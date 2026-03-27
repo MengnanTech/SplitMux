@@ -114,6 +114,41 @@ class NotifyingTerminalView: LocalProcessTerminalView {
     var sessionDelegate: TerminalSessionDelegate?
     var cachedEnv: [String]?
 
+    // MARK: - Right-click context menu
+
+    override func menu(for event: NSEvent) -> NSMenu? {
+        let menu = NSMenu()
+        let hasSelection = getSelection() != nil
+
+        let copyItem = NSMenuItem(title: "Copy", action: #selector(copy(_:)), keyEquivalent: "")
+        copyItem.target = self
+        copyItem.isEnabled = hasSelection
+        menu.addItem(copyItem)
+
+        let pasteItem = NSMenuItem(title: "Paste", action: #selector(paste(_:)), keyEquivalent: "")
+        pasteItem.target = self
+        pasteItem.isEnabled = NSPasteboard.general.string(forType: .string) != nil
+        menu.addItem(pasteItem)
+
+        menu.addItem(.separator())
+
+        let selectAllItem = NSMenuItem(title: "Select All", action: #selector(selectAll(_:)), keyEquivalent: "")
+        selectAllItem.target = self
+        menu.addItem(selectAllItem)
+
+        menu.addItem(.separator())
+
+        let clearItem = NSMenuItem(title: "Clear", action: #selector(clearTerminal), keyEquivalent: "")
+        clearItem.target = self
+        menu.addItem(clearItem)
+
+        return menu
+    }
+
+    @objc private func clearTerminal() {
+        feed(text: "\u{0C}")  // Form feed (Ctrl+L)
+    }
+
     /// Restart the shell process in a new working directory without visible `cd` command
     func restartProcess(in directory: String) {
         terminate()
