@@ -13,8 +13,8 @@ class Tab: Identifiable, Hashable {
     var claudeStatus: ClaudeStatus?
     weak var terminalView: NSView?
 
-    init(title: String, icon: String = "doc.text", content: TabContent = .text("")) {
-        self.id = UUID()
+    init(id: UUID = UUID(), title: String, icon: String = "doc.text", content: TabContent = .text("")) {
+        self.id = id
         self.title = title
         self.icon = icon
         self.content = content

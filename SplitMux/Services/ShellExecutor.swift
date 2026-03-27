@@ -108,11 +108,40 @@ class TerminalSessionDelegate: NSObject, LocalProcessTerminalViewDelegate, @unch
     }
 }
 
-// MARK: - Custom Terminal View (bell notification)
+// MARK: - Custom Terminal View (bell notification + search + font)
 
 class NotifyingTerminalView: LocalProcessTerminalView {
     var sessionDelegate: TerminalSessionDelegate?
     var cachedEnv: [String]?
+
+    // MARK: - Search
+
+    @discardableResult
+    func searchTerminal(query: String, backward: Bool = false) -> Bool {
+        guard !query.isEmpty else { return false }
+        if backward {
+            return self.findPrevious(query)
+        } else {
+            return self.findNext(query)
+        }
+    }
+
+    // MARK: - Font Size
+
+    func updateFontSize(_ size: CGFloat, fontName: String) {
+        if let customFont = NSFont(name: fontName, size: size) {
+            self.font = customFont
+        } else {
+            self.font = NSFont.monospacedSystemFont(ofSize: size, weight: .regular)
+        }
+    }
+
+    // MARK: - Theme
+
+    func applyTheme(_ theme: AppTheme) {
+        self.nativeBackgroundColor = theme.terminalBackground
+        self.nativeForegroundColor = theme.terminalForeground
+    }
 
     // MARK: - Right-click context menu
 
@@ -222,18 +251,19 @@ struct TerminalSwiftUIView: NSViewRepresentable {
         let delegate = TerminalSessionDelegate(tabTitle: tab.title)
         delegate.tab = tab
         delegate.appState = appState
+        delegate.notifyThreshold = SettingsManager.shared.notifyThresholdSeconds
         return delegate
     }
 
     func makeNSView(context: Context) -> NotifyingTerminalView {
         let termView = NotifyingTerminalView(frame: .zero)
+        termView.focusRingType = .none
         termView.sessionDelegate = context.coordinator
         tab.terminalView = termView
 
-        let bgColor = NSColor(red: 0.05, green: 0.05, blue: 0.07, alpha: 1.0)
-        termView.nativeBackgroundColor = bgColor
-        termView.nativeForegroundColor = NSColor(white: 0.85, alpha: 1.0)
-        termView.font = NSFont.monospacedSystemFont(ofSize: 14, weight: .regular)
+        let settings = SettingsManager.shared
+        termView.applyTheme(settings.theme)
+        termView.updateFontSize(settings.fontSize, fontName: settings.fontName)
         termView.processDelegate = context.coordinator
 
         var env = ProcessInfo.processInfo.environment
@@ -300,6 +330,11 @@ struct TerminalSwiftUIView: NSViewRepresentable {
     }
 
     func updateNSView(_ nsView: NotifyingTerminalView, context: Context) {
+        // Apply live settings changes
+        let settings = SettingsManager.shared
+        nsView.updateFontSize(settings.fontSize, fontName: settings.fontName)
+        nsView.applyTheme(settings.theme)
+        context.coordinator.notifyThreshold = settings.notifyThresholdSeconds
     }
 
     /// Create a temporary ZDOTDIR that forwards to user dotfiles,

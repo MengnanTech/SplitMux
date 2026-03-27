@@ -7,26 +7,36 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		15B3480BBD6D0A4DDB2B9CBE /* PersistenceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B30A8EA14811DEDE4BA3C8B0 /* PersistenceService.swift */; };
 		1C5951CC2DDF160D9069187D /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2705F34CBFF710F0B3B61093 /* AppState.swift */; };
+		2C7B2F33F6C7194C7F84EF31 /* SplitNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D5B37ABA0DB8467985088D4 /* SplitNode.swift */; };
 		3986D9F477C2BCC04EE02687 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B58E30059BB7E8BA5B7A18D /* SidebarView.swift */; };
 		66192DB1AF262B414D092C5A /* TabBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BEAE08ADC09A5C7ABB2AC4A /* TabBarView.swift */; };
 		6CD2868F7B2D8343DFD42D60 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 92BE316271B9F5387DA99138 /* SwiftTerm */; };
+		6D04D771F9DDBD603412B9CA /* SplitPaneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C5637445360D508E1A265A6 /* SplitPaneView.swift */; };
 		76224873C9A3B07E5BB4DB10 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A29FB0FA907A1116BD352F22 /* Assets.xcassets */; };
 		80D7C0A9D2062366C81138D7 /* TabPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F66998C1C01601FFB7495CB /* TabPanelView.swift */; };
+		9045A91F80361305B8F68C04 /* CommandPaletteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0450FA03717F0A10E8B13CCC /* CommandPaletteView.swift */; };
 		91988B19EB460BE7E6A877E1 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C9D503C838C9F45E17633E3 /* NotificationService.swift */; };
+		B959724F3733DC1DF1145313 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF1A68A30C80A52EE65AF9EF /* SettingsView.swift */; };
 		C18E185C52DFAC23171C2F49 /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89BBBE1D992BC359C869F114 /* Session.swift */; };
+		CC00821A89047FC5A9D5B8A1 /* TerminalSearchBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3A3F11B4021ECCA5F2B8172 /* TerminalSearchBar.swift */; };
 		CF0E7EFE2E8FE8FDDEDF1CFF /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA94958C7B3C9598143CD854 /* ContentView.swift */; };
 		D58AA81572470B3D1C582CBD /* TabContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 454AD7737E071BBD07A15594 /* TabContentView.swift */; };
 		DA2FFA62D1720021D5BFD5FE /* SplitMuxApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5C0C4193D054715A4CBB97F /* SplitMuxApp.swift */; };
 		DC29667FF2CC5F39BE8FB3A6 /* Tab.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCF1D3D1A0FF0AD4CA36A3A3 /* Tab.swift */; };
+		EA524D5C7F145B26382F1BAA /* SettingsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D38A76841084268D605FC270 /* SettingsManager.swift */; };
+		EDE1EFD4FCFAF4CD7DD6F5DC /* ClaudeHookService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6DECAC9A6DE7F237902D6A6 /* ClaudeHookService.swift */; };
 		F46C56F3D59185B62B999BF9 /* ShellExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CA791722194F1B9618ED6E1 /* ShellExecutor.swift */; };
-		A1B2C3D4E5F60001AABB0001 /* ClaudeHookService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60002AABB0001 /* ClaudeHookService.swift */; };
-		A1B2C3D4E5F60003AABB0001 /* bin in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60004AABB0001 /* bin */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0450FA03717F0A10E8B13CCC /* CommandPaletteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPaletteView.swift; sourceTree = "<group>"; };
 		0C9D503C838C9F45E17633E3 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
+		1C5637445360D508E1A265A6 /* SplitPaneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitPaneView.swift; sourceTree = "<group>"; };
 		2705F34CBFF710F0B3B61093 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		2D5B37ABA0DB8467985088D4 /* SplitNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitNode.swift; sourceTree = "<group>"; };
+		3B05BA369355CCACE63EF27A /* claude */ = {isa = PBXFileReference; path = claude; sourceTree = "<group>"; };
 		454AD7737E071BBD07A15594 /* TabContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabContentView.swift; sourceTree = "<group>"; };
 		6B58E30059BB7E8BA5B7A18D /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
 		7BEAE08ADC09A5C7ABB2AC4A /* TabBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabBarView.swift; sourceTree = "<group>"; };
@@ -34,13 +44,17 @@
 		8AE3BADABDA7191D7EA65125 /* SplitMux.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SplitMux.entitlements; sourceTree = "<group>"; };
 		8CA791722194F1B9618ED6E1 /* ShellExecutor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellExecutor.swift; sourceTree = "<group>"; };
 		8F66998C1C01601FFB7495CB /* TabPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabPanelView.swift; sourceTree = "<group>"; };
+		99894009C3CB2EA0D6F83741 /* codex */ = {isa = PBXFileReference; path = codex; sourceTree = "<group>"; };
 		A29FB0FA907A1116BD352F22 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A3A3F11B4021ECCA5F2B8172 /* TerminalSearchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalSearchBar.swift; sourceTree = "<group>"; };
+		AF1A68A30C80A52EE65AF9EF /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		B30A8EA14811DEDE4BA3C8B0 /* PersistenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceService.swift; sourceTree = "<group>"; };
+		D38A76841084268D605FC270 /* SettingsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsManager.swift; sourceTree = "<group>"; };
 		DA94958C7B3C9598143CD854 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		DCF1D3D1A0FF0AD4CA36A3A3 /* Tab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tab.swift; sourceTree = "<group>"; };
 		E5A887AD18F9732AED899516 /* SplitMux.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SplitMux.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E5C0C4193D054715A4CBB97F /* SplitMuxApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitMuxApp.swift; sourceTree = "<group>"; };
-		A1B2C3D4E5F60002AABB0001 /* ClaudeHookService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeHookService.swift; sourceTree = "<group>"; };
-		A1B2C3D4E5F60004AABB0001 /* bin */ = {isa = PBXFileReference; lastKnownFileType = folder; path = bin; sourceTree = "<group>"; };
+		E6DECAC9A6DE7F237902D6A6 /* ClaudeHookService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeHookService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -80,7 +94,7 @@
 				8AE3BADABDA7191D7EA65125 /* SplitMux.entitlements */,
 				0B13FB3AC9006BE60A51D478 /* App */,
 				72144FC06731CA5685F4EDA1 /* Models */,
-				A1B2C3D4E5F60005AABB0001 /* Resources */,
+				D450B84EE844116C15616EE5 /* Resources */,
 				B34B49222ED8F4DC0B1844FF /* Services */,
 				D4ABA6EF709F24DC494CFAF2 /* Views */,
 			);
@@ -108,25 +122,48 @@
 			children = (
 				2705F34CBFF710F0B3B61093 /* AppState.swift */,
 				89BBBE1D992BC359C869F114 /* Session.swift */,
+				2D5B37ABA0DB8467985088D4 /* SplitNode.swift */,
 				DCF1D3D1A0FF0AD4CA36A3A3 /* Tab.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
 		};
+		9042480A6BA8706610EFA104 /* bin */ = {
+			isa = PBXGroup;
+			children = (
+				3B05BA369355CCACE63EF27A /* claude */,
+				99894009C3CB2EA0D6F83741 /* codex */,
+			);
+			path = bin;
+			sourceTree = "<group>";
+		};
 		B34B49222ED8F4DC0B1844FF /* Services */ = {
 			isa = PBXGroup;
 			children = (
-				A1B2C3D4E5F60002AABB0001 /* ClaudeHookService.swift */,
+				E6DECAC9A6DE7F237902D6A6 /* ClaudeHookService.swift */,
 				0C9D503C838C9F45E17633E3 /* NotificationService.swift */,
+				B30A8EA14811DEDE4BA3C8B0 /* PersistenceService.swift */,
+				D38A76841084268D605FC270 /* SettingsManager.swift */,
 				8CA791722194F1B9618ED6E1 /* ShellExecutor.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
 		};
-		A1B2C3D4E5F60005AABB0001 /* Resources */ = {
+		C11B82949CBB904591BA9395 /* Components */ = {
 			isa = PBXGroup;
 			children = (
-				A1B2C3D4E5F60004AABB0001 /* bin */,
+				0450FA03717F0A10E8B13CCC /* CommandPaletteView.swift */,
+				AF1A68A30C80A52EE65AF9EF /* SettingsView.swift */,
+				1C5637445360D508E1A265A6 /* SplitPaneView.swift */,
+				A3A3F11B4021ECCA5F2B8172 /* TerminalSearchBar.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		D450B84EE844116C15616EE5 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				9042480A6BA8706610EFA104 /* bin */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -135,6 +172,7 @@
 			isa = PBXGroup;
 			children = (
 				DA94958C7B3C9598143CD854 /* ContentView.swift */,
+				C11B82949CBB904591BA9395 /* Components */,
 				D914D41E9C0019AC4E7530DB /* Sidebar */,
 				0352FB5F20A6DEA91F194F8B /* TabContent */,
 			);
@@ -179,7 +217,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1600;
+				LastUpgradeCheck = 2600;
 				TargetAttributes = {
 					16157BEBD28BE2F0C1713998 = {
 						DevelopmentTeam = 2XGP34AR96;
@@ -214,7 +252,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				76224873C9A3B07E5BB4DB10 /* Assets.xcassets in Resources */,
-				A1B2C3D4E5F60003AABB0001 /* bin in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -226,17 +263,24 @@
 			buildActionMask = 2147483647;
 			files = (
 				1C5951CC2DDF160D9069187D /* AppState.swift in Sources */,
+				EDE1EFD4FCFAF4CD7DD6F5DC /* ClaudeHookService.swift in Sources */,
+				9045A91F80361305B8F68C04 /* CommandPaletteView.swift in Sources */,
 				CF0E7EFE2E8FE8FDDEDF1CFF /* ContentView.swift in Sources */,
 				91988B19EB460BE7E6A877E1 /* NotificationService.swift in Sources */,
+				15B3480BBD6D0A4DDB2B9CBE /* PersistenceService.swift in Sources */,
 				C18E185C52DFAC23171C2F49 /* Session.swift in Sources */,
+				EA524D5C7F145B26382F1BAA /* SettingsManager.swift in Sources */,
+				B959724F3733DC1DF1145313 /* SettingsView.swift in Sources */,
 				F46C56F3D59185B62B999BF9 /* ShellExecutor.swift in Sources */,
 				3986D9F477C2BCC04EE02687 /* SidebarView.swift in Sources */,
 				DA2FFA62D1720021D5BFD5FE /* SplitMuxApp.swift in Sources */,
+				2C7B2F33F6C7194C7F84EF31 /* SplitNode.swift in Sources */,
+				6D04D771F9DDBD603412B9CA /* SplitPaneView.swift in Sources */,
 				DC29667FF2CC5F39BE8FB3A6 /* Tab.swift in Sources */,
 				66192DB1AF262B414D092C5A /* TabBarView.swift in Sources */,
 				D58AA81572470B3D1C582CBD /* TabContentView.swift in Sources */,
 				80D7C0A9D2062366C81138D7 /* TabPanelView.swift in Sources */,
-				A1B2C3D4E5F60001AABB0001 /* ClaudeHookService.swift in Sources */,
+				CC00821A89047FC5A9D5B8A1 /* TerminalSearchBar.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -247,6 +291,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -277,10 +322,12 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 2XGP34AR96;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -341,6 +388,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -371,10 +419,12 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 2XGP34AR96;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;

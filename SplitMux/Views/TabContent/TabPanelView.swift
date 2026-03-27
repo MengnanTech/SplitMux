@@ -1,4 +1,5 @@
 import SwiftUI
+import WebKit
 
 struct TabPanelView: View {
     @Environment(AppState.self) private var appState
@@ -91,21 +92,43 @@ struct NotesPanel: View {
     }
 }
 
-// MARK: - Web Panel
+// MARK: - Web Panel (Real WKWebView)
 
 struct WebPanel: View {
     let url: URL
 
     var body: some View {
-        VStack(spacing: 8) {
-            Image(systemName: "globe")
-                .font(.system(size: 32))
-                .foregroundStyle(Color(white: 0.2))
-            Text(url.absoluteString)
-                .font(.system(.caption, design: .monospaced))
-                .foregroundStyle(Color(white: 0.3))
+        VStack(spacing: 0) {
+            WebViewWrapper(url: url)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(red: 0.06, green: 0.06, blue: 0.08))
+    }
+}
+
+struct WebViewWrapper: NSViewRepresentable {
+    let url: URL
+
+    func makeNSView(context: Context) -> WKWebView {
+        let config = WKWebViewConfiguration()
+        let webView = WKWebView(frame: .zero, configuration: config)
+        webView.navigationDelegate = context.coordinator
+        webView.load(URLRequest(url: url))
+        return webView
+    }
+
+    func updateNSView(_ nsView: WKWebView, context: Context) {}
+
+    func makeCoordinator() -> WebViewCoordinator {
+        WebViewCoordinator()
+    }
+
+    class WebViewCoordinator: NSObject, WKNavigationDelegate {
+        func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+            print("[WebPanel] Navigation failed: \(error.localizedDescription)")
+        }
+
+        func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+            print("[WebPanel] Provisional navigation failed: \(error.localizedDescription)")
+        }
     }
 }

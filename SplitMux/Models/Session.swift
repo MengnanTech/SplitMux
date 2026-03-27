@@ -10,6 +10,9 @@ class Session: Identifiable, Hashable {
     var createdAt: Date
     var workingDirectory: String
 
+    /// Optional split pane layout; nil means single-tab (no split)
+    var splitRoot: SplitNode?
+
     /// Display name: custom name > folder name
     var name: String {
         get {
@@ -27,8 +30,8 @@ class Session: Identifiable, Hashable {
         }
     }
 
-    init(name: String? = nil, icon: String = "terminal", tabs: [Tab] = [], workingDirectory: String? = nil) {
-        self.id = UUID()
+    init(id: UUID = UUID(), name: String? = nil, icon: String = "terminal", tabs: [Tab] = [], workingDirectory: String? = nil) {
+        self.id = id
         self.customName = name
         self.icon = icon
         self.tabs = tabs
@@ -84,8 +87,42 @@ class Session: Identifiable, Hashable {
 
     func removeTab(_ tabID: UUID) {
         tabs.removeAll { $0.id == tabID }
+        // Also remove from split layout
+        if let root = splitRoot {
+            splitRoot = root.removing(tabID: tabID)
+        }
         if activeTabID == tabID {
             activeTabID = tabs.last?.id
         }
+    }
+
+    // MARK: - Split Pane
+
+    /// Enter split mode: split the active tab in the given direction
+    func splitActiveTab(direction: SplitDirection) {
+        guard let activeID = activeTabID else { return }
+        let newTab = Tab(title: "zsh", icon: "terminal", content: .terminal)
+        tabs.append(newTab)
+
+        if let root = splitRoot {
+            splitRoot = root.insertSplit(at: activeID, newTabID: newTab.id, direction: direction)
+        } else {
+            // First split — create root from active tab
+            let existing = SplitNode.tab(activeID)
+            let new = SplitNode.tab(newTab.id)
+            switch direction {
+            case .right: splitRoot = .horizontal(existing, new, ratio: 0.5)
+            case .left: splitRoot = .horizontal(new, existing, ratio: 0.5)
+            case .down: splitRoot = .vertical(existing, new, ratio: 0.5)
+            case .up: splitRoot = .vertical(new, existing, ratio: 0.5)
+            }
+        }
+
+        activeTabID = newTab.id
+    }
+
+    /// Exit split mode: collapse to single active tab
+    func unsplit() {
+        splitRoot = nil
     }
 }

@@ -5,8 +5,9 @@ struct SidebarView: View {
     @State private var hoveredSessionID: UUID?
     @State private var renamingSession: Session?
     @State private var renameText = ""
+    @State private var draggedSessionID: UUID?
 
-    private let sidebarBg = Color(red: 0.1, green: 0.1, blue: 0.12)
+    private var sidebarBg: Color { SettingsManager.shared.theme.sidebarBackground }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -46,6 +47,7 @@ struct SidebarView: View {
                             isSelected: session.id == appState.selectedSessionID,
                             isHovered: session.id == hoveredSessionID
                         )
+                        .opacity(draggedSessionID == session.id ? 0.4 : 1.0)
                         .onTapGesture {
                             withAnimation(.easeOut(duration: 0.12)) {
                                 appState.selectedSessionID = session.id
@@ -60,6 +62,15 @@ struct SidebarView: View {
                         .onHover { hovering in
                             hoveredSessionID = hovering ? session.id : nil
                         }
+                        .onDrag {
+                            draggedSessionID = session.id
+                            return NSItemProvider(object: session.id.uuidString as NSString)
+                        }
+                        .onDrop(of: [.text], delegate: SessionDropDelegate(
+                            appState: appState,
+                            targetSessionID: session.id,
+                            draggedSessionID: $draggedSessionID
+                        ))
                         .contextMenu {
                             Button {
                                 let tab = Tab(title: "Terminal", icon: "terminal", content: .terminal)
@@ -87,6 +98,20 @@ struct SidebarView: View {
 
                             Divider()
 
+                            // Split options
+                            ForEach(SplitDirection.allCases, id: \.rawValue) { direction in
+                                Button {
+                                    appState.selectedSessionID = session.id
+                                    withAnimation {
+                                        session.splitActiveTab(direction: direction)
+                                    }
+                                } label: {
+                                    Label(direction.label, systemImage: direction.icon)
+                                }
+                            }
+
+                            Divider()
+
                             Button("Delete", role: .destructive) {
                                 withAnimation {
                                     appState.removeSession(session.id)
@@ -103,7 +128,7 @@ struct SidebarView: View {
             // Footer
             HStack(spacing: 8) {
                 Circle()
-                    .fill(Color.green)
+                    .fill(SettingsManager.shared.theme.accentColor)
                     .frame(width: 6, height: 6)
                 Text("\(appState.sessions.count) sessions")
                     .font(.system(.caption2, design: .monospaced))
@@ -163,10 +188,44 @@ struct SidebarView: View {
     }
 }
 
+// MARK: - Session Drop Delegate
+
+struct SessionDropDelegate: DropDelegate {
+    let appState: AppState
+    let targetSessionID: UUID
+    @Binding var draggedSessionID: UUID?
+
+    func performDrop(info: DropInfo) -> Bool {
+        draggedSessionID = nil
+        return true
+    }
+
+    func dropEntered(info: DropInfo) {
+        guard let draggedID = draggedSessionID,
+              draggedID != targetSessionID,
+              let fromIndex = appState.sessions.firstIndex(where: { $0.id == draggedID }),
+              let toIndex = appState.sessions.firstIndex(where: { $0.id == targetSessionID }) else {
+            return
+        }
+
+        withAnimation(.easeInOut(duration: 0.15)) {
+            appState.sessions.move(fromOffsets: IndexSet(integer: fromIndex), toOffset: toIndex > fromIndex ? toIndex + 1 : toIndex)
+        }
+    }
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        DropProposal(operation: .move)
+    }
+}
+
+// MARK: - Session Row
+
 struct SessionRow: View {
     let session: Session
     let isSelected: Bool
     let isHovered: Bool
+
+    private var theme: AppTheme { SettingsManager.shared.theme }
 
     private var bgColor: Color {
         if isSelected {
@@ -181,14 +240,14 @@ struct SessionRow: View {
         HStack(spacing: 10) {
             Image(systemName: session.icon)
                 .font(.system(size: 13))
-                .foregroundStyle(isSelected ? Color.green : Color(white: 0.45))
+                .foregroundStyle(isSelected ? theme.accentColor : Color(white: 0.45))
                 .frame(width: 22)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(session.name)
                     .font(.system(.callout, design: .default))
                     .fontWeight(isSelected ? .semibold : .regular)
-                    .foregroundStyle(isSelected ? .white : Color(white: 0.7))
+                    .foregroundStyle(isSelected ? theme.primaryText : Color(white: 0.7))
 
                 HStack(spacing: 4) {
                     Image(systemName: "folder")
@@ -235,7 +294,7 @@ struct SessionRow: View {
 
             if isSelected {
                 RoundedRectangle(cornerRadius: 1)
-                    .fill(Color.green)
+                    .fill(theme.accentColor)
                     .frame(width: 3, height: 24)
             }
         }

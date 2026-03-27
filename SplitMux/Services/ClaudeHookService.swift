@@ -20,7 +20,7 @@ final class ClaudeHookService {
     }
 
     /// Start monitoring a tab's status file
-    func startMonitoring(tabID: UUID, onStatusChange: @escaping (ClaudeStatus) -> Void) {
+    func startMonitoring(tabID: UUID, onStatusChange: @escaping @MainActor (ClaudeStatus) -> Void) {
         let path = "\(statusDir)/\(tabID.uuidString)"
 
         // Create the file if it doesn't exist
@@ -31,7 +31,7 @@ final class ClaudeHookService {
         // Poll-based monitoring (reliable across all scenarios)
         let timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
             guard let self else { return }
-            Task { @MainActor in
+            MainActor.assumeIsolated {
                 self.checkStatusFile(path: path, callback: onStatusChange)
             }
         }

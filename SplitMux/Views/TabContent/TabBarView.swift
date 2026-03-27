@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct TabBarView: View {
     @Environment(AppState.self) private var appState
@@ -6,8 +7,9 @@ struct TabBarView: View {
     var onAddTab: () -> Void
     @State private var renamingTab: Tab?
     @State private var renameText = ""
+    @State private var draggedTabID: UUID?
 
-    private let barBg = Color(red: 0.12, green: 0.12, blue: 0.14)
+    private var barBg: Color { SettingsManager.shared.theme.tabBarBackground }
     private let dividerColor = Color(white: 0.2)
 
     var body: some View {
@@ -37,6 +39,16 @@ struct TabBarView: View {
                     }
                 )
                 .frame(maxWidth: .infinity)
+                .opacity(draggedTabID == tab.id ? 0.4 : 1.0)
+                .onDrag {
+                    draggedTabID = tab.id
+                    return NSItemProvider(object: tab.id.uuidString as NSString)
+                }
+                .onDrop(of: [.text], delegate: TabDropDelegate(
+                    session: session,
+                    targetTabID: tab.id,
+                    draggedTabID: $draggedTabID
+                ))
                 .contextMenu {
                     Button {
                         renameText = tab.title
@@ -50,6 +62,20 @@ struct TabBarView: View {
                         withAnimation { session.addTab(newTab) }
                     } label: {
                         Label("Duplicate Tab", systemImage: "doc.on.doc")
+                    }
+
+                    Divider()
+
+                    // Split options
+                    ForEach(SplitDirection.allCases, id: \.rawValue) { direction in
+                        Button {
+                            session.activeTabID = tab.id
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                session.splitActiveTab(direction: direction)
+                            }
+                        } label: {
+                            Label(direction.label, systemImage: direction.icon)
+                        }
                     }
 
                     Divider()
@@ -110,6 +136,7 @@ struct TabBarView: View {
         withAnimation {
             session.tabs.removeAll { $0.id != tab.id }
             session.activeTabID = tab.id
+            session.splitRoot = nil
         }
     }
 
@@ -124,6 +151,38 @@ struct TabBarView: View {
         }
     }
 }
+
+// MARK: - Tab Drop Delegate
+
+struct TabDropDelegate: DropDelegate {
+    let session: Session
+    let targetTabID: UUID
+    @Binding var draggedTabID: UUID?
+
+    func performDrop(info: DropInfo) -> Bool {
+        draggedTabID = nil
+        return true
+    }
+
+    func dropEntered(info: DropInfo) {
+        guard let draggedID = draggedTabID,
+              draggedID != targetTabID,
+              let fromIndex = session.tabs.firstIndex(where: { $0.id == draggedID }),
+              let toIndex = session.tabs.firstIndex(where: { $0.id == targetTabID }) else {
+            return
+        }
+
+        withAnimation(.easeInOut(duration: 0.15)) {
+            session.tabs.move(fromOffsets: IndexSet(integer: fromIndex), toOffset: toIndex > fromIndex ? toIndex + 1 : toIndex)
+        }
+    }
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        DropProposal(operation: .move)
+    }
+}
+
+// MARK: - Tab Item View
 
 struct TabItemView: View {
     let tab: Tab
