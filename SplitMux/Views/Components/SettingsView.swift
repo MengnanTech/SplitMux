@@ -5,29 +5,46 @@ struct SettingsView: View {
     let settings = SettingsManager.shared
 
     var body: some View {
-        TabView {
-            GeneralSettingsTab(settings: settings)
-                .tabItem {
-                    Label("General", systemImage: "gear")
+        VStack(spacing: 0) {
+            HStack {
+                Spacer()
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 16))
+                        .foregroundStyle(.secondary)
                 }
+                .buttonStyle(.plain)
+                .padding(.top, 10)
+                .padding(.trailing, 10)
+            }
 
-            TerminalSettingsTab(settings: settings)
-                .tabItem {
-                    Label("Terminal", systemImage: "terminal")
-                }
+            TabView {
+                GeneralSettingsTab(settings: settings)
+                    .tabItem {
+                        Label("General", systemImage: "gear")
+                    }
 
-            ThemeSettingsTab(settings: settings)
-                .tabItem {
-                    Label("Theme", systemImage: "paintpalette")
-                }
+                TerminalSettingsTab(settings: settings)
+                    .tabItem {
+                        Label("Terminal", systemImage: "terminal")
+                    }
 
-            NotificationSettingsTab(settings: settings)
-                .tabItem {
-                    Label("Notifications", systemImage: "bell")
-                }
+                ThemeSettingsTab(settings: settings)
+                    .tabItem {
+                        Label("Theme", systemImage: "paintpalette")
+                    }
+
+                NotificationSettingsTab(settings: settings)
+                    .tabItem {
+                        Label("Notifications", systemImage: "bell")
+                    }
+            }
         }
-        .frame(width: 450, height: 320)
-        .padding()
+        .frame(width: 450, height: 350)
+        .padding(.horizontal)
+        .padding(.bottom)
     }
 }
 

@@ -255,6 +255,15 @@ struct SessionRow: View {
                     Text(session.displayPath)
                         .lineLimit(1)
                         .truncationMode(.middle)
+
+                    if let branch = session.gitBranch {
+                        Text("·")
+                        Image(systemName: "arrow.triangle.branch")
+                            .font(.system(size: 7))
+                        Text(branch)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                    }
                 }
                 .font(.system(.caption2, design: .monospaced))
                 .foregroundStyle(Color(white: 0.35))

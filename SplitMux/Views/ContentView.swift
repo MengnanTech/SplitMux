@@ -3,8 +3,8 @@ import SwiftUI
 struct ContentView: View {
     @Environment(AppState.self) private var appState
     @State private var showCommandPalette = false
-    @State private var showSearch = false
-    @State private var searchText = ""
+    @State private var sidebarWidth: CGFloat = 220
+    @State private var dragStartWidth: CGFloat = 220
 
     private var theme: AppTheme { SettingsManager.shared.theme }
 
@@ -12,10 +12,11 @@ struct ContentView: View {
         ZStack {
             HStack(spacing: 0) {
                 SidebarView()
-                    .frame(width: 220)
+                    .frame(width: sidebarWidth)
 
-                Divider()
-                    .overlay(Color(white: 0.15))
+                // Draggable divider
+                SidebarDivider(sidebarWidth: $sidebarWidth, dragStartWidth: $dragStartWidth)
+                    .frame(width: 1)
 
                 // Keep all sessions alive, show only the selected one
                 ZStack {
@@ -32,6 +33,7 @@ struct ContentView: View {
                             .font(.system(.title3, design: .monospaced))
                     }
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             .background(theme.contentBackground)
 
@@ -82,8 +84,6 @@ struct ContentView: View {
 
             // Cmd+F — Search Terminal
             Button("") {
-                showSearch.toggle()
-                // Forward to active TabContentView via notification
                 NotificationCenter.default.post(name: .toggleTerminalSearch, object: nil)
             }
                 .keyboardShortcut("f", modifiers: .command)
@@ -183,4 +183,99 @@ struct ContentView: View {
 
 extension Notification.Name {
     static let toggleTerminalSearch = Notification.Name("toggleTerminalSearch")
+}
+
+// MARK: - Sidebar Divider (NSView-based for reliable cursor)
+
+struct SidebarDivider: NSViewRepresentable {
+    @Binding var sidebarWidth: CGFloat
+    @Binding var dragStartWidth: CGFloat
+
+    func makeNSView(context: Context) -> SidebarDividerNSView {
+        let view = SidebarDividerNSView()
+        view.onDrag = { delta in
+            let newWidth = dragStartWidth + delta
+            sidebarWidth = min(max(newWidth, 140), 400)
+        }
+        view.onDragEnd = {
+            dragStartWidth = sidebarWidth
+        }
+        return view
+    }
+
+    func updateNSView(_ nsView: SidebarDividerNSView, context: Context) {
+        nsView.onDrag = { delta in
+            let newWidth = dragStartWidth + delta
+            sidebarWidth = min(max(newWidth, 140), 400)
+        }
+        nsView.onDragEnd = {
+            dragStartWidth = sidebarWidth
+        }
+    }
+}
+
+class SidebarDividerNSView: NSView {
+    var onDrag: ((CGFloat) -> Void)?
+    var onDragEnd: (() -> Void)?
+    private var dragOriginX: CGFloat = 0
+
+    override var intrinsicContentSize: NSSize {
+        NSSize(width: 1, height: NSView.noIntrinsicMetric)
+    }
+
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        // Expand hit area to 10px for easier dragging
+        let expandedRect = bounds.insetBy(dx: -5, dy: 0)
+        return expandedRect.contains(point) ? self : nil
+    }
+
+    override init(frame: NSRect) {
+        super.init(frame: frame)
+        setupTrackingArea()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setupTrackingArea()
+    }
+
+    private func setupTrackingArea() {
+        let area = NSTrackingArea(
+            rect: .zero,
+            options: [.mouseEnteredAndExited, .activeInActiveApp, .inVisibleRect],
+            owner: self
+        )
+        addTrackingArea(area)
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        NSColor(white: 0.15, alpha: 1).setFill()
+        NSRect(x: 0, y: 0, width: 1, height: bounds.height).fill()
+    }
+
+    override func resetCursorRects() {
+        addCursorRect(bounds, cursor: .resizeLeftRight)
+    }
+
+    override func mouseEntered(with event: NSEvent) {
+        NSCursor.resizeLeftRight.set()
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        NSCursor.arrow.set()
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        dragOriginX = event.locationInWindow.x
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        NSCursor.resizeLeftRight.set()
+        let delta = event.locationInWindow.x - dragOriginX
+        onDrag?(delta)
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        onDragEnd?()
+    }
 }

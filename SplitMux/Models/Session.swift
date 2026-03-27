@@ -13,6 +13,10 @@ class Session: Identifiable, Hashable {
     /// Optional split pane layout; nil means single-tab (no split)
     var splitRoot: SplitNode?
 
+    /// Current git branch name (nil if not a git repo)
+    var gitBranch: String?
+    private var gitBranchTimer: Timer?
+
     /// Display name: custom name > folder name
     var name: String {
         get {
@@ -124,5 +128,51 @@ class Session: Identifiable, Hashable {
     /// Exit split mode: collapse to single active tab
     func unsplit() {
         splitRoot = nil
+    }
+
+    // MARK: - Git Branch
+
+    /// Start polling git branch for this session's working directory
+    func startGitBranchPolling() {
+        refreshGitBranch()
+        gitBranchTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            self.refreshGitBranch()
+        }
+    }
+
+    func stopGitBranchPolling() {
+        gitBranchTimer?.invalidate()
+        gitBranchTimer = nil
+    }
+
+    private func refreshGitBranch() {
+        let dir = workingDirectory
+        Task.detached { [weak self] in
+            let task = Process()
+            task.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+            task.arguments = ["rev-parse", "--abbrev-ref", "HEAD"]
+            task.currentDirectoryURL = URL(fileURLWithPath: dir)
+            task.standardError = FileHandle.nullDevice
+
+            let pipe = Pipe()
+            task.standardOutput = pipe
+
+            var result: String?
+            do {
+                try task.run()
+                task.waitUntilExit()
+                let data = pipe.fileHandleForReading.readDataToEndOfFile()
+                let branch = String(data: data, encoding: .utf8)?
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                result = (task.terminationStatus == 0 && !(branch?.isEmpty ?? true)) ? branch : nil
+            } catch {
+                result = nil
+            }
+
+            await MainActor.run {
+                self?.gitBranch = result
+            }
+        }
     }
 }

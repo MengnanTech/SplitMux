@@ -26,12 +26,17 @@ class AppState {
               let restored = PersistenceService.shared.load() else { return }
         self.sessions = restored.sessions
         self.selectedSessionID = restored.selectedSessionID
+        // Start git branch polling for restored sessions
+        for session in sessions {
+            session.startGitBranchPolling()
+        }
     }
 
     private func setupDefault() {
         let mainSession = Session()
         let tab1 = Tab(title: "zsh", icon: "terminal", content: .terminal)
         mainSession.addTab(tab1)
+        mainSession.startGitBranchPolling()
 
         sessions = [mainSession]
         selectedSessionID = mainSession.id
@@ -41,12 +46,16 @@ class AppState {
         let session = Session(workingDirectory: workingDirectory)
         let tab = Tab(title: "zsh", icon: "terminal", content: .terminal)
         session.addTab(tab)
+        session.startGitBranchPolling()
         sessions.append(session)
         selectedSessionID = session.id
         scheduleSave()
     }
 
     func removeSession(_ id: UUID) {
+        if let session = sessions.first(where: { $0.id == id }) {
+            session.stopGitBranchPolling()
+        }
         sessions.removeAll { $0.id == id }
         if selectedSessionID == id {
             selectedSessionID = sessions.first?.id

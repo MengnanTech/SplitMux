@@ -1,9 +1,15 @@
 import SwiftUI
+import Sparkle
 
 @main
 struct SplitMuxApp: App {
     @State private var appState = AppState()
     @State private var showSettings = false
+    private let updaterController = SPUStandardUpdaterController(
+        startingUpdater: true,
+        updaterDelegate: nil,
+        userDriverDelegate: nil
+    )
 
     var body: some Scene {
         WindowGroup {
@@ -96,10 +102,27 @@ struct SplitMuxApp: App {
                 }
                 .keyboardShortcut("p", modifiers: .command)
             }
+
+            // App menu — Check for Updates
+            CommandGroup(after: .appInfo) {
+                CheckForUpdatesView(updater: updaterController.updater)
+            }
         }
 
         Settings {
             SettingsView()
+        }
+    }
+}
+
+// MARK: - Sparkle Check for Updates
+
+struct CheckForUpdatesView: View {
+    let updater: SPUUpdater
+
+    var body: some View {
+        Button("Check for Updates...") {
+            updater.checkForUpdates()
         }
     }
 }
