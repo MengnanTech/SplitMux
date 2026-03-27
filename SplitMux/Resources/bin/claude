@@ -1,0 +1,75 @@
+#!/bin/bash
+# SplitMux claude wrapper — injects hooks for status tracking
+# Claude Code supports --settings to inject hooks inline.
+
+# Remove our directory from PATH to find the real claude
+CLEANED_PATH=$(echo "$PATH" | tr ':' '\n' | grep -v "SplitMux.app/Contents/Resources/bin" | tr '\n' ':' | sed 's/:$//')
+REAL_CLAUDE=$(PATH="$CLEANED_PATH" which claude 2>/dev/null)
+
+if [ -z "$REAL_CLAUDE" ]; then
+    echo "claude: command not found" >&2
+    exit 127
+fi
+
+# Not in SplitMux? Run real claude directly.
+if [ -z "$SPLITMUX_TAB_ID" ]; then
+    exec "$REAL_CLAUDE" "$@"
+fi
+
+# Check if user already passed --settings
+for arg in "$@"; do
+    if [ "$arg" = "--settings" ]; then
+        exec "$REAL_CLAUDE" "$@"
+    fi
+done
+
+STATUS_DIR="/tmp/splitmux"
+mkdir -p "$STATUS_DIR"
+STATUS_FILE="$STATUS_DIR/$SPLITMUX_TAB_ID"
+
+# Build hooks JSON — write status to temp file on lifecycle events
+HOOKS_JSON=$(cat <<ENDJSON
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo running > $STATUS_FILE",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo idle > $STATUS_FILE",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo needs-input > $STATUS_FILE",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
+ENDJSON
+)
+
+exec "$REAL_CLAUDE" --settings "$HOOKS_JSON" "$@"

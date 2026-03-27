@@ -1,0 +1,83 @@
+#!/bin/bash
+# SplitMux codex wrapper — injects hooks for status tracking
+# Codex CLI uses hooks.json config files (no --settings flag),
+# so we write a temporary hooks.json before launching.
+
+# Remove our directory from PATH to find the real codex
+CLEANED_PATH=$(echo "$PATH" | tr ':' '\n' | grep -v "SplitMux.app/Contents/Resources/bin" | tr '\n' ':' | sed 's/:$//')
+REAL_CODEX=$(PATH="$CLEANED_PATH" which codex 2>/dev/null)
+
+if [ -z "$REAL_CODEX" ]; then
+    echo "codex: command not found" >&2
+    exit 127
+fi
+
+# Not in SplitMux? Run real codex directly.
+if [ -z "$SPLITMUX_TAB_ID" ]; then
+    exec "$REAL_CODEX" "$@"
+fi
+
+STATUS_DIR="/tmp/splitmux"
+mkdir -p "$STATUS_DIR"
+STATUS_FILE="$STATUS_DIR/$SPLITMUX_TAB_ID"
+
+# Codex discovers hooks.json from ~/.codex/hooks.json (project or global)
+# Write a SplitMux-specific hooks.json to project-level .codex dir
+HOOKS_DIR="${PWD}/.codex"
+HOOKS_FILE="${HOOKS_DIR}/hooks.json"
+HOOKS_BACKUP=""
+
+# Back up existing hooks.json if present
+if [ -f "$HOOKS_FILE" ]; then
+    HOOKS_BACKUP="${HOOKS_FILE}.splitmux-backup"
+    cp "$HOOKS_FILE" "$HOOKS_BACKUP"
+fi
+
+mkdir -p "$HOOKS_DIR"
+
+# Merge our hooks — if there was an existing hooks.json, we need to be careful.
+# For simplicity, write our hooks (most users won't have custom hooks).
+cat > "$HOOKS_FILE" <<ENDJSON
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": null,
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo running > ${STATUS_FILE}",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": null,
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo idle > ${STATUS_FILE}",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
+ENDJSON
+
+# Cleanup function — restore original hooks.json on exit
+cleanup() {
+    if [ -n "$HOOKS_BACKUP" ]; then
+        mv "$HOOKS_BACKUP" "$HOOKS_FILE"
+    else
+        rm -f "$HOOKS_FILE"
+        # Remove .codex dir only if we created it and it's empty
+        rmdir "$HOOKS_DIR" 2>/dev/null
+    fi
+}
+trap cleanup EXIT
+
+exec "$REAL_CODEX" "$@"

@@ -1,0 +1,36 @@
+name: SplitMux
+options:
+  bundleIdPrefix: com.levi
+  deploymentTarget:
+    macOS: "15.0"
+  xcodeVersion: "16.0"
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    GENERATE_INFOPLIST_FILE: YES
+    DEVELOPMENT_TEAM: 2XGP34AR96
+
+packages:
+  SwiftTerm:
+    url: https://github.com/migueldeicaza/SwiftTerm
+    from: "1.2.0"
+
+targets:
+  SplitMux:
+    type: application
+    platform: macOS
+    sources:
+      - SplitMux
+    dependencies:
+      - package: SwiftTerm
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.levi.SplitMux
+        MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: 1
+        SWIFT_STRICT_CONCURRENCY: complete
+    entitlements:
+      path: SplitMux/SplitMux.entitlements
+      properties:
+        com.apple.security.app-sandbox: false
