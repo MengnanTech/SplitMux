@@ -29,8 +29,9 @@ final class PersistenceService {
         let id: String
         let title: String
         let icon: String
-        let contentType: String // "terminal", "text", "notes", "webURL"
-        let contentValue: String? // text content or URL string
+        let contentType: String // "terminal", "text", "notes", "webURL", "sshTerminal"
+        let contentValue: String? // text content, URL string, or SSH host ID
+        let sshHostID: String?
     }
 
     /// Recursive DTO needs to use a class (reference type) to avoid infinite size
@@ -88,8 +89,9 @@ final class PersistenceService {
         case .text(let s): ("text", s)
         case .notes(let s): ("notes", s)
         case .webURL(let url): ("webURL", url.absoluteString)
+        case .sshTerminal(let hostID): ("sshTerminal", hostID.uuidString)
         }
-        return TabDTO(id: tab.id.uuidString, title: tab.title, icon: tab.icon, contentType: type, contentValue: value)
+        return TabDTO(id: tab.id.uuidString, title: tab.title, icon: tab.icon, contentType: type, contentValue: value, sshHostID: tab.sshHostID?.uuidString)
     }
 
     private func splitNodeToDTO(_ node: SplitNode) -> SplitNodeDTO {
@@ -175,9 +177,13 @@ final class PersistenceService {
         case "text": .text(dto.contentValue ?? "")
         case "notes": .notes(dto.contentValue ?? "")
         case "webURL": .webURL(URL(string: dto.contentValue ?? "about:blank") ?? URL(string: "about:blank")!)
+        case "sshTerminal":
+            .sshTerminal(hostID: UUID(uuidString: dto.contentValue ?? "") ?? UUID())
         default: .terminal
         }
-        return Tab(id: id, title: dto.title, icon: dto.icon, content: content)
+        let tab = Tab(id: id, title: dto.title, icon: dto.icon, content: content)
+        tab.sshHostID = dto.sshHostID.flatMap { UUID(uuidString: $0) }
+        return tab
     }
 
     private func dtoToSplitNode(_ dto: SplitNodeDTO) -> SplitNode? {

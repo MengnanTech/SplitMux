@@ -18,6 +18,9 @@ packages:
   SwiftTerm:
     url: https://github.com/migueldeicaza/SwiftTerm
     from: "1.2.0"
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    from: "2.6.0"
 
 targets:
   SplitMux:
@@ -27,6 +30,7 @@ targets:
       - SplitMux
     dependencies:
       - package: SwiftTerm
+      - package: Sparkle
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.levi.SplitMux

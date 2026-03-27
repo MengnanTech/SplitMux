@@ -213,6 +213,27 @@ struct TabItemView: View {
 
                 Spacer(minLength: 0)
 
+                // Agent progress indicator
+                if tab.claudeStatus == .running {
+                    ProgressView()
+                        .controlSize(.mini)
+                        .scaleEffect(0.6)
+                        .padding(.trailing, 2)
+                } else if tab.claudeStatus == .needsInput {
+                    Image(systemName: "exclamationmark.circle.fill")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.orange)
+                        .padding(.trailing, 2)
+                }
+
+                // SSH connection indicator
+                if tab.isSSH {
+                    Image(systemName: "network")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.green)
+                        .padding(.trailing, 2)
+                }
+
                 // Notification dot
                 if tab.hasNotification && !isActive {
                     Circle()
@@ -259,6 +280,9 @@ struct TabItemView: View {
     private var tabDisplayTitle: String {
         if case .terminal = tab.content {
             return "~ (-\(tab.title))"
+        }
+        if case .sshTerminal = tab.content {
+            return "ssh: \(tab.title)"
         }
         return tab.title
     }

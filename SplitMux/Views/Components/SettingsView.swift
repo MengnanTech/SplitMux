@@ -40,9 +40,19 @@ struct SettingsView: View {
                     .tabItem {
                         Label("Notifications", systemImage: "bell")
                     }
+
+                SSHSettingsTab()
+                    .tabItem {
+                        Label("SSH", systemImage: "network")
+                    }
+
+                HistorySettingsTab()
+                    .tabItem {
+                        Label("History", systemImage: "clock.arrow.circlepath")
+                    }
             }
         }
-        .frame(width: 450, height: 350)
+        .frame(width: 450, height: 400)
         .padding(.horizontal)
         .padding(.bottom)
     }
@@ -153,6 +163,97 @@ struct NotificationSettingsTab: View {
             }
 
             Text("Commands finishing faster than this threshold won't trigger notifications.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .formStyle(.grouped)
+    }
+}
+
+struct SSHSettingsTab: View {
+    private let sshManager = SSHManagerService.shared
+
+    var body: some View {
+        Form {
+            Section("Saved Hosts") {
+                if sshManager.savedHosts.isEmpty {
+                    Text("No saved SSH hosts")
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(sshManager.savedHosts) { host in
+                        HStack {
+                            Circle()
+                                .fill(host.colorTag.color)
+                                .frame(width: 8, height: 8)
+                            Text(host.displayName)
+                            Spacer()
+                            Text("\(host.username)@\(host.hostname)")
+                                .foregroundStyle(.secondary)
+                                .font(.caption)
+                        }
+                    }
+                }
+            }
+
+            Section("SSH Config") {
+                HStack {
+                    Text("~/.ssh/config hosts: \(sshManager.configHosts.count)")
+                    Spacer()
+                    Button("Refresh") {
+                        sshManager.refreshConfig()
+                    }
+                }
+                Text("SplitMux automatically reads hosts from your SSH config file.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .formStyle(.grouped)
+    }
+}
+
+struct HistorySettingsTab: View {
+    private let historyService = TerminalHistoryService.shared
+
+    var body: some View {
+        Form {
+            Toggle("Record terminal output", isOn: Binding(
+                get: { historyService.isRecordingEnabled },
+                set: { historyService.isRecordingEnabled = $0 }
+            ))
+
+            HStack {
+                Text("Max memory per tab:")
+                Spacer()
+                Picker("", selection: Binding(
+                    get: { historyService.maxBytesPerTab },
+                    set: { historyService.maxBytesPerTab = $0 }
+                )) {
+                    Text("10 MB").tag(10_000_000)
+                    Text("25 MB").tag(25_000_000)
+                    Text("50 MB").tag(50_000_000)
+                    Text("100 MB").tag(100_000_000)
+                }
+                .frame(width: 120)
+            }
+
+            Section("Usage") {
+                HStack {
+                    Text("Active histories:")
+                    Spacer()
+                    Text("\(historyService.activeHistories.count)")
+                        .foregroundStyle(.secondary)
+                }
+
+                HStack {
+                    Text("Total memory:")
+                    Spacer()
+                    Text(historyService.totalSizeString)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Text("Terminal output is recorded in memory for search, export, and replay. History is not persisted across app restarts.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }

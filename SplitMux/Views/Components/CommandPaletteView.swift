@@ -161,6 +161,51 @@ struct CommandPaletteView: View {
             }
         ))
 
+        // Terminal History
+        items.append(PaletteItem(
+            id: "cmd-history",
+            icon: "clock.arrow.circlepath",
+            title: "Toggle Terminal History",
+            subtitle: "Show/hide terminal output history panel",
+            kind: .command,
+            action: {
+                NotificationCenter.default.post(name: .toggleTerminalHistory, object: nil)
+            }
+        ))
+
+        // Agent Dashboard
+        items.append(PaletteItem(
+            id: "cmd-agents",
+            icon: "cpu",
+            title: "Agent Dashboard",
+            subtitle: "View and manage Claude Code agents",
+            kind: .command,
+            action: {
+                NotificationCenter.default.post(name: .showAgentDashboard, object: nil)
+            }
+        ))
+
+        // SSH Hosts
+        for host in SSHManagerService.shared.allHosts {
+            items.append(PaletteItem(
+                id: "ssh-\(host.id)",
+                icon: "network",
+                title: "SSH: \(host.displayName)",
+                subtitle: "\(host.username.isEmpty ? "" : "\(host.username)@")\(host.hostname)\(host.port != 22 ? ":\(host.port)" : "")",
+                kind: .sshHost,
+                action: { [weak appState] in
+                    guard let session = appState?.selectedSession else { return }
+                    let tab = Tab(
+                        title: host.displayName,
+                        icon: "network",
+                        content: .sshTerminal(hostID: host.id)
+                    )
+                    tab.sshHostID = host.id
+                    session.addTab(tab)
+                }
+            ))
+        }
+
         return items
     }
 
@@ -180,7 +225,7 @@ struct PaletteItem: Identifiable {
     let action: () -> Void
 
     enum PaletteItemKind {
-        case session, tab, command
+        case session, tab, command, sshHost
     }
 }
 
@@ -226,6 +271,7 @@ struct PaletteItemRow: View {
         case .session: return .green
         case .tab: return .blue
         case .command: return .orange
+        case .sshHost: return .cyan
         }
     }
 
@@ -234,6 +280,7 @@ struct PaletteItemRow: View {
         case .session: return "Session"
         case .tab: return "Tab"
         case .command: return "Command"
+        case .sshHost: return "SSH"
         }
     }
 }

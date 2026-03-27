@@ -8,17 +8,25 @@
 
 /* Begin PBXBuildFile section */
 		15B3480BBD6D0A4DDB2B9CBE /* PersistenceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B30A8EA14811DEDE4BA3C8B0 /* PersistenceService.swift */; };
+		1C313FAA67867659B8A6D867 /* SSHHostsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BCF76A9B67B992A48E88E9D /* SSHHostsSection.swift */; };
 		1C5951CC2DDF160D9069187D /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2705F34CBFF710F0B3B61093 /* AppState.swift */; };
 		2C7B2F33F6C7194C7F84EF31 /* SplitNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D5B37ABA0DB8467985088D4 /* SplitNode.swift */; };
 		3986D9F477C2BCC04EE02687 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B58E30059BB7E8BA5B7A18D /* SidebarView.swift */; };
+		42B91EE4C27E9D6DDC54E7F3 /* SSHManagerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF4CD2689D4E5B2E8B1543FF /* SSHManagerService.swift */; };
+		5416187C450CAE0F2AD9332E /* TerminalHistoryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 403BA34C7DF212B769699C23 /* TerminalHistoryService.swift */; };
+		650E2C89F7618CE147A6346A /* AgentOrchestrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94CFE7C5BD49F7C5AA2E257B /* AgentOrchestrationView.swift */; };
 		66192DB1AF262B414D092C5A /* TabBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BEAE08ADC09A5C7ABB2AC4A /* TabBarView.swift */; };
 		6CD2868F7B2D8343DFD42D60 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 92BE316271B9F5387DA99138 /* SwiftTerm */; };
-		AAB1C2D3E4F50001CCDD0001 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = AAB1C2D3E4F50002CCDD0001 /* Sparkle */; };
 		6D04D771F9DDBD603412B9CA /* SplitPaneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C5637445360D508E1A265A6 /* SplitPaneView.swift */; };
+		75896E33B7F227DC257262C5 /* TerminalHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9317565C43CD3745A495839 /* TerminalHistoryView.swift */; };
 		76224873C9A3B07E5BB4DB10 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A29FB0FA907A1116BD352F22 /* Assets.xcassets */; };
+		80A672CEF423F5AFE68B7CE1 /* SSHHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDCEA570CCC09D2C9721C5FD /* SSHHost.swift */; };
 		80D7C0A9D2062366C81138D7 /* TabPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F66998C1C01601FFB7495CB /* TabPanelView.swift */; };
 		9045A91F80361305B8F68C04 /* CommandPaletteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0450FA03717F0A10E8B13CCC /* CommandPaletteView.swift */; };
 		91988B19EB460BE7E6A877E1 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C9D503C838C9F45E17633E3 /* NotificationService.swift */; };
+		AC8EB4C59954B7993FC17B26 /* TerminalHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DB0D582624EB54FE1534670 /* TerminalHistory.swift */; };
+		ADF1C4C302275A723244D70B /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = BB51791940E0588FFF39BB96 /* Sparkle */; };
+		B1A5B915D432D1063CE49A21 /* SSHHostEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B791AC577EE279C637592AAE /* SSHHostEditorView.swift */; };
 		B959724F3733DC1DF1145313 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF1A68A30C80A52EE65AF9EF /* SettingsView.swift */; };
 		C18E185C52DFAC23171C2F49 /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89BBBE1D992BC359C869F114 /* Session.swift */; };
 		CC00821A89047FC5A9D5B8A1 /* TerminalSearchBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3A3F11B4021ECCA5F2B8172 /* TerminalSearchBar.swift */; };
@@ -37,7 +45,9 @@
 		1C5637445360D508E1A265A6 /* SplitPaneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitPaneView.swift; sourceTree = "<group>"; };
 		2705F34CBFF710F0B3B61093 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		2D5B37ABA0DB8467985088D4 /* SplitNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitNode.swift; sourceTree = "<group>"; };
+		2DB0D582624EB54FE1534670 /* TerminalHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalHistory.swift; sourceTree = "<group>"; };
 		3B05BA369355CCACE63EF27A /* claude */ = {isa = PBXFileReference; path = claude; sourceTree = "<group>"; };
+		403BA34C7DF212B769699C23 /* TerminalHistoryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalHistoryService.swift; sourceTree = "<group>"; };
 		454AD7737E071BBD07A15594 /* TabContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabContentView.swift; sourceTree = "<group>"; };
 		6B58E30059BB7E8BA5B7A18D /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
 		7BEAE08ADC09A5C7ABB2AC4A /* TabBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabBarView.swift; sourceTree = "<group>"; };
@@ -45,17 +55,23 @@
 		8AE3BADABDA7191D7EA65125 /* SplitMux.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SplitMux.entitlements; sourceTree = "<group>"; };
 		8CA791722194F1B9618ED6E1 /* ShellExecutor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellExecutor.swift; sourceTree = "<group>"; };
 		8F66998C1C01601FFB7495CB /* TabPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabPanelView.swift; sourceTree = "<group>"; };
+		94CFE7C5BD49F7C5AA2E257B /* AgentOrchestrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentOrchestrationView.swift; sourceTree = "<group>"; };
 		99894009C3CB2EA0D6F83741 /* codex */ = {isa = PBXFileReference; path = codex; sourceTree = "<group>"; };
+		9BCF76A9B67B992A48E88E9D /* SSHHostsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHHostsSection.swift; sourceTree = "<group>"; };
 		A29FB0FA907A1116BD352F22 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A3A3F11B4021ECCA5F2B8172 /* TerminalSearchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalSearchBar.swift; sourceTree = "<group>"; };
+		A9317565C43CD3745A495839 /* TerminalHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalHistoryView.swift; sourceTree = "<group>"; };
 		AF1A68A30C80A52EE65AF9EF /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		B30A8EA14811DEDE4BA3C8B0 /* PersistenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceService.swift; sourceTree = "<group>"; };
+		B791AC577EE279C637592AAE /* SSHHostEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHHostEditorView.swift; sourceTree = "<group>"; };
+		BDCEA570CCC09D2C9721C5FD /* SSHHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHHost.swift; sourceTree = "<group>"; };
 		D38A76841084268D605FC270 /* SettingsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsManager.swift; sourceTree = "<group>"; };
 		DA94958C7B3C9598143CD854 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		DCF1D3D1A0FF0AD4CA36A3A3 /* Tab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tab.swift; sourceTree = "<group>"; };
 		E5A887AD18F9732AED899516 /* SplitMux.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SplitMux.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E5C0C4193D054715A4CBB97F /* SplitMuxApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitMuxApp.swift; sourceTree = "<group>"; };
 		E6DECAC9A6DE7F237902D6A6 /* ClaudeHookService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeHookService.swift; sourceTree = "<group>"; };
+		FF4CD2689D4E5B2E8B1543FF /* SSHManagerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHManagerService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -64,7 +80,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6CD2868F7B2D8343DFD42D60 /* SwiftTerm in Frameworks */,
-				AAB1C2D3E4F50001CCDD0001 /* Sparkle in Frameworks */,
+				ADF1C4C302275A723244D70B /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -125,7 +141,9 @@
 				2705F34CBFF710F0B3B61093 /* AppState.swift */,
 				89BBBE1D992BC359C869F114 /* Session.swift */,
 				2D5B37ABA0DB8467985088D4 /* SplitNode.swift */,
+				BDCEA570CCC09D2C9721C5FD /* SSHHost.swift */,
 				DCF1D3D1A0FF0AD4CA36A3A3 /* Tab.swift */,
+				2DB0D582624EB54FE1534670 /* TerminalHistory.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -147,6 +165,8 @@
 				B30A8EA14811DEDE4BA3C8B0 /* PersistenceService.swift */,
 				D38A76841084268D605FC270 /* SettingsManager.swift */,
 				8CA791722194F1B9618ED6E1 /* ShellExecutor.swift */,
+				FF4CD2689D4E5B2E8B1543FF /* SSHManagerService.swift */,
+				403BA34C7DF212B769699C23 /* TerminalHistoryService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -154,9 +174,12 @@
 		C11B82949CBB904591BA9395 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				94CFE7C5BD49F7C5AA2E257B /* AgentOrchestrationView.swift */,
 				0450FA03717F0A10E8B13CCC /* CommandPaletteView.swift */,
 				AF1A68A30C80A52EE65AF9EF /* SettingsView.swift */,
 				1C5637445360D508E1A265A6 /* SplitPaneView.swift */,
+				B791AC577EE279C637592AAE /* SSHHostEditorView.swift */,
+				A9317565C43CD3745A495839 /* TerminalHistoryView.swift */,
 				A3A3F11B4021ECCA5F2B8172 /* TerminalSearchBar.swift */,
 			);
 			path = Components;
@@ -185,6 +208,7 @@
 			isa = PBXGroup;
 			children = (
 				6B58E30059BB7E8BA5B7A18D /* SidebarView.swift */,
+				9BCF76A9B67B992A48E88E9D /* SSHHostsSection.swift */,
 			);
 			path = Sidebar;
 			sourceTree = "<group>";
@@ -207,7 +231,7 @@
 			name = SplitMux;
 			packageProductDependencies = (
 				92BE316271B9F5387DA99138 /* SwiftTerm */,
-				AAB1C2D3E4F50002CCDD0001 /* Sparkle */,
+				BB51791940E0588FFF39BB96 /* Sparkle */,
 			);
 			productName = SplitMux;
 			productReference = E5A887AD18F9732AED899516 /* SplitMux.app */;
@@ -238,8 +262,8 @@
 			mainGroup = 3F873ACDA3EC485CD58EA9CD;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				8C66FED3D6B90386511912F8 /* XCRemoteSwiftPackageReference "Sparkle" */,
 				DC51D7C121B0673D0F8223C3 /* XCRemoteSwiftPackageReference "SwiftTerm" */,
-				AAB1C2D3E4F50003CCDD0001 /* XCRemoteSwiftPackageReference "Sparkle" */,
 			);
 			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
@@ -266,12 +290,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				650E2C89F7618CE147A6346A /* AgentOrchestrationView.swift in Sources */,
 				1C5951CC2DDF160D9069187D /* AppState.swift in Sources */,
 				EDE1EFD4FCFAF4CD7DD6F5DC /* ClaudeHookService.swift in Sources */,
 				9045A91F80361305B8F68C04 /* CommandPaletteView.swift in Sources */,
 				CF0E7EFE2E8FE8FDDEDF1CFF /* ContentView.swift in Sources */,
 				91988B19EB460BE7E6A877E1 /* NotificationService.swift in Sources */,
 				15B3480BBD6D0A4DDB2B9CBE /* PersistenceService.swift in Sources */,
+				80A672CEF423F5AFE68B7CE1 /* SSHHost.swift in Sources */,
+				B1A5B915D432D1063CE49A21 /* SSHHostEditorView.swift in Sources */,
+				1C313FAA67867659B8A6D867 /* SSHHostsSection.swift in Sources */,
+				42B91EE4C27E9D6DDC54E7F3 /* SSHManagerService.swift in Sources */,
 				C18E185C52DFAC23171C2F49 /* Session.swift in Sources */,
 				EA524D5C7F145B26382F1BAA /* SettingsManager.swift in Sources */,
 				B959724F3733DC1DF1145313 /* SettingsView.swift in Sources */,
@@ -284,6 +313,9 @@
 				66192DB1AF262B414D092C5A /* TabBarView.swift in Sources */,
 				D58AA81572470B3D1C582CBD /* TabContentView.swift in Sources */,
 				80D7C0A9D2062366C81138D7 /* TabPanelView.swift in Sources */,
+				AC8EB4C59954B7993FC17B26 /* TerminalHistory.swift in Sources */,
+				5416187C450CAE0F2AD9332E /* TerminalHistoryService.swift in Sources */,
+				75896E33B7F227DC257262C5 /* TerminalHistoryView.swift in Sources */,
 				CC00821A89047FC5A9D5B8A1 /* TerminalSearchBar.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -480,20 +512,20 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		8C66FED3D6B90386511912F8 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.6.0;
+			};
+		};
 		DC51D7C121B0673D0F8223C3 /* XCRemoteSwiftPackageReference "SwiftTerm" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/migueldeicaza/SwiftTerm";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 1.2.0;
-			};
-		};
-		AAB1C2D3E4F50003CCDD0001 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/sparkle-project/Sparkle";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.6.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -504,9 +536,9 @@
 			package = DC51D7C121B0673D0F8223C3 /* XCRemoteSwiftPackageReference "SwiftTerm" */;
 			productName = SwiftTerm;
 		};
-		AAB1C2D3E4F50002CCDD0001 /* Sparkle */ = {
+		BB51791940E0588FFF39BB96 /* Sparkle */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = AAB1C2D3E4F50003CCDD0001 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			package = 8C66FED3D6B90386511912F8 /* XCRemoteSwiftPackageReference "Sparkle" */;
 			productName = Sparkle;
 		};
 /* End XCSwiftPackageProductDependency section */

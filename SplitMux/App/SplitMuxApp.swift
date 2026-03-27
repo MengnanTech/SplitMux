@@ -95,12 +95,22 @@ struct SplitMuxApp: App {
                 .keyboardShortcut("f", modifiers: .command)
             }
 
-            // Window menu — command palette
+            // Window menu — command palette + agent dashboard + history
             CommandGroup(after: .windowArrangement) {
                 Button("Command Palette") {
                     NotificationCenter.default.post(name: .toggleCommandPalette, object: nil)
                 }
                 .keyboardShortcut("p", modifiers: .command)
+
+                Button("Agent Dashboard") {
+                    NotificationCenter.default.post(name: .showAgentDashboard, object: nil)
+                }
+                .keyboardShortcut("a", modifiers: [.command, .shift])
+
+                Button("Terminal History") {
+                    NotificationCenter.default.post(name: .toggleTerminalHistory, object: nil)
+                }
+                .keyboardShortcut("h", modifiers: [.command, .shift])
             }
 
             // App menu — Check for Updates

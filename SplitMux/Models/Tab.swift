@@ -13,6 +13,9 @@ class Tab: Identifiable, Hashable {
     var claudeStatus: ClaudeStatus?
     weak var terminalView: NSView?
 
+    /// SSH host ID for SSH terminal tabs
+    var sshHostID: UUID?
+
     init(id: UUID = UUID(), title: String, icon: String = "doc.text", content: TabContent = .text("")) {
         self.id = id
         self.title = title
@@ -28,6 +31,12 @@ class Tab: Identifiable, Hashable {
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
+
+    /// Whether this tab is an SSH connection
+    var isSSH: Bool {
+        if case .sshTerminal = content { return true }
+        return false
+    }
 }
 
 enum TabContent: Hashable {
@@ -35,4 +44,5 @@ enum TabContent: Hashable {
     case webURL(URL)
     case notes(String)
     case terminal
+    case sshTerminal(hostID: UUID)
 }

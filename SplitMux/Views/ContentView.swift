@@ -3,6 +3,7 @@ import SwiftUI
 struct ContentView: View {
     @Environment(AppState.self) private var appState
     @State private var showCommandPalette = false
+    @State private var showAgentDashboard = false
     @State private var sidebarWidth: CGFloat = 220
     @State private var dragStartWidth: CGFloat = 220
 
@@ -59,6 +60,12 @@ struct ContentView: View {
                 tab.lastNotificationMessage = nil
                 appState.updateDockBadge()
             }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .showAgentDashboard)) { _ in
+            showAgentDashboard = true
+        }
+        .sheet(isPresented: $showAgentDashboard) {
+            AgentOrchestrationView(isPresented: $showAgentDashboard)
         }
         // MARK: - Keyboard Shortcuts
         .background {
@@ -139,6 +146,20 @@ struct ContentView: View {
             }
                 .keyboardShortcut("w", modifiers: [.command, .shift])
                 .hidden()
+
+            // Cmd+Shift+H — Toggle Terminal History
+            Button("") {
+                NotificationCenter.default.post(name: .toggleTerminalHistory, object: nil)
+            }
+                .keyboardShortcut("h", modifiers: [.command, .shift])
+                .hidden()
+
+            // Cmd+Shift+A — Agent Dashboard
+            Button("") {
+                NotificationCenter.default.post(name: .showAgentDashboard, object: nil)
+            }
+                .keyboardShortcut("a", modifiers: [.command, .shift])
+                .hidden()
         }
     }
 
@@ -183,6 +204,8 @@ struct ContentView: View {
 
 extension Notification.Name {
     static let toggleTerminalSearch = Notification.Name("toggleTerminalSearch")
+    static let toggleTerminalHistory = Notification.Name("toggleTerminalHistory")
+    static let showAgentDashboard = Notification.Name("showAgentDashboard")
 }
 
 // MARK: - Sidebar Divider (NSView-based for reliable cursor)

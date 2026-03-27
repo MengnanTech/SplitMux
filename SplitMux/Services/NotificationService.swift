@@ -16,7 +16,16 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     }
 
     /// Send system notification + update dock badge
+    /// When tabIsActive=true AND app is focused, suppresses the banner (only plays sound)
     func send(title: String, body: String, tabIsActive: Bool = false) {
+        // Check if notifications are enabled
+        guard SettingsManager.shared.showNotificationBanners else { return }
+
+        // If the tab is active and app is focused, skip notification entirely
+        if tabIsActive && NSApp.isActive {
+            return
+        }
+
         let content = UNMutableNotificationContent()
         content.title = title
         content.body = body

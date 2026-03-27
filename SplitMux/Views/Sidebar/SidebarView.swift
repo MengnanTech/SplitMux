@@ -123,6 +123,12 @@ struct SidebarView: View {
                 .padding(.horizontal, 8)
             }
 
+            // Claude Agents section
+            AgentsSidebarSection()
+
+            // SSH Hosts section
+            SSHHostsSection()
+
             Spacer()
 
             // Footer

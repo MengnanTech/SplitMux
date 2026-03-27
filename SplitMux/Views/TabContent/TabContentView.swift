@@ -5,6 +5,7 @@ struct TabContentView: View {
     @Bindable var session: Session
     @State private var showSearch = false
     @State private var searchText = ""
+    @State private var showHistory = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -44,8 +45,20 @@ struct TabContentView: View {
                     }
                 }
             }
+
+            // Terminal history panel
+            if showHistory, let tabID = session.activeTabID {
+                TerminalHistoryView(tabID: tabID, isVisible: $showHistory)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
         }
         .background(SettingsManager.shared.theme.contentBackground)
+        .onReceive(NotificationCenter.default.publisher(for: .toggleTerminalHistory)) { _ in
+            withAnimation(.easeInOut(duration: 0.2)) { showHistory.toggle() }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .toggleTerminalSearch)) { _ in
+            withAnimation(.easeInOut(duration: 0.15)) { showSearch.toggle() }
+        }
         .contextMenu {
             Button {
                 addTab()

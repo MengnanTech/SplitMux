@@ -12,6 +12,9 @@ struct TabPanelView: View {
             case .terminal:
                 TerminalSwiftUIView(workingDirectory: workingDirectory, tab: tab, appState: appState)
 
+            case .sshTerminal:
+                TerminalSwiftUIView(workingDirectory: workingDirectory, tab: tab, appState: appState)
+
             case .text(let text):
                 TextEditorPanel(text: text) { newText in
                     tab.content = .text(newText)

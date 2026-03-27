@@ -61,6 +61,26 @@ class TerminalSessionDelegate: NSObject, LocalProcessTerminalViewDelegate, @unch
     func processTerminated(source: TerminalView, exitCode: Int32?) {
         let msg = "\(tabTitle) exited (\(exitCode ?? 0))"
         notify(message: msg, title: "Process Exited")
+
+        // SSH auto-reconnect
+        if let termView = source as? NotifyingTerminalView,
+           termView.sshAutoReconnect,
+           let sshCmd = termView.sshCommand {
+            Task { @MainActor in
+                // Update SSH host state
+                if let hostID = termView.sshHostID {
+                    SSHManagerService.shared.host(for: hostID)?.connectionState = .disconnected
+                }
+                // Wait 3 seconds then reconnect
+                try? await Task.sleep(for: .seconds(3))
+                if let hostID = termView.sshHostID {
+                    SSHManagerService.shared.host(for: hostID)?.connectionState = .connecting
+                }
+                self.suppressNextNotification = true
+                let bytes = Array((sshCmd + "\n").utf8)
+                termView.send(data: bytes[...])
+            }
+        }
     }
 
     /// Unified notification — marks tab, sends system notification with smart suppression, updates dock badge
@@ -92,6 +112,11 @@ class TerminalSessionDelegate: NSObject, LocalProcessTerminalViewDelegate, @unch
 
     @MainActor
     private func isTabActive() -> Bool {
+        return isTabCurrentlyActive()
+    }
+
+    @MainActor
+    func isTabCurrentlyActive() -> Bool {
         guard let tab, let appState else { return false }
         guard let session = appState.sessions.first(where: { $0.tabs.contains(where: { $0.id == tab.id }) }) else { return false }
         return session.id == appState.selectedSessionID && session.activeTabID == tab.id
@@ -108,11 +133,19 @@ class TerminalSessionDelegate: NSObject, LocalProcessTerminalViewDelegate, @unch
     }
 }
 
-// MARK: - Custom Terminal View (bell notification + search + font)
+// MARK: - Custom Terminal View (bell notification + search + font + history capture)
 
 class NotifyingTerminalView: LocalProcessTerminalView {
     var sessionDelegate: TerminalSessionDelegate?
     var cachedEnv: [String]?
+
+    /// Callback for terminal output capture (history recording)
+    var onDataReceived: ((Data) -> Void)?
+
+    /// SSH host ID for auto-reconnect
+    var sshHostID: UUID?
+    var sshAutoReconnect: Bool = false
+    var sshCommand: String?
 
     // MARK: - Search
 
@@ -178,6 +211,107 @@ class NotifyingTerminalView: LocalProcessTerminalView {
         feed(text: "\u{0C}")  // Form feed (Ctrl+L)
     }
 
+    // MARK: - Terminal Output Capture + Claude Detection
+
+    /// Whether Claude Code has been detected in this terminal
+    private var _claudeDetected: Bool = false
+    /// Clean text buffer for detection (ANSI stripped, main-thread only)
+    private var _cleanBuffer = ""
+    private let _bufferLimit = 2000
+
+    /// Intercept PTY output for history recording + Claude status detection
+    override func dataReceived(slice: ArraySlice<UInt8>) {
+        let data = Data(slice)
+        onDataReceived?(data)
+
+        // Convert to string and strip ANSI escape codes for detection
+        if let raw = String(data: data, encoding: .utf8) {
+            let clean = Self.stripANSI(raw)
+            if !clean.isEmpty {
+                DispatchQueue.main.async { [weak self] in
+                    self?.processClaudeDetection(clean)
+                }
+            }
+        }
+
+        super.dataReceived(slice: slice)
+    }
+
+    /// Strip ANSI escape sequences from text
+    private static func stripANSI(_ text: String) -> String {
+        // Match: ESC[ ... letter, ESC] ... BEL/ST, ESC( ... char
+        text.replacingOccurrences(
+            of: "\u{1B}\\[[0-9;?]*[A-Za-z]|\u{1B}\\][^\u{07}\u{1B}]*(?:\u{07}|\u{1B}\\\\)|\u{1B}\\([A-Za-z]|\u{1B}[=>]",
+            with: "",
+            options: .regularExpression
+        )
+    }
+
+    @MainActor
+    private func processClaudeDetection(_ cleanText: String) {
+        guard let delegate = sessionDelegate, let tab = delegate.tab else { return }
+
+        // Accumulate clean buffer
+        _cleanBuffer += cleanText
+        if _cleanBuffer.count > _bufferLimit {
+            _cleanBuffer = String(_cleanBuffer.suffix(_bufferLimit))
+        }
+
+        // Phase 1: Detect Claude Code startup
+        if !_claudeDetected {
+            // Look for Claude Code startup markers in accumulated buffer
+            if _cleanBuffer.contains("Claude Code v")
+                || _cleanBuffer.contains("for shortcuts")
+                || _cleanBuffer.contains("(1M context)")
+                || _cleanBuffer.contains("context)") {
+                _claudeDetected = true
+                tab.claudeStatus = .running
+                writeStatusFile(tabID: tab.id, status: "running")
+                print("[SplitMux] Claude Code detected in tab \(tab.id.uuidString.prefix(8))")
+            }
+            return
+        }
+
+        // Phase 2: Track status changes
+        if cleanText.contains("for shortcuts") || cleanText.contains("❯") {
+            // Claude is at its prompt, waiting for user input
+            if tab.claudeStatus != .idle {
+                tab.claudeStatus = .idle
+                writeStatusFile(tabID: tab.id, status: "idle")
+                print("[SplitMux] Claude status → idle")
+            }
+        } else if cleanText.contains("[Y/n]") || cleanText.contains("yes]")
+                    || cleanText.contains("Allow once") || cleanText.contains("Allow always") {
+            // Claude needs permission/confirmation
+            if tab.claudeStatus != .needsInput {
+                tab.claudeStatus = .needsInput
+                writeStatusFile(tabID: tab.id, status: "needs-input")
+                print("[SplitMux] Claude status → needs-input")
+                // Send notification
+                tab.hasNotification = true
+                tab.lastNotificationMessage = "Claude Code — Needs Input"
+                NotificationService.shared.send(
+                    title: "Needs Input",
+                    body: "Claude Code — Needs Input",
+                    tabIsActive: delegate.isTabCurrentlyActive()
+                )
+            }
+        } else {
+            // Any other output = Claude is working
+            let trimmed = cleanText.trimmingCharacters(in: .whitespacesAndNewlines)
+            if trimmed.count > 3 && tab.claudeStatus == .idle {
+                tab.claudeStatus = .running
+                writeStatusFile(tabID: tab.id, status: "running")
+                print("[SplitMux] Claude status → running")
+            }
+        }
+    }
+
+    private func writeStatusFile(tabID: UUID, status: String) {
+        let path = "/tmp/splitmux/\(tabID.uuidString)"
+        try? status.write(toFile: path, atomically: true, encoding: .utf8)
+    }
+
     /// Restart the shell process in a new working directory without visible `cd` command
     func restartProcess(in directory: String) {
         terminate()
@@ -221,14 +355,21 @@ class NotifyingTerminalView: LocalProcessTerminalView {
         super.bell(source: source)
         Task { @MainActor in
             guard let delegate = self.sessionDelegate, let tab = delegate.tab else { return }
-            tab.hasNotification = true
-            tab.lastNotificationMessage = "Bell — \(delegate.tabTitle)"
-            // Bell always sends system notification (never suppressed)
-            NotificationService.shared.send(
-                title: "Terminal Bell",
-                body: delegate.tabTitle,
-                tabIsActive: false
-            )
+            // Only notify if tab is NOT active (user is looking at another tab/app)
+            let tabIsActive = delegate.appState.flatMap { appState in
+                appState.sessions.first(where: { $0.tabs.contains(where: { $0.id == tab.id }) })
+                    .map { $0.id == appState.selectedSessionID && $0.activeTabID == tab.id }
+            } ?? false
+
+            if !tabIsActive || !NSApp.isActive {
+                tab.hasNotification = true
+                tab.lastNotificationMessage = "Bell — \(delegate.tabTitle)"
+                NotificationService.shared.send(
+                    title: "Terminal Bell",
+                    body: delegate.tabTitle,
+                    tabIsActive: tabIsActive
+                )
+            }
         }
     }
 }
@@ -301,6 +442,25 @@ struct TerminalSwiftUIView: NSViewRepresentable {
             dir = home
         }
 
+        // Wire up terminal output history recording
+        let history = TerminalHistoryService.shared.history(for: tab.id)
+        termView.onDataReceived = { data in
+            MainActor.assumeIsolated {
+                history.append(data: data)
+            }
+        }
+
+        // SSH terminal: start zsh then feed ssh command
+        if case .sshTerminal(let hostID) = tab.content {
+            termView.sshHostID = hostID
+            if let host = SSHManagerService.shared.host(for: hostID) {
+                termView.sshAutoReconnect = host.autoReconnect
+                termView.sshCommand = host.sshCommand
+                host.connectionState = .connecting
+                host.connectedTabID = tab.id
+            }
+        }
+
         termView.startProcess(
             executable: "/bin/zsh",
             args: ["-l"],
@@ -308,6 +468,22 @@ struct TerminalSwiftUIView: NSViewRepresentable {
             execName: "-zsh",
             currentDirectory: dir
         )
+
+        // For SSH tabs, send the ssh command to the shell process
+        if case .sshTerminal(let hostID) = tab.content {
+            if let host = SSHManagerService.shared.host(for: hostID) {
+                // Suppress the "command finished" notification for auto-typed SSH commands
+                context.coordinator.suppressNextNotification = true
+                // Small delay to let shell initialize, then type the command
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    let bytes = Array((host.sshCommand + "\n").utf8)
+                    termView.send(data: bytes[...])
+                    MainActor.assumeIsolated {
+                        host.connectionState = .connected
+                    }
+                }
+            }
+        }
 
         // Start Claude hook monitoring for this tab
         let tabRef = tab

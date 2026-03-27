@@ -1,0 +1,247 @@
+import SwiftUI
+
+/// Terminal output history browser with search, export, and replay
+struct TerminalHistoryView: View {
+    let tabID: UUID
+    @Binding var isVisible: Bool
+    @State private var searchQuery = ""
+    @State private var searchResults: [(entryIndex: Int, range: Range<String.Index>)] = []
+    @State private var selectedResultIndex = 0
+
+    private var history: TerminalHistory {
+        TerminalHistoryService.shared.history(for: tabID)
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header bar
+            HStack(spacing: 12) {
+                Image(systemName: "clock.arrow.circlepath")
+                    .foregroundStyle(.blue)
+
+                Text("Terminal History")
+                    .font(.system(.caption, design: .monospaced))
+                    .foregroundStyle(Color(white: 0.6))
+
+                Spacer()
+
+                // Stats
+                HStack(spacing: 8) {
+                    Text("\(history.entries.count) chunks")
+                    Text(history.sizeString)
+                    Text(formatDuration(history.duration))
+                }
+                .font(.system(.caption2, design: .monospaced))
+                .foregroundStyle(Color(white: 0.4))
+
+                // Replay controls
+                if history.isReplaying {
+                    Button {
+                        history.stopReplay()
+                    } label: {
+                        Image(systemName: "stop.fill")
+                            .foregroundStyle(.red)
+                    }
+                    .buttonStyle(.plain)
+
+                    Text("\(history.replayPosition)/\(history.entries.count)")
+                        .font(.system(.caption2, design: .monospaced))
+                        .foregroundStyle(.blue)
+                }
+
+                // Export button
+                Button { exportHistory() } label: {
+                    Image(systemName: "square.and.arrow.up")
+                        .font(.system(size: 11))
+                        .foregroundStyle(Color(white: 0.5))
+                }
+                .buttonStyle(.plain)
+                .help("Export history")
+
+                // Close button
+                Button { isVisible = false } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(Color(white: 0.5))
+                        .frame(width: 20, height: 20)
+                        .background(Color.white.opacity(0.08))
+                        .clipShape(Circle())
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color(red: 0.08, green: 0.08, blue: 0.1))
+
+            // Search bar
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 11))
+                    .foregroundStyle(Color(white: 0.4))
+
+                TextField("Search history...", text: $searchQuery)
+                    .textFieldStyle(.plain)
+                    .font(.system(.caption, design: .monospaced))
+                    .onSubmit { performSearch() }
+
+                if !searchResults.isEmpty {
+                    Text("\(selectedResultIndex + 1)/\(searchResults.count)")
+                        .font(.system(.caption2, design: .monospaced))
+                        .foregroundStyle(Color(white: 0.5))
+
+                    Button { navigateResult(-1) } label: {
+                        Image(systemName: "chevron.up")
+                            .font(.system(size: 10))
+                    }
+                    .buttonStyle(.plain)
+
+                    Button { navigateResult(1) } label: {
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 10))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(Color(red: 0.06, green: 0.06, blue: 0.08))
+
+            Divider().overlay(Color(white: 0.15))
+
+            // History content
+            ScrollViewReader { proxy in
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 0) {
+                        ForEach(Array(history.entries.enumerated()), id: \.offset) { index, entry in
+                            HStack(alignment: .top, spacing: 8) {
+                                // Timestamp
+                                Text(formatTime(entry.timestamp))
+                                    .font(.system(size: 9, design: .monospaced))
+                                    .foregroundStyle(Color(white: 0.3))
+                                    .frame(width: 60, alignment: .trailing)
+
+                                // Content
+                                Text(entry.text)
+                                    .font(.system(size: 11, design: .monospaced))
+                                    .foregroundStyle(Color(white: 0.75))
+                                    .textSelection(.enabled)
+                            }
+                            .id(index)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 1)
+                            .background(
+                                isHighlighted(index) ? Color.yellow.opacity(0.15) : Color.clear
+                            )
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+                .onChange(of: selectedResultIndex) { _, newValue in
+                    if !searchResults.isEmpty {
+                        let entryIndex = searchResults[newValue].entryIndex
+                        proxy.scrollTo(entryIndex, anchor: .center)
+                    }
+                }
+            }
+
+            // Replay controls bar
+            HStack(spacing: 12) {
+                Button {
+                    startReplay()
+                } label: {
+                    Label("Replay", systemImage: "play.fill")
+                        .font(.system(.caption, design: .monospaced))
+                }
+                .buttonStyle(.plain)
+                .disabled(history.entries.isEmpty || history.isReplaying)
+
+                Spacer()
+
+                // Speed picker
+                HStack(spacing: 4) {
+                    Text("Speed:")
+                        .font(.system(.caption2, design: .monospaced))
+                        .foregroundStyle(Color(white: 0.4))
+
+                    Picker("", selection: Binding(
+                        get: { history.replaySpeed },
+                        set: { history.replaySpeed = $0 }
+                    )) {
+                        Text("0.5x").tag(0.5)
+                        Text("1x").tag(1.0)
+                        Text("2x").tag(2.0)
+                        Text("4x").tag(4.0)
+                    }
+                    .pickerStyle(.segmented)
+                    .frame(width: 180)
+                }
+
+                // Recording toggle
+                HStack(spacing: 4) {
+                    Circle()
+                        .fill(history.isRecording ? Color.red : Color(white: 0.3))
+                        .frame(width: 6, height: 6)
+                    Text(history.isRecording ? "Recording" : "Paused")
+                        .font(.system(.caption2, design: .monospaced))
+                        .foregroundStyle(Color(white: 0.4))
+                }
+                .onTapGesture {
+                    history.isRecording.toggle()
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color(red: 0.08, green: 0.08, blue: 0.1))
+        }
+        .frame(height: 280)
+        .background(Color(red: 0.05, green: 0.05, blue: 0.07))
+    }
+
+    // MARK: - Actions
+
+    private func performSearch() {
+        searchResults = history.search(query: searchQuery)
+        selectedResultIndex = 0
+    }
+
+    private func navigateResult(_ offset: Int) {
+        guard !searchResults.isEmpty else { return }
+        selectedResultIndex = (selectedResultIndex + offset + searchResults.count) % searchResults.count
+    }
+
+    private func isHighlighted(_ entryIndex: Int) -> Bool {
+        searchResults.contains { $0.entryIndex == entryIndex }
+    }
+
+    private func exportHistory() {
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.plainText]
+        panel.nameFieldStringValue = "terminal-history-\(tabID.uuidString.prefix(8)).txt"
+
+        if panel.runModal() == .OK, let url = panel.url {
+            try? history.exportToFile(url: url, includeTimestamps: true)
+        }
+    }
+
+    private func startReplay() {
+        // TODO: In a full implementation, this would feed data to a separate read-only terminal
+        // For now, just animate the position
+        history.startReplay { _ in
+            // Replay data would be fed to terminal
+        }
+    }
+
+    // MARK: - Formatting
+
+    private func formatTime(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss"
+        return formatter.string(from: date)
+    }
+
+    private func formatDuration(_ seconds: TimeInterval) -> String {
+        if seconds < 60 { return "\(Int(seconds))s" }
+        if seconds < 3600 { return "\(Int(seconds / 60))m" }
+        return "\(Int(seconds / 3600))h \(Int((seconds / 60).truncatingRemainder(dividingBy: 60)))m"
+    }
+}

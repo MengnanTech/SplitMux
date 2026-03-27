@@ -1,5 +1,6 @@
 import Foundation
 
+@MainActor
 @Observable
 class Session: Identifiable, Hashable {
     let id: UUID
@@ -44,11 +45,11 @@ class Session: Identifiable, Hashable {
         self.workingDirectory = workingDirectory ?? FileManager.default.homeDirectoryForCurrentUser.path
     }
 
-    static func == (lhs: Session, rhs: Session) -> Bool {
+    nonisolated static func == (lhs: Session, rhs: Session) -> Bool {
         lhs.id == rhs.id
     }
 
-    func hash(into hasher: inout Hasher) {
+    nonisolated func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
 
@@ -74,13 +75,14 @@ class Session: Identifiable, Hashable {
         tabs.compactMap(\.lastNotificationMessage).last
     }
 
-    /// Aggregate Claude status across all tabs (prioritizes running > needs-input > idle)
+    /// Aggregate Claude status across all tabs (prioritizes running > needs-input > idle > completed)
     var claudeStatus: ClaudeStatus? {
         let statuses = tabs.compactMap(\.claudeStatus)
         if statuses.isEmpty { return nil }
         if statuses.contains(.running) { return .running }
         if statuses.contains(.needsInput) { return .needsInput }
         if statuses.contains(.idle) { return .idle }
+        if statuses.contains(.completed) { return .completed }
         return nil
     }
 
@@ -90,6 +92,19 @@ class Session: Identifiable, Hashable {
     }
 
     func removeTab(_ tabID: UUID) {
+        // Clean up SSH host state
+        if let tab = tabs.first(where: { $0.id == tabID }),
+           case .sshTerminal(let hostID) = tab.content {
+            SSHManagerService.shared.host(for: hostID)?.connectionState = .disconnected
+            SSHManagerService.shared.host(for: hostID)?.connectedTabID = nil
+        }
+
+        // Clean up terminal history
+        TerminalHistoryService.shared.removeHistory(for: tabID)
+
+        // Clean up Claude hook monitoring
+        ClaudeHookService.shared.stopMonitoring(tabID: tabID)
+
         tabs.removeAll { $0.id == tabID }
         // Also remove from split layout
         if let root = splitRoot {
@@ -135,9 +150,10 @@ class Session: Identifiable, Hashable {
     /// Start polling git branch for this session's working directory
     func startGitBranchPolling() {
         refreshGitBranch()
-        gitBranchTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] _ in
-            guard let self else { return }
-            self.refreshGitBranch()
+        gitBranchTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { _ in
+            MainActor.assumeIsolated { [weak self] in
+                self?.refreshGitBranch()
+            }
         }
     }
 
@@ -148,31 +164,33 @@ class Session: Identifiable, Hashable {
 
     private func refreshGitBranch() {
         let dir = workingDirectory
-        Task.detached { [weak self] in
-            let task = Process()
-            task.executableURL = URL(fileURLWithPath: "/usr/bin/git")
-            task.arguments = ["rev-parse", "--abbrev-ref", "HEAD"]
-            task.currentDirectoryURL = URL(fileURLWithPath: dir)
-            task.standardError = FileHandle.nullDevice
+        Task { [weak self] in
+            let result = await Task.detached {
+                Session.fetchGitBranch(in: dir)
+            }.value
+            self?.gitBranch = result
+        }
+    }
 
-            let pipe = Pipe()
-            task.standardOutput = pipe
+    private nonisolated static func fetchGitBranch(in dir: String) -> String? {
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+        task.arguments = ["rev-parse", "--abbrev-ref", "HEAD"]
+        task.currentDirectoryURL = URL(fileURLWithPath: dir)
+        task.standardError = FileHandle.nullDevice
 
-            var result: String?
-            do {
-                try task.run()
-                task.waitUntilExit()
-                let data = pipe.fileHandleForReading.readDataToEndOfFile()
-                let branch = String(data: data, encoding: .utf8)?
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                result = (task.terminationStatus == 0 && !(branch?.isEmpty ?? true)) ? branch : nil
-            } catch {
-                result = nil
-            }
+        let pipe = Pipe()
+        task.standardOutput = pipe
 
-            await MainActor.run {
-                self?.gitBranch = result
-            }
+        do {
+            try task.run()
+            task.waitUntilExit()
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            let branch = String(data: data, encoding: .utf8)?
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            return (task.terminationStatus == 0 && !(branch?.isEmpty ?? true)) ? branch : nil
+        } catch {
+            return nil
         }
     }
 }
