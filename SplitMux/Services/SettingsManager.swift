@@ -192,6 +192,73 @@ enum AppTheme: String, CaseIterable, Identifiable {
         }
     }
 
+    // Light mode target palette:
+    // appCanvasBackground: warm off-white
+    // chromeSurface: elevated white
+    // glassOverlay: low-alpha cool fog
+    // brandCoral: primary action accent
+    // brandAqua: secondary technical accent
+
+    /// Base canvas background for the app shell.
+    var appCanvasBackground: Color {
+        switch self {
+        case .light: return Color(red: 0.985, green: 0.978, blue: 0.968)
+        case .dark: return contentBackground
+        case .solarized: return contentBackground
+        case .monokai: return contentBackground
+        }
+    }
+
+    /// Elevated chrome surface for panels, cards, and controls.
+    var chromeSurfaceBackground: Color {
+        switch self {
+        case .light: return Color.white
+        case .dark: return elevatedSurface
+        case .solarized: return elevatedSurface
+        case .monokai: return elevatedSurface
+        }
+    }
+
+    /// Low-alpha overlay used for light shell glass and transient surfaces.
+    var chromeOverlay: Color {
+        switch self {
+        case .light: return Color(red: 0.90, green: 0.94, blue: 0.99).opacity(0.44)
+        case .dark: return subtleOverlay
+        case .solarized: return subtleOverlay
+        case .monokai: return subtleOverlay
+        }
+    }
+
+    /// Primary action accent for the refreshed light shell.
+    var brandCoral: Color {
+        switch self {
+        case .light: return Color(red: 0.95, green: 0.47, blue: 0.34)
+        case .dark: return accentColor
+        case .solarized: return accentColor
+        case .monokai: return accentColor
+        }
+    }
+
+    /// Secondary technical accent for the refreshed light shell.
+    var brandAqua: Color {
+        switch self {
+        case .light: return Color(red: 0.16, green: 0.68, blue: 0.76)
+        case .dark: return accentColor
+        case .solarized: return accentColor
+        case .monokai: return accentColor
+        }
+    }
+
+    /// Shell shadow tuned for the lighter chrome stack.
+    var chromeShadow: Color {
+        switch self {
+        case .light: return Color.black.opacity(0.10)
+        case .dark: return Color.black.opacity(0.45)
+        case .solarized: return Color.black.opacity(0.35)
+        case .monokai: return Color.black.opacity(0.40)
+        }
+    }
+
     /// Selected item background
     var selectedBackground: Color {
         switch self {
