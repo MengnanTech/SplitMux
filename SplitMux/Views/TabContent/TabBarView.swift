@@ -319,24 +319,15 @@ struct TabItemView: View {
                         }
                     } else if isActive {
                         RoundedRectangle(cornerRadius: 6)
-                            .fill(.ultraThinMaterial)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 6)
-                                    .fill(theme.activeTabBackground.opacity(0.7))
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 6)
-                                    .strokeBorder(theme.subtleBorder.opacity(0.3), lineWidth: 0.5)
-                            )
-                            .shadow(color: Color.black.opacity(0.12), radius: 2, y: 1)
+                            .fill(theme.activeTabBackground.opacity(0.7))
                     } else if isHovered {
                         RoundedRectangle(cornerRadius: 6)
                             .fill(theme.hoverBackground.opacity(0.4))
                     }
                 }
             )
-            .padding(.vertical, usesLightChrome ? 4 : 5)
-            .padding(.horizontal, usesLightChrome ? (isActive ? 2 : 1) : 2)
+            .padding(.vertical, 0)
+            .padding(.horizontal, 0)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

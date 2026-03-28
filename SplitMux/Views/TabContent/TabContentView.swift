@@ -12,7 +12,6 @@ struct TabContentView: View {
         VStack(spacing: 0) {
             // Tab bar — always visible for discoverability
             TabBarView(session: session, onAddTab: addTab)
-                .padding(.top, 6) // Minimal space below traffic lights
 
             // Breadcrumb path bar
             BreadcrumbBar(workingDirectory: session.workingDirectory, gitBranch: session.gitBranch)
