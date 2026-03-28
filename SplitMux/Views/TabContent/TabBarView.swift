@@ -9,15 +9,14 @@ struct TabBarView: View {
     @State private var renameText = ""
     @State private var draggedTabID: UUID?
 
-    private var barBg: Color { SettingsManager.shared.theme.tabBarBackground }
-    private let dividerColor = Color(white: 0.2)
+    private var theme: AppTheme { SettingsManager.shared.theme }
 
     var body: some View {
         HStack(spacing: 0) {
             // Tabs — equal width, fill the bar
             ForEach(Array(session.tabs.enumerated()), id: \.element.id) { index, tab in
                 if index > 0 {
-                    dividerColor.frame(width: 1, height: 20)
+                    theme.subtleBorder.frame(width: 1, height: 20)
                 }
 
                 TabItemView(
@@ -105,18 +104,18 @@ struct TabBarView: View {
             }
 
             // Add button — fixed width on the right
-            dividerColor.frame(width: 1, height: 20)
+            theme.subtleBorder.frame(width: 1, height: 20)
 
             Button(action: onAddTab) {
                 Image(systemName: "plus")
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(Color(white: 0.5))
+                    .foregroundStyle(theme.sectionHeaderText)
                     .frame(width: 40, height: 38)
             }
             .buttonStyle(.plain)
         }
         .frame(height: 38)
-        .background(barBg)
+        .background(theme.tabBarBackground)
         .alert("Rename Tab", isPresented: Binding(
             get: { renamingTab != nil },
             set: { if !$0 { renamingTab = nil } }
@@ -198,24 +197,20 @@ struct TabItemView: View {
     var onClose: () -> Void
 
     @State private var isHovered = false
+    private var theme: AppTheme { SettingsManager.shared.theme }
 
     var body: some View {
         Button(action: onSelect) {
             HStack(spacing: 0) {
-                // Close button area (left)
-                ZStack {
-                    if isActive || isHovered {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 9, weight: .medium))
-                            .foregroundStyle(Color(white: 0.45))
-                            .frame(width: 18, height: 18)
-                            .background(Color.white.opacity(0.08))
-                            .clipShape(Circle())
-                            .contentShape(Circle())
-                            .onTapGesture { onClose() }
-                    }
+                // Shortcut badge (left)
+                if index < 9 {
+                    Text("\u{2318}\(index + 1)")
+                        .font(.system(size: 10))
+                        .foregroundStyle(isActive ? theme.iconDimmed : theme.disabledText)
+                        .frame(width: 28)
+                } else {
+                    Spacer().frame(width: 28)
                 }
-                .frame(width: 28)
 
                 Spacer(minLength: 0)
 
@@ -251,28 +246,33 @@ struct TabItemView: View {
                 // Title center
                 Text(tabDisplayTitle)
                     .font(.system(size: 12))
-                    .foregroundStyle(tab.hasNotification && !isActive ? Color.orange : (isActive ? .white : Color(white: 0.55)))
+                    .foregroundStyle(tab.hasNotification && !isActive ? Color.orange : (isActive ? theme.primaryText : theme.secondaryText))
                     .lineLimit(1)
 
                 Spacer(minLength: 0)
 
-                // Shortcut badge (right)
-                if index < 9 {
-                    Text("\u{2318}\(index + 1)")
-                        .font(.system(size: 10))
-                        .foregroundStyle(Color(white: isActive ? 0.4 : 0.25))
-                        .frame(width: 28)
-                } else {
-                    Spacer().frame(width: 28)
+                // Close button (right side — macOS convention)
+                ZStack {
+                    if isActive || isHovered {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 9, weight: .medium))
+                            .foregroundStyle(theme.tertiaryText)
+                            .frame(width: 18, height: 18)
+                            .background(Color.white.opacity(0.08))
+                            .clipShape(Circle())
+                            .contentShape(Circle())
+                            .onTapGesture { onClose() }
+                    }
                 }
+                .frame(width: 28)
             }
             .padding(.horizontal, 6)
             .frame(height: 28)
             .background(
                 Capsule()
                     .fill(isActive
-                          ? Color(white: 0.25)
-                          : isHovered ? Color(white: 0.18) : Color.clear)
+                          ? theme.activeTabBackground
+                          : isHovered ? theme.hoverBackground : Color.clear)
             )
             .padding(.vertical, 5)
             .padding(.horizontal, 2)
@@ -285,7 +285,7 @@ struct TabItemView: View {
 
     private var tabDisplayTitle: String {
         if case .terminal = tab.content {
-            return "~ (-\(tab.title))"
+            return tab.title
         }
         if case .sshTerminal = tab.content {
             return "ssh: \(tab.title)"

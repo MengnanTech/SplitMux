@@ -52,7 +52,7 @@ struct SettingsView: View {
                     }
             }
         }
-        .frame(width: 450, height: 400)
+        .frame(width: 500, height: 460)
         .padding(.horizontal)
         .padding(.bottom)
     }

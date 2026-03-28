@@ -179,4 +179,122 @@ enum AppTheme: String, CaseIterable, Identifiable {
         default: return .dark
         }
     }
+
+    // MARK: - Design Tokens (unified from hardcoded values)
+
+    /// Hover background for list items and interactive elements
+    var hoverBackground: Color {
+        switch self {
+        case .dark: return Color(white: 0.15)
+        case .light: return Color(white: 0.88)
+        case .solarized: return Color(red: 0.04, green: 0.2, blue: 0.25)
+        case .monokai: return Color(red: 0.18, green: 0.19, blue: 0.16)
+        }
+    }
+
+    /// Selected item background
+    var selectedBackground: Color {
+        switch self {
+        case .dark: return Color(red: 0.18, green: 0.2, blue: 0.25)
+        case .light: return Color(red: 0.85, green: 0.9, blue: 0.95)
+        case .solarized: return Color(red: 0.04, green: 0.22, blue: 0.27)
+        case .monokai: return Color(red: 0.2, green: 0.21, blue: 0.18)
+        }
+    }
+
+    /// Tertiary text — metadata, timestamps, less important info
+    var tertiaryText: Color {
+        switch self {
+        case .dark: return Color(white: 0.45)
+        case .light: return Color(white: 0.5)
+        case .solarized: return Color(red: 0.35, green: 0.43, blue: 0.46)
+        case .monokai: return Color(white: 0.45)
+        }
+    }
+
+    /// Disabled/dimmed text — paths, timestamps, least important info
+    var disabledText: Color {
+        switch self {
+        case .dark: return Color(white: 0.35)
+        case .light: return Color(white: 0.6)
+        case .solarized: return Color(red: 0.3, green: 0.38, blue: 0.4)
+        case .monokai: return Color(white: 0.35)
+        }
+    }
+
+    /// Subtle borders and dividers
+    var subtleBorder: Color {
+        switch self {
+        case .dark: return Color(white: 0.2)
+        case .light: return Color(white: 0.78)
+        case .solarized: return Color(red: 0.1, green: 0.25, blue: 0.3)
+        case .monokai: return Color(white: 0.22)
+        }
+    }
+
+    /// Section header text (SESSIONS, SSH HOSTS, etc.)
+    var sectionHeaderText: Color {
+        switch self {
+        case .dark: return Color(white: 0.5)
+        case .light: return Color(white: 0.45)
+        case .solarized: return Color(red: 0.4, green: 0.48, blue: 0.51)
+        case .monokai: return Color(white: 0.5)
+        }
+    }
+
+    /// Elevated surface backgrounds (command palette, history panel, overlays)
+    var elevatedSurface: Color {
+        switch self {
+        case .dark: return Color(red: 0.08, green: 0.08, blue: 0.1)
+        case .light: return Color(white: 0.96)
+        case .solarized: return Color(red: 0.0, green: 0.12, blue: 0.16)
+        case .monokai: return Color(red: 0.11, green: 0.12, blue: 0.1)
+        }
+    }
+
+    /// Subtle white overlay for buttons/badges
+    var subtleOverlay: Color {
+        switch self {
+        case .dark: return Color.white.opacity(0.06)
+        case .light: return Color.black.opacity(0.06)
+        case .solarized: return Color.white.opacity(0.06)
+        case .monokai: return Color.white.opacity(0.06)
+        }
+    }
+
+    /// Active tab / active element capsule background
+    var activeTabBackground: Color {
+        switch self {
+        case .dark: return Color(white: 0.25)
+        case .light: return Color(white: 0.82)
+        case .solarized: return Color(red: 0.06, green: 0.24, blue: 0.3)
+        case .monokai: return Color(red: 0.22, green: 0.23, blue: 0.2)
+        }
+    }
+
+    /// Inactive/body text — used for non-selected item labels
+    var bodyText: Color {
+        switch self {
+        case .dark: return Color(white: 0.7)
+        case .light: return Color(white: 0.3)
+        case .solarized: return Color(red: 0.45, green: 0.52, blue: 0.55)
+        case .monokai: return Color(white: 0.7)
+        }
+    }
+
+    /// Chevron / icon dimmed color
+    var iconDimmed: Color {
+        switch self {
+        case .dark: return Color(white: 0.4)
+        case .light: return Color(white: 0.55)
+        case .solarized: return Color(red: 0.35, green: 0.43, blue: 0.46)
+        case .monokai: return Color(white: 0.4)
+        }
+    }
+
+    /// Split pane divider color (normal state)
+    var splitDivider: Color { subtleBorder }
+
+    /// Split pane divider color (hover state)
+    var splitDividerHover: Color { accentColor.opacity(0.6) }
 }

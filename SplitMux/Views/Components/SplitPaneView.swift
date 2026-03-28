@@ -6,13 +6,15 @@ struct SplitPaneView: View {
     let session: Session
     let node: SplitNode
 
+    private var theme: AppTheme { SettingsManager.shared.theme }
+
     var body: some View {
         switch node {
         case .tab(let tabID):
             if let tab = session.tabs.first(where: { $0.id == tabID }) {
                 splitTabPanel(tab: tab)
             } else {
-                Color.black
+                theme.contentBackground
             }
 
         case .horizontal(let first, let second, let ratio):
@@ -35,7 +37,14 @@ struct SplitPaneView: View {
 
     @ViewBuilder
     private func splitTabPanel(tab: Tab) -> some View {
+        let isActive = tab.id == session.activeTabID
+
         TabPanelView(tab: tab, workingDirectory: session.workingDirectory)
+            .overlay(
+                RoundedRectangle(cornerRadius: 2)
+                    .stroke(isActive ? theme.accentColor.opacity(0.5) : .clear, lineWidth: 1.5)
+                    .padding(1)
+            )
             .onTapGesture {
                 session.activeTabID = tab.id
             }
@@ -51,6 +60,9 @@ struct HSplitContent: View {
     let ratio: Double
 
     @State private var currentRatio: Double
+    @State private var isDividerHovered = false
+
+    private var theme: AppTheme { SettingsManager.shared.theme }
 
     init(session: Session, first: SplitNode, second: SplitNode, ratio: Double) {
         self.session = session
@@ -66,11 +78,13 @@ struct HSplitContent: View {
                 SplitPaneView(session: session, node: first)
                     .frame(width: geo.size.width * currentRatio - 2)
 
-                // Draggable divider
+                // Draggable divider with hover highlight
                 Rectangle()
-                    .fill(Color(white: 0.2))
-                    .frame(width: 4)
+                    .fill(isDividerHovered ? theme.splitDividerHover : theme.splitDivider)
+                    .frame(width: isDividerHovered ? 6 : 4)
+                    .animation(.easeInOut(duration: 0.12), value: isDividerHovered)
                     .onHover { hovering in
+                        isDividerHovered = hovering
                         if hovering {
                             NSCursor.resizeLeftRight.push()
                         } else {
@@ -94,7 +108,6 @@ struct HSplitContent: View {
     }
 
     private func updateSessionRatio() {
-        // Walk the tree to find and update this node's ratio
         if let root = session.splitRoot {
             session.splitRoot = updateRatioInTree(root, target: (first, second), newRatio: currentRatio)
         }
@@ -131,6 +144,9 @@ struct VSplitContent: View {
     let ratio: Double
 
     @State private var currentRatio: Double
+    @State private var isDividerHovered = false
+
+    private var theme: AppTheme { SettingsManager.shared.theme }
 
     init(session: Session, first: SplitNode, second: SplitNode, ratio: Double) {
         self.session = session
@@ -147,9 +163,11 @@ struct VSplitContent: View {
                     .frame(height: geo.size.height * currentRatio - 2)
 
                 Rectangle()
-                    .fill(Color(white: 0.2))
-                    .frame(height: 4)
+                    .fill(isDividerHovered ? theme.splitDividerHover : theme.splitDivider)
+                    .frame(height: isDividerHovered ? 6 : 4)
+                    .animation(.easeInOut(duration: 0.12), value: isDividerHovered)
                     .onHover { hovering in
+                        isDividerHovered = hovering
                         if hovering {
                             NSCursor.resizeUpDown.push()
                         } else {

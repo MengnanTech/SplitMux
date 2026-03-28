@@ -6,6 +6,8 @@ struct CommandPaletteView: View {
     @State private var query = ""
     @State private var selectedIndex = 0
 
+    private var theme: AppTheme { SettingsManager.shared.theme }
+
     private var results: [PaletteItem] {
         let items = buildItems()
         if query.isEmpty { return items }
@@ -20,21 +22,21 @@ struct CommandPaletteView: View {
             // Search field
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass")
-                    .foregroundStyle(Color(white: 0.5))
+                    .foregroundStyle(theme.sectionHeaderText)
 
                 TextField("Search sessions, tabs, commands...", text: $query)
                     .textFieldStyle(.plain)
                     .font(.system(size: 15))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(theme.primaryText)
                     .onSubmit {
                         executeSelected()
                     }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
-            .background(Color(red: 0.12, green: 0.12, blue: 0.14))
+            .background(theme.tabBarBackground)
 
-            Divider().overlay(Color(white: 0.2))
+            Divider().overlay(theme.subtleBorder)
 
             // Results
             ScrollViewReader { proxy in
@@ -57,7 +59,7 @@ struct CommandPaletteView: View {
             .frame(maxHeight: 300)
         }
         .frame(width: 500)
-        .background(Color(red: 0.08, green: 0.08, blue: 0.1))
+        .background(theme.elevatedSurface)
         .clipShape(RoundedRectangle(cornerRadius: 10))
         .shadow(color: .black.opacity(0.5), radius: 20)
         .onKeyPress(.upArrow) {
@@ -89,6 +91,7 @@ struct CommandPaletteView: View {
                 title: session.name,
                 subtitle: session.displayPath,
                 kind: .session,
+                shortcut: nil,
                 action: {
                     appState.selectedSessionID = session.id
                 }
@@ -101,6 +104,7 @@ struct CommandPaletteView: View {
                     title: tab.title,
                     subtitle: "in \(session.name)",
                     kind: .tab,
+                    shortcut: nil,
                     action: {
                         appState.selectedSessionID = session.id
                         session.activeTabID = tab.id
@@ -109,13 +113,14 @@ struct CommandPaletteView: View {
             }
         }
 
-        // Commands
+        // Commands with keyboard shortcuts
         items.append(PaletteItem(
             id: "cmd-new-session",
             icon: "plus.rectangle",
             title: "New Session",
             subtitle: "Create a new terminal session",
             kind: .command,
+            shortcut: "\u{2318}N",
             action: { appState.addSession() }
         ))
         items.append(PaletteItem(
@@ -124,6 +129,7 @@ struct CommandPaletteView: View {
             title: "New Tab",
             subtitle: "Add a tab to current session",
             kind: .command,
+            shortcut: "\u{2318}T",
             action: {
                 if let session = appState.selectedSession {
                     let tab = Tab(title: "zsh", icon: "terminal", content: .terminal)
@@ -137,6 +143,7 @@ struct CommandPaletteView: View {
             title: "Split Right",
             subtitle: "Split active pane horizontally",
             kind: .command,
+            shortcut: "\u{2318}D",
             action: {
                 appState.selectedSession?.splitActiveTab(direction: .right)
             }
@@ -147,8 +154,20 @@ struct CommandPaletteView: View {
             title: "Split Down",
             subtitle: "Split active pane vertically",
             kind: .command,
+            shortcut: "\u{21E7}\u{2318}D",
             action: {
                 appState.selectedSession?.splitActiveTab(direction: .down)
+            }
+        ))
+        items.append(PaletteItem(
+            id: "cmd-search",
+            icon: "magnifyingglass",
+            title: "Search Terminal",
+            subtitle: "Find text in terminal output",
+            kind: .command,
+            shortcut: "\u{2318}F",
+            action: {
+                NotificationCenter.default.post(name: .toggleTerminalSearch, object: nil)
             }
         ))
         items.append(PaletteItem(
@@ -157,30 +176,29 @@ struct CommandPaletteView: View {
             title: "Open Settings",
             subtitle: "Configure SplitMux preferences",
             kind: .command,
+            shortcut: nil,
             action: {
                 NotificationCenter.default.post(name: .openSettings, object: nil)
             }
         ))
-
-        // Terminal History
         items.append(PaletteItem(
             id: "cmd-history",
             icon: "clock.arrow.circlepath",
             title: "Toggle Terminal History",
             subtitle: "Show/hide terminal output history panel",
             kind: .command,
+            shortcut: "\u{21E7}\u{2318}H",
             action: {
                 NotificationCenter.default.post(name: .toggleTerminalHistory, object: nil)
             }
         ))
-
-        // Agent Dashboard
         items.append(PaletteItem(
             id: "cmd-agents",
             icon: "cpu",
             title: "Agent Dashboard",
             subtitle: "View and manage Claude Code agents",
             kind: .command,
+            shortcut: "\u{21E7}\u{2318}A",
             action: {
                 NotificationCenter.default.post(name: .showAgentDashboard, object: nil)
             }
@@ -194,6 +212,7 @@ struct CommandPaletteView: View {
                 title: "SSH: \(host.displayName)",
                 subtitle: "\(host.username.isEmpty ? "" : "\(host.username)@")\(host.hostname)\(host.port != 22 ? ":\(host.port)" : "")",
                 kind: .sshHost,
+                shortcut: nil,
                 action: { [weak appState] in
                     guard let session = appState?.selectedSession else { return }
                     let tab = Tab(
@@ -223,6 +242,7 @@ struct PaletteItem: Identifiable {
     let title: String
     let subtitle: String
     let kind: PaletteItemKind
+    let shortcut: String?
     let action: () -> Void
 
     enum PaletteItemKind {
@@ -234,6 +254,8 @@ struct PaletteItemRow: View {
     let item: PaletteItem
     let isSelected: Bool
 
+    private var theme: AppTheme { SettingsManager.shared.theme }
+
     var body: some View {
         HStack(spacing: 10) {
             Image(systemName: item.icon)
@@ -244,26 +266,37 @@ struct PaletteItemRow: View {
             VStack(alignment: .leading, spacing: 1) {
                 Text(item.title)
                     .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
-                    .foregroundStyle(isSelected ? .white : Color(white: 0.8))
+                    .foregroundStyle(isSelected ? theme.primaryText : theme.bodyText)
 
                 Text(item.subtitle)
                     .font(.system(size: 11))
-                    .foregroundStyle(Color(white: 0.45))
+                    .foregroundStyle(theme.tertiaryText)
             }
 
             Spacer()
 
+            // Keyboard shortcut hint
+            if let shortcut = item.shortcut {
+                Text(shortcut)
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundStyle(theme.tertiaryText)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(theme.hoverBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: 4))
+            }
+
             Text(kindLabel)
                 .font(.system(size: 10))
-                .foregroundStyle(Color(white: 0.35))
+                .foregroundStyle(theme.disabledText)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 2)
-                .background(Color(white: 0.15))
+                .background(theme.hoverBackground)
                 .clipShape(RoundedRectangle(cornerRadius: 3))
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 6)
-        .background(isSelected ? Color(white: 0.15) : .clear)
+        .background(isSelected ? theme.hoverBackground : .clear)
         .contentShape(Rectangle())
     }
 

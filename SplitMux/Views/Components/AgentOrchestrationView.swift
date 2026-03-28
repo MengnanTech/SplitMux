@@ -7,6 +7,7 @@ struct AgentOrchestrationView: View {
     @State private var inputText: [UUID: String] = [:]
 
     private var hookService: ClaudeHookService { ClaudeHookService.shared }
+    private var theme: AppTheme { SettingsManager.shared.theme }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -16,7 +17,7 @@ struct AgentOrchestrationView: View {
                     .foregroundStyle(.blue)
                 Text("Agent Dashboard")
                     .font(.system(.headline, design: .monospaced))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(theme.primaryText)
 
                 Spacer()
 
@@ -35,26 +36,26 @@ struct AgentOrchestrationView: View {
             HStack(spacing: 16) {
                 StatusPill(count: hookService.runningCount, label: "Running", color: .blue)
                 StatusPill(count: hookService.needsInputCount, label: "Needs Input", color: .orange)
-                StatusPill(count: hookService.idleCount, label: "Idle", color: Color(white: 0.45))
+                StatusPill(count: hookService.idleCount, label: "Idle", color: theme.tertiaryText)
                 StatusPill(count: hookService.completedCount, label: "Completed", color: .green)
             }
             .padding(.horizontal)
             .padding(.bottom, 12)
 
-            Divider().overlay(Color(white: 0.2))
+            Divider().overlay(theme.subtleBorder)
 
             if hookService.agentInfos.isEmpty {
                 VStack(spacing: 12) {
                     Spacer()
                     Image(systemName: "cpu")
                         .font(.system(size: 32))
-                        .foregroundStyle(Color(white: 0.25))
+                        .foregroundStyle(theme.disabledText)
                     Text("No active agents")
                         .font(.system(.body, design: .monospaced))
-                        .foregroundStyle(Color(white: 0.4))
+                        .foregroundStyle(theme.iconDimmed)
                     Text("Start Claude Code in a terminal tab\nto see agents here")
                         .font(.system(.caption, design: .monospaced))
-                        .foregroundStyle(Color(white: 0.3))
+                        .foregroundStyle(theme.disabledText)
                         .multilineTextAlignment(.center)
                     Spacer()
                 }
@@ -78,13 +79,13 @@ struct AgentOrchestrationView: View {
                     .padding(.vertical, 8)
                 }
 
-                Divider().overlay(Color(white: 0.2))
+                Divider().overlay(theme.subtleBorder)
 
                 // Recent notifications
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Recent Events")
                         .font(.system(.caption, design: .monospaced))
-                        .foregroundStyle(Color(white: 0.4))
+                        .foregroundStyle(theme.iconDimmed)
                         .padding(.horizontal, 16)
                         .padding(.top, 8)
 
@@ -98,13 +99,13 @@ struct AgentOrchestrationView: View {
 
                                     Text(notification.message)
                                         .font(.system(.caption2, design: .monospaced))
-                                        .foregroundStyle(Color(white: 0.55))
+                                        .foregroundStyle(theme.secondaryText)
 
                                     Spacer()
 
                                     Text(timeAgo(notification.timestamp))
                                         .font(.system(.caption2, design: .monospaced))
-                                        .foregroundStyle(Color(white: 0.3))
+                                        .foregroundStyle(theme.disabledText)
                                 }
                                 .padding(.horizontal, 16)
                                 .padding(.vertical, 2)
@@ -117,7 +118,7 @@ struct AgentOrchestrationView: View {
             }
         }
         .frame(width: 520, height: 500)
-        .background(Color(red: 0.08, green: 0.08, blue: 0.1))
+        .background(theme.elevatedSurface)
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .shadow(color: .black.opacity(0.5), radius: 20)
         .onAppear {
@@ -167,21 +168,23 @@ struct StatusPill: View {
     let label: String
     let color: Color
 
+    private var theme: AppTheme { SettingsManager.shared.theme }
+
     var body: some View {
         HStack(spacing: 4) {
             Text("\(count)")
                 .font(.system(size: 14, weight: .bold, design: .monospaced))
-                .foregroundStyle(count > 0 ? color : Color(white: 0.3))
+                .foregroundStyle(count > 0 ? color : theme.disabledText)
 
             Text(label)
                 .font(.system(.caption2, design: .monospaced))
-                .foregroundStyle(Color(white: 0.45))
+                .foregroundStyle(theme.tertiaryText)
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 5)
         .background(
             RoundedRectangle(cornerRadius: 6)
-                .fill(count > 0 ? color.opacity(0.1) : Color(white: 0.1))
+                .fill(count > 0 ? color.opacity(0.1) : theme.hoverBackground.opacity(0.5))
         )
     }
 }
@@ -193,6 +196,8 @@ struct AgentRow: View {
     @Binding var inputText: String
     var onSwitch: () -> Void
     var onSendInput: () -> Void
+
+    private var theme: AppTheme { SettingsManager.shared.theme }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -219,12 +224,12 @@ struct AgentRow: View {
                     HStack(spacing: 6) {
                         Text(agent.tabTitle.isEmpty ? "Terminal" : agent.tabTitle)
                             .font(.system(.callout, design: .monospaced))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(theme.primaryText)
 
                         if !agent.sessionName.isEmpty {
                             Text("in \(agent.sessionName)")
                                 .font(.system(.caption2, design: .monospaced))
-                                .foregroundStyle(Color(white: 0.4))
+                                .foregroundStyle(theme.iconDimmed)
                         }
                     }
 
@@ -232,7 +237,7 @@ struct AgentRow: View {
                         Text(agent.status.label)
                             .foregroundStyle(agent.status.color)
                         Text(agent.durationString)
-                            .foregroundStyle(Color(white: 0.35))
+                            .foregroundStyle(theme.disabledText)
                     }
                     .font(.system(.caption2, design: .monospaced))
                 }
@@ -274,7 +279,7 @@ struct AgentRow: View {
         .padding(10)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(Color(white: 0.12))
+                .fill(theme.hoverBackground.opacity(0.6))
         )
     }
 }
@@ -286,6 +291,7 @@ struct AgentsSidebarSection: View {
     @State private var isExpanded = true
 
     private var hookService: ClaudeHookService { ClaudeHookService.shared }
+    private var theme: AppTheme { SettingsManager.shared.theme }
 
     var body: some View {
         if !hookService.agentInfos.isEmpty {
@@ -297,13 +303,13 @@ struct AgentsSidebarSection: View {
                         HStack(spacing: 6) {
                             Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
                                 .font(.system(size: 8, weight: .bold))
-                                .foregroundStyle(Color(white: 0.4))
+                                .foregroundStyle(theme.iconDimmed)
                                 .frame(width: 10)
 
                             Text("Claude Agents")
                                 .font(.system(.caption, design: .monospaced))
                                 .fontWeight(.semibold)
-                                .foregroundStyle(Color(white: 0.5))
+                                .foregroundStyle(theme.sectionHeaderText)
                                 .textCase(.uppercase)
                                 .tracking(1.2)
                         }
@@ -328,14 +334,14 @@ struct AgentsSidebarSection: View {
                         }
                     }
                     .font(.system(.caption2, design: .monospaced))
-                    .foregroundStyle(Color(white: 0.5))
+                    .foregroundStyle(theme.sectionHeaderText)
 
                     Button {
                         NotificationCenter.default.post(name: .showAgentDashboard, object: nil)
                     } label: {
                         Image(systemName: "rectangle.expand.vertical")
                             .font(.system(size: 10))
-                            .foregroundStyle(Color(white: 0.4))
+                            .foregroundStyle(theme.iconDimmed)
                     }
                     .buttonStyle(.plain)
                     .help("Open Agent Dashboard")
@@ -353,14 +359,14 @@ struct AgentsSidebarSection: View {
 
                                 Text(agent.tabTitle.isEmpty ? "Terminal" : agent.tabTitle)
                                     .font(.system(.caption2, design: .monospaced))
-                                    .foregroundStyle(Color(white: 0.6))
+                                    .foregroundStyle(theme.secondaryText)
                                     .lineLimit(1)
 
                                 Spacer()
 
                                 Text(agent.durationString)
                                     .font(.system(.caption2, design: .monospaced))
-                                    .foregroundStyle(Color(white: 0.3))
+                                    .foregroundStyle(theme.disabledText)
                             }
                             .padding(.horizontal, 16)
                             .padding(.vertical, 3)

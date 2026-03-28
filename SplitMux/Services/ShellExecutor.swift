@@ -59,20 +59,19 @@ class TerminalSessionDelegate: NSObject, LocalProcessTerminalViewDelegate, @unch
     }
 
     func processTerminated(source: TerminalView, exitCode: Int32?) {
-        // Reset Claude detection on process exit
-        if let termView = source as? NotifyingTerminalView {
-            termView.claudeDetected = false
-            termView.recentOutput = ""
-        }
-
         let msg = "\(tabTitle) exited (\(exitCode ?? 0))"
         notify(message: msg, title: "Process Exited")
 
-        // SSH auto-reconnect
-        if let termView = source as? NotifyingTerminalView,
-           termView.sshAutoReconnect,
-           let sshCmd = termView.sshCommand {
-            Task { @MainActor in
+        if let termView = source as? NotifyingTerminalView {
+            Task { @MainActor [weak self] in
+                // Reset Claude detection on process exit
+                termView.claudeDetected = false
+                termView.recentOutput = ""
+
+                // SSH auto-reconnect
+                guard termView.sshAutoReconnect,
+                      let sshCmd = termView.sshCommand else { return }
+
                 // Update SSH host state
                 if let hostID = termView.sshHostID {
                     SSHManagerService.shared.host(for: hostID)?.connectionState = .disconnected
@@ -82,7 +81,7 @@ class TerminalSessionDelegate: NSObject, LocalProcessTerminalViewDelegate, @unch
                 if let hostID = termView.sshHostID {
                     SSHManagerService.shared.host(for: hostID)?.connectionState = .connecting
                 }
-                self.suppressNextNotification = true
+                self?.suppressNextNotification = true
                 let bytes = Array((sshCmd + "\n").utf8)
                 termView.send(data: bytes[...])
             }
@@ -158,6 +157,26 @@ class NotifyingTerminalView: LocalProcessTerminalView {
     var lastAppliedFontName: String = ""
     var lastAppliedThemeID: String = ""
 
+    /// Deferred process start — waits until the view has a real frame so the PTY
+    /// reports correct terminal dimensions (columns/rows) to child processes.
+    /// We hook into setFrameSize because that's where SwiftTerm calls
+    /// processSizeChange() which updates terminal.cols/rows from the frame.
+    private var pendingProcessStart: (() -> Void)?
+    private var processStarted = false
+
+    func deferProcessStart(_ start: @escaping () -> Void) {
+        pendingProcessStart = start
+    }
+
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+        if let start = pendingProcessStart, !processStarted, newSize.width > 0, newSize.height > 0 {
+            pendingProcessStart = nil
+            processStarted = true
+            start()
+        }
+    }
+
     // MARK: - Search
 
     @discardableResult
@@ -191,6 +210,7 @@ class NotifyingTerminalView: LocalProcessTerminalView {
 
     override func menu(for event: NSEvent) -> NSMenu? {
         let menu = NSMenu()
+        menu.autoenablesItems = false
         let hasSelection = getSelection() != nil
 
         let copyItem = NSMenuItem(title: "Copy", action: #selector(copy(_:)), keyEquivalent: "")
@@ -207,26 +227,31 @@ class NotifyingTerminalView: LocalProcessTerminalView {
 
         let selectAllItem = NSMenuItem(title: "Select All", action: #selector(selectAll(_:)), keyEquivalent: "")
         selectAllItem.target = self
+        selectAllItem.isEnabled = true
         menu.addItem(selectAllItem)
 
         menu.addItem(.separator())
 
         let clearItem = NSMenuItem(title: "Clear", action: #selector(clearTerminal), keyEquivalent: "")
         clearItem.target = self
+        clearItem.isEnabled = true
         menu.addItem(clearItem)
 
         menu.addItem(.separator())
 
         let newTabItem = NSMenuItem(title: "New Tab", action: #selector(newTabAction), keyEquivalent: "")
         newTabItem.target = self
+        newTabItem.isEnabled = true
         menu.addItem(newTabItem)
 
         let splitRightItem = NSMenuItem(title: "Split Right", action: #selector(splitRightAction), keyEquivalent: "")
         splitRightItem.target = self
+        splitRightItem.isEnabled = true
         menu.addItem(splitRightItem)
 
         let splitDownItem = NSMenuItem(title: "Split Down", action: #selector(splitDownAction), keyEquivalent: "")
         splitDownItem.target = self
+        splitDownItem.isEnabled = true
         menu.addItem(splitDownItem)
 
         return menu
@@ -261,18 +286,6 @@ class NotifyingTerminalView: LocalProcessTerminalView {
     var claudeDetected = false
     /// Sliding window of recent clean text for pattern matching
     var recentOutput = ""
-    /// Debug log file handle (temporary — remove after verification)
-    private static let debugLog: FileHandle? = {
-        let path = "/tmp/splitmux-debug.log"
-        FileManager.default.createFile(atPath: path, contents: nil)
-        return FileHandle(forWritingAtPath: path)
-    }()
-
-    private static func log(_ msg: String) {
-        let line = "[\(ISO8601DateFormatter().string(from: Date()))] \(msg)\n"
-        debugLog?.seekToEndOfFile()
-        debugLog?.write(line.data(using: .utf8) ?? Data())
-    }
 
     /// ANSI escape code stripping regex — handles CSI, OSC, DCS, character sets, keypad, cursor save/restore
     private static let ansiRegex = try! NSRegularExpression(pattern: [
@@ -314,14 +327,7 @@ class NotifyingTerminalView: LocalProcessTerminalView {
     }
 
     private func detectClaude(_ text: String) {
-        guard let delegate = sessionDelegate else {
-            Self.log("detectClaude: no sessionDelegate")
-            return
-        }
-        guard let tab = delegate.tab else {
-            Self.log("detectClaude: delegate.tab is nil")
-            return
-        }
+        guard let delegate = sessionDelegate, let tab = delegate.tab else { return }
 
         // Compact whitespace before adding to window — TUI apps fill rows with spaces
         // which would otherwise flood the window and push out actual text
@@ -330,37 +336,42 @@ class NotifyingTerminalView: LocalProcessTerminalView {
 
         // Step 1: Detect Claude startup — "Claude Code" followed by version
         if !claudeDetected {
-            if recentOutput.range(of: #"Claude Code v\d+\.\d+"#, options: .regularExpression) != nil {
+            if recentOutput.range(of: #"Claude\s*Code\s*v?\s*\d+\.\d+"#, options: .regularExpression) != nil {
                 claudeDetected = true
                 tab.claudeStatus = .running
                 writeStatus(tab: tab, status: "running")
-                Self.log("✅ Claude DETECTED! tab=\(tab.id.uuidString.prefix(8)) → .running")
-            } else if compact.contains("claude") || compact.contains("Claude") {
-                let preview = String(recentOutput.suffix(300)).replacingOccurrences(of: "\n", with: "\\n")
-                Self.log("detectClaude: has 'claude' but no version match. tail=\(preview)")
+                // Fall through to check if this same chunk also contains idle marker
+            } else {
+                return
             }
-            return
         }
 
         // Step 2: Track status transitions
+        // Use CURRENT CHUNK only for status checks — the sliding window retains old markers
         let isActive = delegate.isTabCurrentlyActive() && NSApp.isActive
         let prev = tab.claudeStatus
 
-        // Claude-specific idle indicator (not a generic shell prompt)
-        let isIdle = recentOutput.contains("? for shortcuts")
-        let needsInput = text.contains("[Y/n]") || text.contains("Allow once") || text.contains("Allow always")
+        // Check current chunk for status indicators (spaces may be missing after ANSI strip)
+        let chunkHasIdle = compact.contains("forshortcuts") || compact.contains("for shortcuts")
+        let chunkHasInput = compact.contains("[Y/n]") || compact.contains("Allowonce") || compact.contains("Allow once") || compact.contains("Allowalways") || compact.contains("Allow always")
 
-        if needsInput {
+        // Check only the TAIL of the sliding window (~300 chars) for the idle marker.
+        // Ink re-renders send cursor/style chunks without the marker text, but the
+        // marker is still on screen and appears in recent output. Using the tail
+        // (not the full 2000-char window) ensures that once Claude starts working
+        // and new content pushes out the idle marker, we correctly detect running.
+        let windowTail = String(recentOutput.suffix(300))
+        let tailHasIdle = windowTail.contains("forshortcuts") || windowTail.contains("for shortcuts")
+
+        if chunkHasInput {
             if prev != .needsInput {
                 tab.claudeStatus = .needsInput
                 writeStatus(tab: tab, status: "needs-input")
-                Self.log("Claude → needs-input")
             }
-        } else if isIdle && (prev == .running || prev == .needsInput) {
+        } else if (chunkHasIdle || (prev != .idle && tailHasIdle)) && (prev == .running || prev == .needsInput) {
             // Transition: running/needsInput → idle = task completed
             tab.claudeStatus = .idle
             writeStatus(tab: tab, status: "idle")
-            Self.log("Claude → idle (prev=\(prev?.rawValue ?? "nil"), isActive=\(isActive))")
             if prev == .running && !isActive {
                 tab.hasNotification = true
                 tab.lastNotificationMessage = "Claude Code — Task Completed"
@@ -370,15 +381,16 @@ class NotifyingTerminalView: LocalProcessTerminalView {
                     tabIsActive: false
                 )
             }
-        } else if !isIdle && prev == .idle {
-            // User sent new message → Claude working again
-            let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-            if trimmed.count > 5 {
-                tab.claudeStatus = .running
-                writeStatus(tab: tab, status: "running")
-                // Clear window so old "? for shortcuts" doesn't re-trigger idle
-                recentOutput = ""
-                Self.log("Claude → running (new message)")
+        } else if prev == .idle && !chunkHasIdle {
+            // Claude was idle, new output without idle marker → working again
+            // But don't flip back if the idle marker is still in recent tail
+            // (ink re-renders send cursor/style updates without the marker text)
+            if !tailHasIdle {
+                let trimmed = compact.trimmingCharacters(in: .whitespacesAndNewlines)
+                if trimmed.count > 3 {
+                    tab.claudeStatus = .running
+                    writeStatus(tab: tab, status: "running")
+                }
             }
         }
     }
@@ -408,6 +420,8 @@ class NotifyingTerminalView: LocalProcessTerminalView {
             let currentPath = envDict["PATH"] ?? "/usr/bin:/bin"
             envDict["PATH"] = (extraPaths + [currentPath]).joined(separator: ":")
             envDict["TERM"] = "xterm-256color"
+            envDict["TERM_PROGRAM"] = "SplitMux"
+            envDict["COLORTERM"] = "truecolor"
             envDict["LANG"] = "en_US.UTF-8"
             env = envDict.map { "\($0.key)=\($0.value)" }
         }
@@ -501,7 +515,10 @@ struct TerminalSwiftUIView: NSViewRepresentable {
         let currentPath = env["PATH"] ?? "/usr/bin:/bin"
         env["PATH"] = (extraPaths + [currentPath]).joined(separator: ":")
         env["TERM"] = "xterm-256color"
+        env["TERM_PROGRAM"] = "SplitMux"
+        env["COLORTERM"] = "truecolor"
         env["LANG"] = "en_US.UTF-8"
+        env["CLAUDE_CODE_FORCE_FULL_LOGO"] = "1"
 
         // SplitMux env vars for Claude hook integration
         env["SPLITMUX_TAB_ID"] = tab.id.uuidString
@@ -540,25 +557,31 @@ struct TerminalSwiftUIView: NSViewRepresentable {
             }
         }
 
-        termView.startProcess(
-            executable: "/bin/zsh",
-            args: ["-l"],
-            environment: envPairs,
-            execName: "-zsh",
-            currentDirectory: dir
-        )
+        // Defer process start until the view has a real frame so the PTY
+        // reports correct terminal dimensions to child processes (e.g. Claude Code
+        // needs >= 70 columns to render its bordered welcome layout).
+        let sshContent = tab.content
+        let coordinator = context.coordinator
+        termView.deferProcessStart { [weak termView] in
+            guard let termView = termView else { return }
+            termView.startProcess(
+                executable: "/bin/zsh",
+                args: ["-l"],
+                environment: envPairs,
+                execName: "-zsh",
+                currentDirectory: dir
+            )
 
-        // For SSH tabs, send the ssh command to the shell process
-        if case .sshTerminal(let hostID) = tab.content {
-            if let host = SSHManagerService.shared.host(for: hostID) {
-                // Suppress the "command finished" notification for auto-typed SSH commands
-                context.coordinator.suppressNextNotification = true
-                // Small delay to let shell initialize, then type the command
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    let bytes = Array((host.sshCommand + "\n").utf8)
-                    termView.send(data: bytes[...])
-                    MainActor.assumeIsolated {
-                        host.connectionState = .connected
+            // For SSH tabs, send the ssh command to the shell process
+            if case .sshTerminal(let hostID) = sshContent {
+                if let host = SSHManagerService.shared.host(for: hostID) {
+                    coordinator.suppressNextNotification = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        let bytes = Array((host.sshCommand + "\n").utf8)
+                        termView.send(data: bytes[...])
+                        MainActor.assumeIsolated {
+                            host.connectionState = .connected
+                        }
                     }
                 }
             }

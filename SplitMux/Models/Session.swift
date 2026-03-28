@@ -77,6 +77,14 @@ class Session: Identifiable, Hashable {
         tabs.compactMap(\.lastNotificationMessage).last
     }
 
+    /// Tabs that have Claude Code running (with their status)
+    var claudeTabs: [(tab: Tab, status: ClaudeStatus)] {
+        tabs.compactMap { tab in
+            guard let status = tab.claudeStatus else { return nil }
+            return (tab: tab, status: status)
+        }
+    }
+
     /// Aggregate Claude status across all tabs (prioritizes running > needs-input > idle > completed)
     var claudeStatus: ClaudeStatus? {
         let statuses = tabs.compactMap(\.claudeStatus)

@@ -9,10 +9,8 @@ struct TabContentView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Tab bar (hidden when single tab and no split)
-            if session.tabs.count > 1 || session.splitRoot != nil {
-                TabBarView(session: session, onAddTab: addTab)
-            }
+            // Tab bar — always visible for discoverability
+            TabBarView(session: session, onAddTab: addTab)
 
             // Search bar overlay
             if showSearch {

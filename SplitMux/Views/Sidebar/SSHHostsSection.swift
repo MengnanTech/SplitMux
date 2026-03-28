@@ -9,6 +9,7 @@ struct SSHHostsSection: View {
     @State private var hoveredHostID: UUID?
 
     private let sshManager = SSHManagerService.shared
+    private var theme: AppTheme { SettingsManager.shared.theme }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -20,13 +21,13 @@ struct SSHHostsSection: View {
                     HStack(spacing: 6) {
                         Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
                             .font(.system(size: 8, weight: .bold))
-                            .foregroundStyle(Color(white: 0.4))
+                            .foregroundStyle(theme.iconDimmed)
                             .frame(width: 10)
 
                         Text("SSH Hosts")
                             .font(.system(.caption, design: .monospaced))
                             .fontWeight(.semibold)
-                            .foregroundStyle(Color(white: 0.5))
+                            .foregroundStyle(theme.sectionHeaderText)
                             .textCase(.uppercase)
                             .tracking(1.2)
                     }
@@ -42,7 +43,7 @@ struct SSHHostsSection: View {
                     } label: {
                         Image(systemName: "arrow.clockwise")
                             .font(.system(size: 10))
-                            .foregroundStyle(Color(white: 0.4))
+                            .foregroundStyle(theme.iconDimmed)
                     }
                     .buttonStyle(.plain)
                     .help("Refresh ~/.ssh/config")
@@ -51,9 +52,9 @@ struct SSHHostsSection: View {
                     Button { showAddHost = true } label: {
                         Image(systemName: "plus")
                             .font(.system(size: 10, weight: .medium))
-                            .foregroundStyle(Color(white: 0.5))
+                            .foregroundStyle(theme.sectionHeaderText)
                             .frame(width: 20, height: 20)
-                            .background(Color.white.opacity(0.06))
+                            .background(theme.subtleOverlay)
                             .clipShape(RoundedRectangle(cornerRadius: 4))
                     }
                     .buttonStyle(.plain)
@@ -66,7 +67,7 @@ struct SSHHostsSection: View {
                 if sshManager.allHosts.isEmpty {
                     Text("No SSH hosts")
                         .font(.system(.caption2, design: .monospaced))
-                        .foregroundStyle(Color(white: 0.35))
+                        .foregroundStyle(theme.disabledText)
                         .padding(.horizontal, 16)
                         .padding(.bottom, 8)
                 } else {
@@ -153,8 +154,10 @@ struct SSHHostRow: View {
     var onConnect: () -> Void
     var onEdit: () -> Void
 
+    private var theme: AppTheme { SettingsManager.shared.theme }
+
     private var bgColor: Color {
-        isHovered ? Color(white: 0.15) : .clear
+        isHovered ? theme.hoverBackground : .clear
     }
 
     var body: some View {
@@ -177,7 +180,7 @@ struct SSHHostRow: View {
                 VStack(alignment: .leading, spacing: 1) {
                     Text(host.displayName)
                         .font(.system(.caption, design: .monospaced))
-                        .foregroundStyle(Color(white: 0.75))
+                        .foregroundStyle(theme.bodyText)
                         .lineLimit(1)
 
                     HStack(spacing: 4) {
@@ -191,7 +194,7 @@ struct SSHHostRow: View {
                         }
                     }
                     .font(.system(.caption2, design: .monospaced))
-                    .foregroundStyle(Color(white: 0.35))
+                    .foregroundStyle(theme.disabledText)
                     .lineLimit(1)
                 }
 

@@ -94,7 +94,7 @@ class TerminalHistory {
 
     // MARK: - Replay
 
-    func startReplay(feedBlock: @escaping (Data) -> Void) {
+    func startReplay(feedBlock: @escaping @Sendable (Data) -> Void) {
         guard !entries.isEmpty else { return }
         isReplaying = true
         replayPosition = 0
@@ -107,7 +107,7 @@ class TerminalHistory {
         replayTimer = nil
     }
 
-    private func replayNextEntry(feedBlock: @escaping (Data) -> Void) {
+    private func replayNextEntry(feedBlock: @escaping @Sendable (Data) -> Void) {
         guard isReplaying, replayPosition < entries.count else {
             stopReplay()
             return

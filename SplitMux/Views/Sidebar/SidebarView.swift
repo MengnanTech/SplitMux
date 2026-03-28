@@ -7,7 +7,7 @@ struct SidebarView: View {
     @State private var renameText = ""
     @State private var draggedSessionID: UUID?
 
-    private var sidebarBg: Color { SettingsManager.shared.theme.sidebarBackground }
+    private var theme: AppTheme { SettingsManager.shared.theme }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -16,7 +16,7 @@ struct SidebarView: View {
                 Text("Sessions")
                     .font(.system(.caption, design: .monospaced))
                     .fontWeight(.semibold)
-                    .foregroundStyle(Color(white: 0.5))
+                    .foregroundStyle(theme.sectionHeaderText)
                     .textCase(.uppercase)
                     .tracking(1.2)
 
@@ -27,9 +27,9 @@ struct SidebarView: View {
                 } label: {
                     Image(systemName: "plus")
                         .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(Color(white: 0.5))
+                        .foregroundStyle(theme.sectionHeaderText)
                         .frame(width: 24, height: 24)
-                        .background(Color.white.opacity(0.06))
+                        .background(theme.subtleOverlay)
                         .clipShape(RoundedRectangle(cornerRadius: 5))
                 }
                 .buttonStyle(.plain)
@@ -131,19 +131,32 @@ struct SidebarView: View {
 
             Spacer()
 
-            // Footer
-            HStack(spacing: 8) {
-                Circle()
-                    .fill(SettingsManager.shared.theme.accentColor)
-                    .frame(width: 6, height: 6)
-                Text("\(appState.sessions.count) sessions")
+            // Footer — helpful shortcut hint
+            HStack(spacing: 6) {
+                Image(systemName: "command")
+                    .font(.system(size: 8))
+                    .foregroundStyle(theme.iconDimmed)
+                Text("P")
                     .font(.system(.caption2, design: .monospaced))
-                    .foregroundStyle(Color(white: 0.4))
+                    .fontWeight(.medium)
+                    .foregroundStyle(theme.iconDimmed)
+                Text("Command Palette")
+                    .font(.system(.caption2, design: .monospaced))
+                    .foregroundStyle(theme.disabledText)
+
+                Spacer()
+
+                Circle()
+                    .fill(theme.accentColor)
+                    .frame(width: 6, height: 6)
+                Text("\(appState.sessions.count)")
+                    .font(.system(.caption2, design: .monospaced))
+                    .foregroundStyle(theme.disabledText)
             }
             .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.vertical, 10)
         }
-        .background(sidebarBg)
+        .background(theme.sidebarBackground)
         .alert("Rename Session", isPresented: Binding(
             get: { renamingSession != nil },
             set: { if !$0 { renamingSession = nil } }
@@ -238,9 +251,9 @@ struct SessionRow: View {
 
     private var bgColor: Color {
         if isSelected {
-            return Color(red: 0.18, green: 0.2, blue: 0.25)
+            return theme.selectedBackground
         } else if isHovered {
-            return Color(white: 0.15)
+            return theme.hoverBackground
         }
         return .clear
     }
@@ -249,14 +262,14 @@ struct SessionRow: View {
         HStack(spacing: 10) {
             Image(systemName: session.icon)
                 .font(.system(size: 13))
-                .foregroundStyle(isSelected ? theme.accentColor : Color(white: 0.45))
+                .foregroundStyle(isSelected ? theme.accentColor : theme.tertiaryText)
                 .frame(width: 22)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(session.name)
                     .font(.system(.callout, design: .default))
                     .fontWeight(isSelected ? .semibold : .regular)
-                    .foregroundStyle(isSelected ? theme.primaryText : Color(white: 0.7))
+                    .foregroundStyle(isSelected ? theme.primaryText : theme.bodyText)
 
                 HStack(spacing: 4) {
                     Image(systemName: "folder")
@@ -275,17 +288,20 @@ struct SessionRow: View {
                     }
                 }
                 .font(.system(.caption2, design: .monospaced))
-                .foregroundStyle(Color(white: 0.35))
+                .foregroundStyle(theme.disabledText)
 
-                // Claude status indicator
-                if let status = session.claudeStatus {
-                    HStack(spacing: 4) {
-                        Image(systemName: status.icon)
-                            .font(.system(size: 8))
-                        Text(status.label)
+                // Per-tab Claude status indicators
+                let claudeTabs = session.claudeTabs
+                if !claudeTabs.isEmpty {
+                    ForEach(claudeTabs, id: \.tab.id) { item in
+                        HStack(spacing: 4) {
+                            Image(systemName: item.status.icon)
+                                .font(.system(size: 8))
+                            Text(claudeTabs.count > 1 ? "\(item.tab.title): \(item.status.label)" : item.status.label)
+                        }
+                        .font(.system(.caption2, design: .monospaced))
+                        .foregroundStyle(item.status.color)
                     }
-                    .font(.system(.caption2, design: .monospaced))
-                    .foregroundStyle(status.color)
                 }
 
                 // Notification message preview

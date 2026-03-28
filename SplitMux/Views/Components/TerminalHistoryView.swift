@@ -8,6 +8,8 @@ struct TerminalHistoryView: View {
     @State private var searchResults: [(entryIndex: Int, range: Range<String.Index>)] = []
     @State private var selectedResultIndex = 0
 
+    private var theme: AppTheme { SettingsManager.shared.theme }
+
     private var history: TerminalHistory {
         TerminalHistoryService.shared.history(for: tabID)
     }
@@ -21,7 +23,7 @@ struct TerminalHistoryView: View {
 
                 Text("Terminal History")
                     .font(.system(.caption, design: .monospaced))
-                    .foregroundStyle(Color(white: 0.6))
+                    .foregroundStyle(theme.secondaryText)
 
                 Spacer()
 
@@ -32,7 +34,7 @@ struct TerminalHistoryView: View {
                     Text(formatDuration(history.duration))
                 }
                 .font(.system(.caption2, design: .monospaced))
-                .foregroundStyle(Color(white: 0.4))
+                .foregroundStyle(theme.iconDimmed)
 
                 // Replay controls
                 if history.isReplaying {
@@ -53,7 +55,7 @@ struct TerminalHistoryView: View {
                 Button { exportHistory() } label: {
                     Image(systemName: "square.and.arrow.up")
                         .font(.system(size: 11))
-                        .foregroundStyle(Color(white: 0.5))
+                        .foregroundStyle(theme.sectionHeaderText)
                 }
                 .buttonStyle(.plain)
                 .help("Export history")
@@ -62,22 +64,22 @@ struct TerminalHistoryView: View {
                 Button { isVisible = false } label: {
                     Image(systemName: "xmark")
                         .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(Color(white: 0.5))
+                        .foregroundStyle(theme.sectionHeaderText)
                         .frame(width: 20, height: 20)
-                        .background(Color.white.opacity(0.08))
+                        .background(theme.subtleOverlay)
                         .clipShape(Circle())
                 }
                 .buttonStyle(.plain)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(Color(red: 0.08, green: 0.08, blue: 0.1))
+            .background(theme.elevatedSurface)
 
             // Search bar
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: 11))
-                    .foregroundStyle(Color(white: 0.4))
+                    .foregroundStyle(theme.iconDimmed)
 
                 TextField("Search history...", text: $searchQuery)
                     .textFieldStyle(.plain)
@@ -87,7 +89,7 @@ struct TerminalHistoryView: View {
                 if !searchResults.isEmpty {
                     Text("\(selectedResultIndex + 1)/\(searchResults.count)")
                         .font(.system(.caption2, design: .monospaced))
-                        .foregroundStyle(Color(white: 0.5))
+                        .foregroundStyle(theme.sectionHeaderText)
 
                     Button { navigateResult(-1) } label: {
                         Image(systemName: "chevron.up")
@@ -104,9 +106,9 @@ struct TerminalHistoryView: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
-            .background(Color(red: 0.06, green: 0.06, blue: 0.08))
+            .background(theme.sidebarBackground)
 
-            Divider().overlay(Color(white: 0.15))
+            Divider().overlay(theme.subtleBorder.opacity(0.5))
 
             // History content
             ScrollViewReader { proxy in
@@ -117,13 +119,13 @@ struct TerminalHistoryView: View {
                                 // Timestamp
                                 Text(formatTime(entry.timestamp))
                                     .font(.system(size: 9, design: .monospaced))
-                                    .foregroundStyle(Color(white: 0.3))
+                                    .foregroundStyle(theme.disabledText)
                                     .frame(width: 60, alignment: .trailing)
 
                                 // Content
                                 Text(entry.text)
                                     .font(.system(size: 11, design: .monospaced))
-                                    .foregroundStyle(Color(white: 0.75))
+                                    .foregroundStyle(theme.bodyText)
                                     .textSelection(.enabled)
                             }
                             .id(index)
@@ -161,7 +163,7 @@ struct TerminalHistoryView: View {
                 HStack(spacing: 4) {
                     Text("Speed:")
                         .font(.system(.caption2, design: .monospaced))
-                        .foregroundStyle(Color(white: 0.4))
+                        .foregroundStyle(theme.iconDimmed)
 
                     Picker("", selection: Binding(
                         get: { history.replaySpeed },
@@ -179,11 +181,11 @@ struct TerminalHistoryView: View {
                 // Recording toggle
                 HStack(spacing: 4) {
                     Circle()
-                        .fill(history.isRecording ? Color.red : Color(white: 0.3))
+                        .fill(history.isRecording ? Color.red : theme.disabledText)
                         .frame(width: 6, height: 6)
                     Text(history.isRecording ? "Recording" : "Paused")
                         .font(.system(.caption2, design: .monospaced))
-                        .foregroundStyle(Color(white: 0.4))
+                        .foregroundStyle(theme.iconDimmed)
                 }
                 .onTapGesture {
                     history.isRecording.toggle()
@@ -191,10 +193,10 @@ struct TerminalHistoryView: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(Color(red: 0.08, green: 0.08, blue: 0.1))
+            .background(theme.elevatedSurface)
         }
         .frame(height: 280)
-        .background(Color(red: 0.05, green: 0.05, blue: 0.07))
+        .background(theme.contentBackground)
     }
 
     // MARK: - Actions
