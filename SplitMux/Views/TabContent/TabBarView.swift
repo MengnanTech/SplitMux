@@ -115,7 +115,8 @@ struct TabBarView: View {
             .buttonStyle(.plain)
         }
         .frame(height: 38)
-        .background(theme.tabBarBackground)
+        .background(.ultraThinMaterial)
+        .background(theme.tabBarBackground.opacity(0.7))
         .alert("Rename Tab", isPresented: Binding(
             get: { renamingTab != nil },
             set: { if !$0 { renamingTab = nil } }

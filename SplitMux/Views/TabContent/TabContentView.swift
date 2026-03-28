@@ -7,10 +7,15 @@ struct TabContentView: View {
     @State private var searchText = ""
     @State private var showHistory = false
 
+    private var theme: AppTheme { SettingsManager.shared.theme }
+
     var body: some View {
         VStack(spacing: 0) {
             // Tab bar — always visible for discoverability
             TabBarView(session: session, onAddTab: addTab)
+
+            // Breadcrumb path bar
+            BreadcrumbBar(workingDirectory: session.workingDirectory, gitBranch: session.gitBranch)
 
             // Search bar overlay
             if showSearch {
@@ -29,19 +34,52 @@ struct TabContentView: View {
                 .transition(.move(edge: .top).combined(with: .opacity))
             }
 
-            // Content area
-            if let root = session.splitRoot {
-                // Split pane mode
-                SplitPaneView(session: session, node: root)
-            } else {
-                // Single tab mode
-                ZStack {
-                    ForEach(session.tabs) { tab in
-                        TabPanelView(tab: tab, workingDirectory: session.workingDirectory)
-                            .opacity(tab.id == session.activeTabID ? 1 : 0)
-                            .allowsHitTesting(tab.id == session.activeTabID)
+            // Content area with drag-to-split overlay
+            ZStack {
+                if let root = session.splitRoot, session.zoomedTabID == nil {
+                    // Split pane mode
+                    SplitPaneView(session: session, node: root)
+                } else if session.splitRoot != nil, let zoomedID = session.zoomedTabID,
+                          let zoomedTab = session.tabs.first(where: { $0.id == zoomedID }) {
+                    // Zoomed pane mode — single pane fills area, with zoom indicator
+                    ZStack(alignment: .topTrailing) {
+                        TabPanelView(tab: zoomedTab, workingDirectory: session.workingDirectory)
+
+                        // Zoom badge
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.up.left.and.arrow.down.right")
+                                .font(.system(size: 9))
+                            Text("ZOOM")
+                                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                        }
+                        .foregroundStyle(theme.primaryText.opacity(0.7))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(
+                            Capsule()
+                                .fill(theme.accentColor.opacity(0.3))
+                                .overlay(Capsule().stroke(theme.accentColor.opacity(0.5), lineWidth: 0.5))
+                        )
+                        .padding(8)
+                        .onTapGesture {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                session.toggleZoom()
+                            }
+                        }
+                    }
+                } else {
+                    // Single tab mode
+                    ZStack {
+                        ForEach(session.tabs) { tab in
+                            TabPanelView(tab: tab, workingDirectory: session.workingDirectory)
+                                .opacity(tab.id == session.activeTabID ? 1 : 0)
+                                .allowsHitTesting(tab.id == session.activeTabID)
+                        }
                     }
                 }
+
+                // Drop zone overlay for drag-to-split
+                SplitDropZoneOverlay(session: session)
             }
 
             // Terminal history panel

@@ -16,6 +16,9 @@ class Session: Identifiable, Hashable {
     /// Optional split pane layout; nil means single-tab (no split)
     var splitRoot: SplitNode?
 
+    /// Zoomed tab ID — when set, this pane fills the entire split area (like tmux zoom)
+    var zoomedTabID: UUID?
+
     /// Current git branch name (nil if not a git repo)
     var gitBranch: String?
     private var gitBranchTimer: Timer?
@@ -155,6 +158,17 @@ class Session: Identifiable, Hashable {
     /// Exit split mode: collapse to single active tab
     func unsplit() {
         splitRoot = nil
+        zoomedTabID = nil
+    }
+
+    /// Toggle zoom on the active pane (like tmux Cmd+Z)
+    func toggleZoom() {
+        guard splitRoot != nil, let activeID = activeTabID else { return }
+        if zoomedTabID != nil {
+            zoomedTabID = nil
+        } else {
+            zoomedTabID = activeID
+        }
     }
 
     // MARK: - Git Branch

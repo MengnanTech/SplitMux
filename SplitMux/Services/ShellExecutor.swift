@@ -107,6 +107,22 @@ class TerminalSessionDelegate: NSObject, LocalProcessTerminalViewDelegate, @unch
                 tabIsActive: tabIsActive
             )
 
+            // Post inline toast notification (only if tab is NOT active)
+            if !tabIsActive, let appState = self.appState {
+                let session = appState.sessions.first { $0.tabs.contains(where: { $0.id == tab.id }) }
+                NotificationCenter.default.post(
+                    name: .tabNotification,
+                    object: nil,
+                    userInfo: [
+                        "tabID": tab.id,
+                        "tabTitle": tab.title,
+                        "message": message,
+                        "sessionID": session?.id as Any,
+                        "sessionName": session?.name as Any
+                    ]
+                )
+            }
+
             // Update dock badge
             if let appState = self.appState {
                 let total = appState.sessions.flatMap(\.tabs).filter(\.hasNotification).count

@@ -46,6 +46,9 @@ struct ContentView: View {
             }
             .background(theme.contentBackground)
 
+            // Notification toast overlay
+            NotificationToastOverlay()
+
             // Command Palette overlay
             if showCommandPalette {
                 Color.black.opacity(0.4)
@@ -163,6 +166,15 @@ struct ContentView: View {
                 NotificationCenter.default.post(name: .toggleTerminalHistory, object: nil)
             }
                 .keyboardShortcut("h", modifiers: [.command, .shift])
+                .hidden()
+
+            // Cmd+Shift+Z — Toggle Zoom on active split pane
+            Button("") {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    appState.selectedSession?.toggleZoom()
+                }
+            }
+                .keyboardShortcut("z", modifiers: [.command, .shift])
                 .hidden()
 
             // Cmd+Shift+A — Agent Dashboard

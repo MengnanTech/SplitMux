@@ -37,6 +37,9 @@
 		EA524D5C7F145B26382F1BAA /* SettingsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D38A76841084268D605FC270 /* SettingsManager.swift */; };
 		EDE1EFD4FCFAF4CD7DD6F5DC /* ClaudeHookService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6DECAC9A6DE7F237902D6A6 /* ClaudeHookService.swift */; };
 		F46C56F3D59185B62B999BF9 /* ShellExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CA791722194F1B9618ED6E1 /* ShellExecutor.swift */; };
+		AA1111111111111111111111 /* BreadcrumbBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA2222222222222222222222 /* BreadcrumbBar.swift */; };
+		AA3333333333333333333333 /* NotificationToast.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA4444444444444444444444 /* NotificationToast.swift */; };
+		AA5555555555555555555555 /* SplitDropZone.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6666666666666666666666 /* SplitDropZone.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -72,6 +75,9 @@
 		E5C0C4193D054715A4CBB97F /* SplitMuxApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitMuxApp.swift; sourceTree = "<group>"; };
 		E6DECAC9A6DE7F237902D6A6 /* ClaudeHookService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeHookService.swift; sourceTree = "<group>"; };
 		FF4CD2689D4E5B2E8B1543FF /* SSHManagerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHManagerService.swift; sourceTree = "<group>"; };
+		AA2222222222222222222222 /* BreadcrumbBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreadcrumbBar.swift; sourceTree = "<group>"; };
+		AA4444444444444444444444 /* NotificationToast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationToast.swift; sourceTree = "<group>"; };
+		AA6666666666666666666666 /* SplitDropZone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitDropZone.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -175,8 +181,11 @@
 			isa = PBXGroup;
 			children = (
 				94CFE7C5BD49F7C5AA2E257B /* AgentOrchestrationView.swift */,
+				AA2222222222222222222222 /* BreadcrumbBar.swift */,
 				0450FA03717F0A10E8B13CCC /* CommandPaletteView.swift */,
+				AA4444444444444444444444 /* NotificationToast.swift */,
 				AF1A68A30C80A52EE65AF9EF /* SettingsView.swift */,
+				AA6666666666666666666666 /* SplitDropZone.swift */,
 				1C5637445360D508E1A265A6 /* SplitPaneView.swift */,
 				B791AC577EE279C637592AAE /* SSHHostEditorView.swift */,
 				A9317565C43CD3745A495839 /* TerminalHistoryView.swift */,
@@ -292,6 +301,9 @@
 			files = (
 				650E2C89F7618CE147A6346A /* AgentOrchestrationView.swift in Sources */,
 				1C5951CC2DDF160D9069187D /* AppState.swift in Sources */,
+				AA1111111111111111111111 /* BreadcrumbBar.swift in Sources */,
+				AA3333333333333333333333 /* NotificationToast.swift in Sources */,
+				AA5555555555555555555555 /* SplitDropZone.swift in Sources */,
 				EDE1EFD4FCFAF4CD7DD6F5DC /* ClaudeHookService.swift in Sources */,
 				9045A91F80361305B8F68C04 /* CommandPaletteView.swift in Sources */,
 				CF0E7EFE2E8FE8FDDEDF1CFF /* ContentView.swift in Sources */,

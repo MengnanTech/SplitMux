@@ -45,6 +45,12 @@ struct SplitPaneView: View {
                     .stroke(isActive ? theme.accentColor.opacity(0.5) : .clear, lineWidth: 1.5)
                     .padding(1)
             )
+            .onTapGesture(count: 2) {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    session.activeTabID = tab.id
+                    session.toggleZoom()
+                }
+            }
             .onTapGesture {
                 session.activeTabID = tab.id
             }
