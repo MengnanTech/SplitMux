@@ -79,14 +79,15 @@ final class SSHManagerService {
         var current: SSHHost?
 
         for line in content.components(separatedBy: .newlines) {
-            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
             if trimmed.isEmpty || trimmed.hasPrefix("#") { continue }
 
-            let parts = trimmed.split(separator: " ", maxSplits: 1).map(String.init)
+            // Split on whitespace (spaces or tabs) with max 1 split
+            let parts = trimmed.split(maxSplits: 1, omittingEmptySubsequences: true) { $0 == " " || $0 == "\t" }.map(String.init)
             guard parts.count == 2 else { continue }
 
             let key = parts[0].lowercased()
-            let value = parts[1].trimmingCharacters(in: .whitespaces)
+            let value = parts[1].trimmingCharacters(in: .whitespacesAndNewlines)
 
             switch key {
             case "host":

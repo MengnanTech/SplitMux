@@ -88,7 +88,12 @@ class SSHHost: Identifiable, Codable {
         }
         if let key = keyPath, !key.isEmpty {
             let expanded = key.replacingOccurrences(of: "~", with: FileManager.default.homeDirectoryForCurrentUser.path)
-            parts.append("-i \(expanded)")
+            // Quote path in case it contains spaces
+            if expanded.contains(" ") {
+                parts.append("-i \"\(expanded)\"")
+            } else {
+                parts.append("-i \(expanded)")
+            }
         }
         if !username.isEmpty {
             parts.append("\(username)@\(hostname)")

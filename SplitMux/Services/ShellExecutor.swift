@@ -59,6 +59,12 @@ class TerminalSessionDelegate: NSObject, LocalProcessTerminalViewDelegate, @unch
     }
 
     func processTerminated(source: TerminalView, exitCode: Int32?) {
+        // Reset Claude detection on process exit
+        if let termView = source as? NotifyingTerminalView {
+            termView.claudeDetected = false
+            termView.recentOutput = ""
+        }
+
         let msg = "\(tabTitle) exited (\(exitCode ?? 0))"
         notify(message: msg, title: "Process Exited")
 
@@ -147,6 +153,11 @@ class NotifyingTerminalView: LocalProcessTerminalView {
     var sshAutoReconnect: Bool = false
     var sshCommand: String?
 
+    /// Cache last applied settings to avoid redundant updates that disrupt rendering
+    var lastAppliedFontSize: CGFloat = 0
+    var lastAppliedFontName: String = ""
+    var lastAppliedThemeID: String = ""
+
     // MARK: - Search
 
     @discardableResult
@@ -204,7 +215,40 @@ class NotifyingTerminalView: LocalProcessTerminalView {
         clearItem.target = self
         menu.addItem(clearItem)
 
+        menu.addItem(.separator())
+
+        let newTabItem = NSMenuItem(title: "New Tab", action: #selector(newTabAction), keyEquivalent: "")
+        newTabItem.target = self
+        menu.addItem(newTabItem)
+
+        let splitRightItem = NSMenuItem(title: "Split Right", action: #selector(splitRightAction), keyEquivalent: "")
+        splitRightItem.target = self
+        menu.addItem(splitRightItem)
+
+        let splitDownItem = NSMenuItem(title: "Split Down", action: #selector(splitDownAction), keyEquivalent: "")
+        splitDownItem.target = self
+        menu.addItem(splitDownItem)
+
         return menu
+    }
+
+    @objc private func newTabAction() {
+        guard let delegate = sessionDelegate, let appState = delegate.appState,
+              let session = appState.sessions.first(where: { $0.tabs.contains(where: { $0.id == delegate.tab?.id }) }) else { return }
+        let tab = Tab(title: "zsh", icon: "terminal", content: .terminal)
+        session.addTab(tab)
+    }
+
+    @objc private func splitRightAction() {
+        guard let delegate = sessionDelegate, let appState = delegate.appState,
+              let session = appState.sessions.first(where: { $0.tabs.contains(where: { $0.id == delegate.tab?.id }) }) else { return }
+        session.splitActiveTab(direction: .right)
+    }
+
+    @objc private func splitDownAction() {
+        guard let delegate = sessionDelegate, let appState = delegate.appState,
+              let session = appState.sessions.first(where: { $0.tabs.contains(where: { $0.id == delegate.tab?.id }) }) else { return }
+        session.splitActiveTab(direction: .down)
     }
 
     @objc private func clearTerminal() {
@@ -213,102 +257,134 @@ class NotifyingTerminalView: LocalProcessTerminalView {
 
     // MARK: - Terminal Output Capture + Claude Detection
 
-    /// Whether Claude Code has been detected in this terminal
-    private var _claudeDetected: Bool = false
-    /// Clean text buffer for detection (ANSI stripped, main-thread only)
-    private var _cleanBuffer = ""
-    private let _bufferLimit = 2000
+    /// Claude Code detected in this terminal (reset on process exit)
+    var claudeDetected = false
+    /// Sliding window of recent clean text for pattern matching
+    var recentOutput = ""
+    /// Debug log file handle (temporary — remove after verification)
+    private static let debugLog: FileHandle? = {
+        let path = "/tmp/splitmux-debug.log"
+        FileManager.default.createFile(atPath: path, contents: nil)
+        return FileHandle(forWritingAtPath: path)
+    }()
 
-    /// Intercept PTY output for history recording + Claude status detection
+    private static func log(_ msg: String) {
+        let line = "[\(ISO8601DateFormatter().string(from: Date()))] \(msg)\n"
+        debugLog?.seekToEndOfFile()
+        debugLog?.write(line.data(using: .utf8) ?? Data())
+    }
+
+    /// ANSI escape code stripping regex — handles CSI, OSC, DCS, character sets, keypad, cursor save/restore
+    private static let ansiRegex = try! NSRegularExpression(pattern: [
+        "\u{1B}\\[[0-9;:?]*[A-Za-z]",                                   // CSI sequences (incl. colon-separated SGR)
+        "\u{1B}\\][^\u{07}\u{1B}]*(?:\u{07}|\u{1B}\\\\)",               // OSC sequences
+        "\u{1B}P[^\u{1B}]*\u{1B}\\\\",                                  // DCS sequences
+        "\u{1B}[()][A-Za-z]",                                           // Character set designation
+        "\u{1B}[=>78]",                                                  // Keypad mode + cursor save/restore
+        "\u{1B}#[0-9]",                                                  // Double-width/height lines
+    ].joined(separator: "|"))
+
+    /// Strip ANSI escape codes from terminal output
+    private static func stripAnsi(_ raw: String) -> String {
+        let range = NSRange(raw.startIndex..., in: raw)
+        return ansiRegex.stringByReplacingMatches(in: raw, range: range, withTemplate: "")
+    }
+
+    /// Collapse runs of whitespace (2+ spaces) to single space for window efficiency
+    private static func compactWhitespace(_ s: String) -> String {
+        s.replacingOccurrences(of: " {2,}", with: " ", options: .regularExpression)
+    }
+
+    /// Intercept PTY output for history recording + Claude detection
     override func dataReceived(slice: ArraySlice<UInt8>) {
         let data = Data(slice)
         onDataReceived?(data)
 
-        // Convert to string and strip ANSI escape codes for detection
-        if let raw = String(data: data, encoding: .utf8) {
-            let clean = Self.stripANSI(raw)
-            if !clean.isEmpty {
-                DispatchQueue.main.async { [weak self] in
-                    self?.processClaudeDetection(clean)
-                }
-            }
+        // Claude detection from terminal output
+        // Use lenient UTF-8 decoding — chunk boundaries often split multi-byte chars
+        let raw = String(decoding: data, as: UTF8.self)
+        let clean = Self.stripAnsi(raw)
+
+        // Call detectClaude directly — dataReceived is already on main queue
+        if !clean.isEmpty {
+            detectClaude(clean)
         }
 
         super.dataReceived(slice: slice)
     }
 
-    /// Strip ANSI escape sequences from text
-    private static func stripANSI(_ text: String) -> String {
-        // Match: ESC[ ... letter, ESC] ... BEL/ST, ESC( ... char
-        text.replacingOccurrences(
-            of: "\u{1B}\\[[0-9;?]*[A-Za-z]|\u{1B}\\][^\u{07}\u{1B}]*(?:\u{07}|\u{1B}\\\\)|\u{1B}\\([A-Za-z]|\u{1B}[=>]",
-            with: "",
-            options: .regularExpression
-        )
-    }
-
-    @MainActor
-    private func processClaudeDetection(_ cleanText: String) {
-        guard let delegate = sessionDelegate, let tab = delegate.tab else { return }
-
-        // Accumulate clean buffer
-        _cleanBuffer += cleanText
-        if _cleanBuffer.count > _bufferLimit {
-            _cleanBuffer = String(_cleanBuffer.suffix(_bufferLimit))
+    private func detectClaude(_ text: String) {
+        guard let delegate = sessionDelegate else {
+            Self.log("detectClaude: no sessionDelegate")
+            return
+        }
+        guard let tab = delegate.tab else {
+            Self.log("detectClaude: delegate.tab is nil")
+            return
         }
 
-        // Phase 1: Detect Claude Code startup
-        if !_claudeDetected {
-            // Look for Claude Code startup markers in accumulated buffer
-            if _cleanBuffer.contains("Claude Code v")
-                || _cleanBuffer.contains("for shortcuts")
-                || _cleanBuffer.contains("(1M context)")
-                || _cleanBuffer.contains("context)") {
-                _claudeDetected = true
+        // Compact whitespace before adding to window — TUI apps fill rows with spaces
+        // which would otherwise flood the window and push out actual text
+        let compact = Self.compactWhitespace(text)
+        recentOutput = String((recentOutput + compact).suffix(2000))
+
+        // Step 1: Detect Claude startup — "Claude Code" followed by version
+        if !claudeDetected {
+            if recentOutput.range(of: #"Claude Code v\d+\.\d+"#, options: .regularExpression) != nil {
+                claudeDetected = true
                 tab.claudeStatus = .running
-                writeStatusFile(tabID: tab.id, status: "running")
-                print("[SplitMux] Claude Code detected in tab \(tab.id.uuidString.prefix(8))")
+                writeStatus(tab: tab, status: "running")
+                Self.log("✅ Claude DETECTED! tab=\(tab.id.uuidString.prefix(8)) → .running")
+            } else if compact.contains("claude") || compact.contains("Claude") {
+                let preview = String(recentOutput.suffix(300)).replacingOccurrences(of: "\n", with: "\\n")
+                Self.log("detectClaude: has 'claude' but no version match. tail=\(preview)")
             }
             return
         }
 
-        // Phase 2: Track status changes
-        if cleanText.contains("for shortcuts") || cleanText.contains("❯") {
-            // Claude is at its prompt, waiting for user input
-            if tab.claudeStatus != .idle {
-                tab.claudeStatus = .idle
-                writeStatusFile(tabID: tab.id, status: "idle")
-                print("[SplitMux] Claude status → idle")
-            }
-        } else if cleanText.contains("[Y/n]") || cleanText.contains("yes]")
-                    || cleanText.contains("Allow once") || cleanText.contains("Allow always") {
-            // Claude needs permission/confirmation
-            if tab.claudeStatus != .needsInput {
+        // Step 2: Track status transitions
+        let isActive = delegate.isTabCurrentlyActive() && NSApp.isActive
+        let prev = tab.claudeStatus
+
+        // Claude-specific idle indicator (not a generic shell prompt)
+        let isIdle = recentOutput.contains("? for shortcuts")
+        let needsInput = text.contains("[Y/n]") || text.contains("Allow once") || text.contains("Allow always")
+
+        if needsInput {
+            if prev != .needsInput {
                 tab.claudeStatus = .needsInput
-                writeStatusFile(tabID: tab.id, status: "needs-input")
-                print("[SplitMux] Claude status → needs-input")
-                // Send notification
+                writeStatus(tab: tab, status: "needs-input")
+                Self.log("Claude → needs-input")
+            }
+        } else if isIdle && (prev == .running || prev == .needsInput) {
+            // Transition: running/needsInput → idle = task completed
+            tab.claudeStatus = .idle
+            writeStatus(tab: tab, status: "idle")
+            Self.log("Claude → idle (prev=\(prev?.rawValue ?? "nil"), isActive=\(isActive))")
+            if prev == .running && !isActive {
                 tab.hasNotification = true
-                tab.lastNotificationMessage = "Claude Code — Needs Input"
+                tab.lastNotificationMessage = "Claude Code — Task Completed"
                 NotificationService.shared.send(
-                    title: "Needs Input",
-                    body: "Claude Code — Needs Input",
-                    tabIsActive: delegate.isTabCurrentlyActive()
+                    title: "Task Completed",
+                    body: "Claude Code — Task Completed",
+                    tabIsActive: false
                 )
             }
-        } else {
-            // Any other output = Claude is working
-            let trimmed = cleanText.trimmingCharacters(in: .whitespacesAndNewlines)
-            if trimmed.count > 3 && tab.claudeStatus == .idle {
+        } else if !isIdle && prev == .idle {
+            // User sent new message → Claude working again
+            let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            if trimmed.count > 5 {
                 tab.claudeStatus = .running
-                writeStatusFile(tabID: tab.id, status: "running")
-                print("[SplitMux] Claude status → running")
+                writeStatus(tab: tab, status: "running")
+                // Clear window so old "? for shortcuts" doesn't re-trigger idle
+                recentOutput = ""
+                Self.log("Claude → running (new message)")
             }
         }
     }
 
-    private func writeStatusFile(tabID: UUID, status: String) {
-        let path = "/tmp/splitmux/\(tabID.uuidString)"
+    private func writeStatus(tab: Tab, status: String) {
+        let path = "/tmp/splitmux/\(tab.id.uuidString)"
         try? status.write(toFile: path, atomically: true, encoding: .utf8)
     }
 
@@ -405,6 +481,9 @@ struct TerminalSwiftUIView: NSViewRepresentable {
         let settings = SettingsManager.shared
         termView.applyTheme(settings.theme)
         termView.updateFontSize(settings.fontSize, fontName: settings.fontName)
+        termView.lastAppliedFontSize = settings.fontSize
+        termView.lastAppliedFontName = settings.fontName
+        termView.lastAppliedThemeID = settings.theme.rawValue
         termView.processDelegate = context.coordinator
 
         var env = ProcessInfo.processInfo.environment
@@ -485,31 +564,30 @@ struct TerminalSwiftUIView: NSViewRepresentable {
             }
         }
 
-        // Start Claude hook monitoring for this tab
+        // Start Claude hook monitoring for this tab (status file based — updates status only, no notifications)
         let tabRef = tab
         ClaudeHookService.shared.startMonitoring(tabID: tab.id) { [weak tabRef] status in
             guard let tab = tabRef else { return }
             tab.claudeStatus = status
-
-            if status == .idle || status == .needsInput {
-                tab.hasNotification = true
-                let message = status == .idle ? "Claude Code — Completed" : "Claude Code — Needs Input"
-                tab.lastNotificationMessage = message
-                NotificationService.shared.send(
-                    title: status == .idle ? "Task Completed" : "Needs Input",
-                    body: message
-                )
-            }
         }
 
         return termView
     }
 
     func updateNSView(_ nsView: NotifyingTerminalView, context: Context) {
-        // Apply live settings changes
+        // Only apply settings when values actually changed — avoids redundant
+        // font/theme resets that can disrupt terminal rendering mid-output
         let settings = SettingsManager.shared
-        nsView.updateFontSize(settings.fontSize, fontName: settings.fontName)
-        nsView.applyTheme(settings.theme)
+        if nsView.lastAppliedFontSize != settings.fontSize || nsView.lastAppliedFontName != settings.fontName {
+            nsView.updateFontSize(settings.fontSize, fontName: settings.fontName)
+            nsView.lastAppliedFontSize = settings.fontSize
+            nsView.lastAppliedFontName = settings.fontName
+        }
+        let themeID = settings.theme.rawValue
+        if nsView.lastAppliedThemeID != themeID {
+            nsView.applyTheme(settings.theme)
+            nsView.lastAppliedThemeID = themeID
+        }
         context.coordinator.notifyThreshold = settings.notifyThresholdSeconds
     }
 
@@ -531,9 +609,13 @@ struct TerminalSwiftUIView: NSViewRepresentable {
 
         // .zshrc — sourced for interactive shells, after .zprofile
         // Prepend wrapper bin AFTER all user config so it survives PATH reordering
+        // Enable shared history across all SplitMux tabs
         let zshrc = """
         [ -f "\(home)/.zshrc" ] && source "\(home)/.zshrc"
         export PATH="\(wrapperBinPath):$PATH"
+        export HISTFILE="\(home)/.zsh_history"
+        setopt SHARE_HISTORY
+        setopt INC_APPEND_HISTORY
         """
 
         // .zlogin — sourced last for login shells

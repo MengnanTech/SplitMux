@@ -3,7 +3,7 @@ import SwiftUI
 /// Sidebar section showing SSH hosts with connect/manage actions
 struct SSHHostsSection: View {
     @Environment(AppState.self) private var appState
-    @State private var isExpanded = true
+    @State private var isExpanded = false
     @State private var showAddHost = false
     @State private var editingHost: SSHHost?
     @State private var hoveredHostID: UUID?

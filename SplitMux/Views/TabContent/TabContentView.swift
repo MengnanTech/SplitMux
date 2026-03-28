@@ -54,9 +54,11 @@ struct TabContentView: View {
         }
         .background(SettingsManager.shared.theme.contentBackground)
         .onReceive(NotificationCenter.default.publisher(for: .toggleTerminalHistory)) { _ in
+            guard session.id == appState.selectedSessionID else { return }
             withAnimation(.easeInOut(duration: 0.2)) { showHistory.toggle() }
         }
         .onReceive(NotificationCenter.default.publisher(for: .toggleTerminalSearch)) { _ in
+            guard session.id == appState.selectedSessionID else { return }
             withAnimation(.easeInOut(duration: 0.15)) { showSearch.toggle() }
         }
         .contextMenu {

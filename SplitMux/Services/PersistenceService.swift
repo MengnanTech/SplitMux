@@ -162,9 +162,15 @@ final class PersistenceService {
 
         session.activeTabID = dto.activeTabID.flatMap { UUID(uuidString: $0) } ?? session.tabs.first?.id
 
-        // Restore split layout
-        if let layoutDTO = dto.splitLayout {
-            session.splitRoot = dtoToSplitNode(layoutDTO)
+        // Restore split layout — validate that all referenced tabs still exist
+        if let layoutDTO = dto.splitLayout,
+           let splitNode = dtoToSplitNode(layoutDTO) {
+            let splitTabIDs = Set(splitNode.tabIDs)
+            let sessionTabIDs = Set(session.tabs.map(\.id))
+            // Only restore split if ALL referenced tabs exist
+            if splitTabIDs.isSubset(of: sessionTabIDs) && splitTabIDs.count >= 2 {
+                session.splitRoot = splitNode
+            }
         }
 
         return session

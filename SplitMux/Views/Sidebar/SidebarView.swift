@@ -190,7 +190,10 @@ struct SidebarView: View {
             let newTab = Tab(title: tab.title, icon: tab.icon, content: tab.content)
             newSession.addTab(newTab)
         }
+        newSession.startGitBranchPolling()
         appState.sessions.append(newSession)
+        appState.selectedSessionID = newSession.id
+        appState.scheduleSave()
     }
 }
 

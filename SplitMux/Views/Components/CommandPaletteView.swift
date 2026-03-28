@@ -65,6 +65,7 @@ struct CommandPaletteView: View {
             return .handled
         }
         .onKeyPress(.downArrow) {
+            guard !results.isEmpty else { return .handled }
             selectedIndex = min(results.count - 1, selectedIndex + 1)
             return .handled
         }

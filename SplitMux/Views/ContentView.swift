@@ -61,6 +61,9 @@ struct ContentView: View {
                 appState.updateDockBadge()
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .toggleCommandPalette)) { _ in
+            showCommandPalette.toggle()
+        }
         .onReceive(NotificationCenter.default.publisher(for: .showAgentDashboard)) { _ in
             showAgentDashboard = true
         }

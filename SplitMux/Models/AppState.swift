@@ -24,11 +24,16 @@ class AppState {
     func restoreIfNeeded() {
         guard SettingsManager.shared.restoreSessionsOnLaunch,
               let restored = PersistenceService.shared.load() else { return }
+        // Stop git polling on default sessions before replacing
+        for session in sessions {
+            session.stopGitBranchPolling()
+        }
         self.sessions = restored.sessions
         self.selectedSessionID = restored.selectedSessionID
-        // Start git branch polling for restored sessions
+        // Start git branch polling and wire save for restored sessions
         for session in sessions {
             session.startGitBranchPolling()
+            wireSessionSave(session)
         }
     }
 
@@ -37,6 +42,7 @@ class AppState {
         let tab1 = Tab(title: "zsh", icon: "terminal", content: .terminal)
         mainSession.addTab(tab1)
         mainSession.startGitBranchPolling()
+        wireSessionSave(mainSession)
 
         sessions = [mainSession]
         selectedSessionID = mainSession.id
@@ -47,9 +53,17 @@ class AppState {
         let tab = Tab(title: "zsh", icon: "terminal", content: .terminal)
         session.addTab(tab)
         session.startGitBranchPolling()
+        wireSessionSave(session)
         sessions.append(session)
         selectedSessionID = session.id
         scheduleSave()
+    }
+
+    /// Wire up a session's onChanged to trigger a debounced save
+    private func wireSessionSave(_ session: Session) {
+        session.onChanged = { [weak self] in
+            self?.scheduleSave()
+        }
     }
 
     func removeSession(_ id: UUID) {

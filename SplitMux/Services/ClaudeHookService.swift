@@ -27,6 +27,12 @@ final class ClaudeHookService {
     var completedCount: Int { agentInfos.filter { $0.status == .completed }.count }
 
     private init() {
+        // Clean up all old status files on startup
+        if let files = try? FileManager.default.contentsOfDirectory(atPath: statusDir) {
+            for file in files {
+                try? FileManager.default.removeItem(atPath: "\(statusDir)/\(file)")
+            }
+        }
         try? FileManager.default.createDirectory(
             atPath: statusDir,
             withIntermediateDirectories: true
@@ -37,10 +43,9 @@ final class ClaudeHookService {
     func startMonitoring(tabID: UUID, onStatusChange: @escaping @MainActor (ClaudeStatus) -> Void) {
         let path = "\(statusDir)/\(tabID.uuidString)"
 
-        // Create the file if it doesn't exist
-        if !FileManager.default.fileExists(atPath: path) {
-            FileManager.default.createFile(atPath: path, contents: nil)
-        }
+        // Always reset status file to empty on start (clear stale data from previous sessions)
+        FileManager.default.createFile(atPath: path, contents: Data(), attributes: nil)
+        lastStatus.removeValue(forKey: path)
 
         // Poll-based monitoring (reliable across all scenarios)
         let timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
@@ -143,7 +148,8 @@ final class ClaudeHookService {
 
     /// Clean up all monitors
     func cleanup() {
-        for (id, _) in pollTimers {
+        let ids = Array(pollTimers.keys)
+        for id in ids {
             stopMonitoring(tabID: id)
         }
     }

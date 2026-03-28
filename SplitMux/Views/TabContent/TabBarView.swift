@@ -133,8 +133,11 @@ struct TabBarView: View {
     }
 
     private func closeOtherTabs(keep tab: Tab) {
+        let idsToRemove = session.tabs.filter { $0.id != tab.id }.map(\.id)
         withAnimation {
-            session.tabs.removeAll { $0.id != tab.id }
+            for id in idsToRemove {
+                session.removeTab(id)
+            }
             session.activeTabID = tab.id
             session.splitRoot = nil
         }
@@ -142,8 +145,11 @@ struct TabBarView: View {
 
     private func closeTabsToRight(of tab: Tab) {
         guard let idx = session.tabs.firstIndex(where: { $0.id == tab.id }) else { return }
+        let idsToRemove = session.tabs[(idx + 1)...].map(\.id)
         withAnimation {
-            session.tabs.removeSubrange((idx + 1)...)
+            for id in idsToRemove {
+                session.removeTab(id)
+            }
             if let activeID = session.activeTabID,
                !session.tabs.contains(where: { $0.id == activeID }) {
                 session.activeTabID = tab.id

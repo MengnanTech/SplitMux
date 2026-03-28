@@ -3,6 +3,8 @@ import Foundation
 @MainActor
 @Observable
 class Session: Identifiable, Hashable {
+    /// Callback to notify AppState of changes that need saving
+    var onChanged: (() -> Void)?
     let id: UUID
     var customName: String?
     var icon: String
@@ -89,6 +91,7 @@ class Session: Identifiable, Hashable {
     func addTab(_ tab: Tab) {
         tabs.append(tab)
         activeTabID = tab.id
+        onChanged?()
     }
 
     func removeTab(_ tabID: UUID) {
@@ -113,6 +116,7 @@ class Session: Identifiable, Hashable {
         if activeTabID == tabID {
             activeTabID = tabs.last?.id
         }
+        onChanged?()
     }
 
     // MARK: - Split Pane
