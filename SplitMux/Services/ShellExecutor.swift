@@ -43,7 +43,13 @@ class TerminalSessionDelegate: NSObject, LocalProcessTerminalViewDelegate, @unch
             }
             commandStartTime = nil
         } else if !isShellPrompt && commandStartTime == nil {
-            commandStartTime = Date()
+            // Only treat as command start if enough time has passed since the last
+            // prompt — zsh themes set custom titles (e.g. "user@host") right after
+            // shell init/prompt rendering, which is NOT a command execution.
+            let timeSincePrompt = Date().timeIntervalSince(lastPromptTime)
+            if timeSincePrompt > 1.5 {
+                commandStartTime = Date()
+            }
         }
     }
 
