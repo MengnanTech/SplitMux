@@ -33,16 +33,12 @@ class TerminalSessionDelegate: NSObject, LocalProcessTerminalViewDelegate, @unch
             reconnectTask?.cancel()
             reconnectTask = Task { @MainActor [weak self, weak termView] in
                 guard let termView else { return }
-                // If Claude was running, clear status and status file on process exit
-                if termView.claudeDetected, let tab = self?.tab {
+                // Clear Claude status on process exit
+                if let tab = self?.tab {
                     tab.claudeStatus = nil
                     let path = "/tmp/splitmux/\(tab.id.uuidString)"
                     try? "".write(toFile: path, atomically: true, encoding: .utf8)
                 }
-                // Reset Claude detection on process exit
-                termView.claudeDetected = false
-                termView.recentOutput = ""
-                termView.stopIdleTimeoutTimer()
 
                 // SSH auto-reconnect
                 guard termView.sshAutoReconnect,
@@ -251,215 +247,13 @@ class NotifyingTerminalView: LocalProcessTerminalView {
         feed(text: "\u{0C}")  // Form feed (Ctrl+L)
     }
 
-    // MARK: - Terminal Output Capture + Claude Detection
+    // MARK: - Terminal Output Capture
 
-    /// Claude Code detected in this terminal (reset on process exit)
-    var claudeDetected = false
-    /// Sliding window of recent clean text for pattern matching
-    var recentOutput = ""
-    /// Timestamp of last substantial terminal output (for timeout-based idle detection)
-    var lastSubstantialOutputTime: Date = Date()
-    /// Timer for timeout-based idle detection fallback
-    private var idleTimeoutTimer: Timer?
-    /// Threshold (seconds) of no substantial output to consider Claude idle
-    private static let idleTimeoutSeconds: TimeInterval = 3.0
-
-    /// ANSI escape code stripping regex — handles CSI, OSC, DCS, character sets, keypad, cursor save/restore
-    private static let ansiRegex = try! NSRegularExpression(pattern: [
-        "\u{1B}\\[[0-9;:?]*[A-Za-z]",                                   // CSI sequences (incl. colon-separated SGR)
-        "\u{1B}\\][^\u{07}\u{1B}]*(?:\u{07}|\u{1B}\\\\)",               // OSC sequences
-        "\u{1B}P[^\u{1B}]*\u{1B}\\\\",                                  // DCS sequences
-        "\u{1B}[()][A-Za-z]",                                           // Character set designation
-        "\u{1B}[=>78]",                                                  // Keypad mode + cursor save/restore
-        "\u{1B}#[0-9]",                                                  // Double-width/height lines
-    ].joined(separator: "|"))
-
-    /// Strip ANSI escape codes from terminal output
-    private static func stripAnsi(_ raw: String) -> String {
-        let range = NSRange(raw.startIndex..., in: raw)
-        return ansiRegex.stringByReplacingMatches(in: raw, range: range, withTemplate: "")
-    }
-
-    /// Collapse runs of whitespace (2+ spaces) to single space for window efficiency
-    private static func compactWhitespace(_ s: String) -> String {
-        s.replacingOccurrences(of: " {2,}", with: " ", options: .regularExpression)
-    }
-
-    /// Intercept PTY output for history recording + Claude detection
+    /// Intercept PTY output for history recording
     override func dataReceived(slice: ArraySlice<UInt8>) {
         let data = Data(slice)
         onDataReceived?(data)
-
-        // Claude detection from terminal output
-        // Use lenient UTF-8 decoding — chunk boundaries often split multi-byte chars
-        let raw = String(decoding: data, as: UTF8.self)
-        let clean = Self.stripAnsi(raw)
-
-        // Call detectClaude directly — dataReceived is already on main queue
-        if !clean.isEmpty {
-            detectClaude(clean)
-        }
-
         super.dataReceived(slice: slice)
-    }
-
-    private func detectClaude(_ text: String) {
-        guard let delegate = sessionDelegate, let tab = delegate.tab else { return }
-
-        // Compact whitespace before adding to window — TUI apps fill rows with spaces
-        // which would otherwise flood the window and push out actual text
-        let compact = Self.compactWhitespace(text)
-        recentOutput = String((recentOutput + compact).suffix(2000))
-
-        // Track substantial output for timeout-based idle detection
-        let trimmed = compact.trimmingCharacters(in: .whitespacesAndNewlines)
-        let isSubstantialOutput = trimmed.count > 10
-
-        // Step 1: Detect Claude startup
-        // Match "Claude Code" (case-sensitive, both words capitalized) — the banner text.
-        // No version number required — new versions show "Opus 4.6" on a separate line
-        // with other text in between, which the old regex couldn't match.
-        // Won't false-positive on the command `claude` (lowercase).
-        if !claudeDetected {
-            if recentOutput.contains("Claude Code") {
-                claudeDetected = true
-                tab.claudeStatus = .running
-                writeStatus(tab: tab, status: "running")
-                lastSubstantialOutputTime = Date()
-                startIdleTimeoutTimer()
-                // Fall through to check if this same chunk also contains idle marker
-            } else {
-                return
-            }
-        }
-
-        // Update substantial output timestamp
-        if isSubstantialOutput {
-            lastSubstantialOutputTime = Date()
-        }
-
-        // Step 2: Track status transitions
-        // Use CURRENT CHUNK only for status checks — the sliding window retains old markers
-        let isActive = delegate.isTabCurrentlyActive() && NSApp.isActive
-        let prev = tab.claudeStatus
-
-        // Check current chunk for status indicators (spaces may be missing after ANSI strip)
-        // Also detect "? for help" which appears in some Claude versions (e.g. --dangerously-skip-permissions mode)
-        let chunkHasIdle = compact.contains("forshortcuts") || compact.contains("for shortcuts")
-            || compact.contains("forhelp") || compact.contains("for help")
-        let chunkHasInput = compact.contains("[Y/n]") || compact.contains("Allowonce") || compact.contains("Allow once") || compact.contains("Allowalways") || compact.contains("Allow always")
-
-        // Check only the TAIL of the sliding window (~300 chars) for the idle marker.
-        // Ink re-renders send cursor/style chunks without the marker text, but the
-        // marker is still on screen and appears in recent output. Using the tail
-        // (not the full 2000-char window) ensures that once Claude starts working
-        // and new content pushes out the idle marker, we correctly detect running.
-        let windowTail = String(recentOutput.suffix(300))
-        let tailHasIdle = windowTail.contains("forshortcuts") || windowTail.contains("for shortcuts")
-            || windowTail.contains("forhelp") || windowTail.contains("for help")
-
-        if chunkHasInput {
-            if prev != .needsInput {
-                tab.claudeStatus = .needsInput
-                writeStatus(tab: tab, status: "needs-input")
-                if !isActive {
-                    tab.hasNotification = true
-                    tab.lastNotificationMessage = "Claude Code — Needs Input"
-                    NotificationService.shared.send(
-                        title: "Needs Input",
-                        body: "Claude Code — Waiting for approval",
-                        tabIsActive: false
-                    )
-                    postToastNotification(delegate: delegate, tab: tab, message: "Claude Code — Needs Input")
-                }
-            }
-        } else if (chunkHasIdle || (prev != .idle && tailHasIdle)) && (prev == .running || prev == .needsInput) {
-            // Transition: running/needsInput → idle = task completed
-            transitionToIdle(tab: tab, prev: prev, delegate: delegate, isActive: isActive)
-        } else if prev == .idle && !chunkHasIdle {
-            // Claude was idle, new output without idle marker → working again
-            // But don't flip back if the idle marker is still in recent tail
-            // (ink re-renders send cursor/style updates without the marker text)
-            if !tailHasIdle && trimmed.count > 3 {
-                tab.claudeStatus = .running
-                writeStatus(tab: tab, status: "running")
-                lastSubstantialOutputTime = Date()
-                startIdleTimeoutTimer()
-            }
-        }
-    }
-
-    /// Transition Claude status to idle and fire notifications
-    private func transitionToIdle(tab: Tab, prev: ClaudeStatus?, delegate: TerminalSessionDelegate, isActive: Bool) {
-        tab.claudeStatus = .idle
-        writeStatus(tab: tab, status: "idle")
-        stopIdleTimeoutTimer()
-        if prev == .running && !isActive {
-            tab.hasNotification = true
-            tab.lastNotificationMessage = "Claude Code — Task Completed"
-            NotificationService.shared.send(
-                title: "Task Completed",
-                body: "Claude Code — Task Completed",
-                tabIsActive: false
-            )
-            postToastNotification(delegate: delegate, tab: tab, message: "Claude Code — Task Completed")
-        }
-    }
-
-    // MARK: - Timeout-based idle detection
-
-    /// Start a repeating timer that checks if Claude has been "running" with no
-    /// substantial output — handles cases where text-based idle markers are absent
-    /// (e.g. --dangerously-skip-permissions mode).
-    private func startIdleTimeoutTimer() {
-        stopIdleTimeoutTimer()
-        idleTimeoutTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            guard let self else { return }
-            MainActor.assumeIsolated {
-                self.checkIdleTimeout()
-            }
-        }
-    }
-
-    func stopIdleTimeoutTimer() {
-        idleTimeoutTimer?.invalidate()
-        idleTimeoutTimer = nil
-    }
-
-    private func checkIdleTimeout() {
-        guard claudeDetected,
-              let delegate = sessionDelegate,
-              let tab = delegate.tab,
-              tab.claudeStatus == .running else {
-            // Not in running state — no need to check
-            return
-        }
-
-        let elapsed = Date().timeIntervalSince(lastSubstantialOutputTime)
-        if elapsed >= Self.idleTimeoutSeconds {
-            let isActive = delegate.isTabCurrentlyActive() && NSApp.isActive
-            transitionToIdle(tab: tab, prev: .running, delegate: delegate, isActive: isActive)
-        }
-    }
-
-    private func writeStatus(tab: Tab, status: String) {
-        let path = "/tmp/splitmux/\(tab.id.uuidString)"
-        try? status.write(toFile: path, atomically: true, encoding: .utf8)
-    }
-
-    /// Post in-app toast notification for Claude status changes
-    private func postToastNotification(delegate: TerminalSessionDelegate, tab: Tab, message: String) {
-        var info: [String: Any] = [
-            "tabID": tab.id,
-            "tabTitle": tab.title,
-            "message": message
-        ]
-        if let appState = delegate.appState,
-           let session = appState.sessions.first(where: { $0.tabs.contains(where: { $0.id == tab.id }) }) {
-            info["sessionID"] = session.id
-            info["sessionName"] = session.name
-        }
-        NotificationCenter.default.post(name: .tabNotification, object: nil, userInfo: info)
     }
 
     /// Restart the shell process in a new working directory without visible `cd` command
@@ -550,10 +344,21 @@ struct TerminalSwiftUIView: NSViewRepresentable {
 
         // Switch active pane on click (for split pane mode)
         let tabID = tab.id
-        termView.onPaneClicked = { [weak appState] in
-            guard let appState = appState,
-                  let session = appState.sessions.first(where: { $0.tabs.contains(where: { $0.id == tabID }) }),
-                  let splitRoot = session.splitRoot,
+        let tabRef2 = tab
+        termView.onPaneClicked = { [weak appState, weak tabRef2] in
+            guard let appState = appState, let clickedTab = tabRef2,
+                  let session = appState.sessions.first(where: { $0.tabs.contains(where: { $0.id == tabID }) })
+            else { return }
+
+            // Clear notification on click regardless of split mode
+            if clickedTab.hasNotification {
+                clickedTab.hasNotification = false
+                clickedTab.lastNotificationMessage = nil
+                appState.updateDockBadge()
+            }
+
+            // Switch active pane in split mode
+            guard let splitRoot = session.splitRoot,
                   splitRoot.tabIDs.contains(tabID),
                   session.activeTabID != tabID
             else { return }
@@ -599,7 +404,6 @@ struct TerminalSwiftUIView: NSViewRepresentable {
         env["TERM_PROGRAM"] = "SplitMux"
         env["COLORTERM"] = "truecolor"
         env["LANG"] = "en_US.UTF-8"
-        env["CLAUDE_CODE_FORCE_FULL_LOGO"] = "1"
 
         // SplitMux env vars for Claude hook integration
         env["SPLITMUX_TAB_ID"] = tab.id.uuidString
@@ -668,12 +472,39 @@ struct TerminalSwiftUIView: NSViewRepresentable {
             }
         }
 
-        // Start Claude hook monitoring for this tab (agent dashboard tracking only).
-        // The terminal output detection (detectClaude) is the sole writer of tab.claudeStatus —
-        // the hook service only updates its own agentInfos for the orchestration dashboard.
-        ClaudeHookService.shared.startMonitoring(tabID: tab.id) { _ in
-            // No-op: tab.claudeStatus is driven by terminal output detection (detectClaude),
-            // not by the file-based hook service. This avoids double-write race conditions.
+        // Start Claude hook monitoring — the status file is the sole source of truth.
+        // Claude's wrapper script (bin/claude) injects hooks that write status directly
+        // to /tmp/splitmux/{tabID} on lifecycle events (UserPromptSubmit, Stop, Notification).
+        let tabRef = tab
+        let coordRef = context.coordinator
+        ClaudeHookService.shared.startMonitoring(tabID: tab.id) { [weak tabRef, weak coordRef] status in
+            guard let tab = tabRef else { return }
+            let prev = tab.claudeStatus
+            tab.claudeStatus = status
+
+            // Fire notifications on meaningful transitions when tab is not active
+            guard let delegate = coordRef else { return }
+            let isActive = delegate.isTabCurrentlyActive() && NSApp.isActive
+
+            if status == .needsInput && prev != .needsInput && !isActive {
+                tab.hasNotification = true
+                tab.lastNotificationMessage = "Claude Code — Needs Input"
+                NotificationService.shared.send(
+                    title: "Needs Input",
+                    body: "Claude Code — Waiting for approval",
+                    tabIsActive: false
+                )
+                Self.postToastNotification(tab: tab, appState: delegate.appState)
+            } else if status == .idle && prev == .running && !isActive {
+                tab.hasNotification = true
+                tab.lastNotificationMessage = "Claude Code — Task Completed"
+                NotificationService.shared.send(
+                    title: "Task Completed",
+                    body: "Claude Code — Task Completed",
+                    tabIsActive: false
+                )
+                Self.postToastNotification(tab: tab, appState: delegate.appState)
+            }
         }
 
         return termView
@@ -693,6 +524,21 @@ struct TerminalSwiftUIView: NSViewRepresentable {
             nsView.applyTheme(settings.theme)
             nsView.lastAppliedThemeID = themeID
         }
+    }
+
+    /// Post in-app toast notification for Claude status changes
+    private static func postToastNotification(tab: Tab, appState: AppState?) {
+        var info: [String: Any] = [
+            "tabID": tab.id,
+            "tabTitle": tab.title,
+            "message": tab.lastNotificationMessage ?? ""
+        ]
+        if let appState,
+           let session = appState.sessions.first(where: { $0.tabs.contains(where: { $0.id == tab.id }) }) {
+            info["sessionID"] = session.id
+            info["sessionName"] = session.name
+        }
+        NotificationCenter.default.post(name: .tabNotification, object: nil, userInfo: info)
     }
 
     /// Create a temporary ZDOTDIR that forwards to user dotfiles,
