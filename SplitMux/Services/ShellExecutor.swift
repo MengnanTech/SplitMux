@@ -44,14 +44,21 @@ class TerminalSessionDelegate: NSObject, LocalProcessTerminalViewDelegate, @unch
 
     func hostCurrentDirectoryUpdate(source: TerminalView, directory: String?) {
         let now = Date()
-        let elapsed = now.timeIntervalSince(lastPromptTime)
 
-        if suppressNextNotification {
+        // Only notify if a command was actually running — zsh re-emits OSC 7
+        // on prompt redraws (e.g. pressing Delete), which would otherwise
+        // trigger false "Command Finished" notifications.
+        if let start = commandStartTime {
+            let elapsed = now.timeIntervalSince(start)
+            if suppressNextNotification {
+                suppressNextNotification = false
+            } else if elapsed >= notifyThreshold {
+                let dir = directory.map { URL(fileURLWithPath: $0).lastPathComponent } ?? "terminal"
+                let msg = "\(tabTitle) in \(dir) — \(Self.formatDuration(elapsed))"
+                notify(message: msg, title: "Command Finished")
+            }
+        } else if suppressNextNotification {
             suppressNextNotification = false
-        } else if elapsed >= notifyThreshold {
-            let dir = directory.map { URL(fileURLWithPath: $0).lastPathComponent } ?? "terminal"
-            let msg = "\(tabTitle) in \(dir) — \(Self.formatDuration(elapsed))"
-            notify(message: msg, title: "Command Finished")
         }
 
         lastPromptTime = now
@@ -162,6 +169,9 @@ class NotifyingTerminalView: LocalProcessTerminalView {
 
     /// Callback for terminal output capture (history recording)
     var onDataReceived: ((Data) -> Void)?
+
+    /// Bell debounce — suppress rapid-fire bell notifications (e.g. Delete on empty prompt)
+    private var lastBellNotificationTime: Date = .distantPast
 
     /// SSH host ID for auto-reconnect
     var sshHostID: UUID?
@@ -461,6 +471,12 @@ class NotifyingTerminalView: LocalProcessTerminalView {
         super.bell(source: source)
         Task { @MainActor in
             guard let delegate = self.sessionDelegate, let tab = delegate.tab else { return }
+
+            // Debounce: suppress bell notifications within 3 seconds of each other
+            // (e.g. pressing Delete/Backspace repeatedly on empty prompt)
+            let now = Date()
+            guard now.timeIntervalSince(lastBellNotificationTime) >= 3 else { return }
+
             // Only notify if tab is NOT active (user is looking at another tab/app)
             let tabIsActive = delegate.appState.flatMap { appState in
                 appState.sessions.first(where: { $0.tabs.contains(where: { $0.id == tab.id }) })
@@ -468,6 +484,7 @@ class NotifyingTerminalView: LocalProcessTerminalView {
             } ?? false
 
             if !tabIsActive || !NSApp.isActive {
+                lastBellNotificationTime = now
                 tab.hasNotification = true
                 tab.lastNotificationMessage = "Bell — \(delegate.tabTitle)"
                 NotificationService.shared.send(
