@@ -5,6 +5,7 @@ struct EmptyStateView: View {
     @State private var isHovering = false
 
     private var theme: AppTheme { SettingsManager.shared.theme }
+    private var isLightMode: Bool { theme.colorScheme == .light }
 
     var body: some View {
         VStack(spacing: 32) {
@@ -14,33 +15,39 @@ struct EmptyStateView: View {
                 RoundedRectangle(cornerRadius: 16)
                     .fill(
                         LinearGradient(
-                            colors: [Color(red: 1, green: 0.42, blue: 0.42), Color(red: 1, green: 0.63, blue: 0.48)],
+                            colors: isLightMode
+                                ? [theme.brandCoral, theme.brandCoral.opacity(0.72)]
+                                : [Color(red: 1, green: 0.42, blue: 0.42), Color(red: 1, green: 0.63, blue: 0.48)],
                             startPoint: .topLeading, endPoint: .bottomTrailing
                         )
                     )
                     .frame(width: 52, height: 72)
                     .rotationEffect(.degrees(-6))
                     .offset(x: -30)
-                    .shadow(color: Color(red: 1, green: 0.42, blue: 0.42).opacity(0.3), radius: 12, y: 6)
+                    .shadow(color: (isLightMode ? theme.brandCoral : Color(red: 1, green: 0.42, blue: 0.42)).opacity(isLightMode ? 0.18 : 0.3), radius: isLightMode ? 8 : 12, y: isLightMode ? 4 : 6)
 
                 // Right card
                 RoundedRectangle(cornerRadius: 16)
                     .fill(
                         LinearGradient(
-                            colors: [Color(red: 0.31, green: 0.8, blue: 0.77), Color(red: 0.27, green: 0.66, blue: 0.88)],
+                            colors: isLightMode
+                                ? [theme.brandAqua, theme.brandAqua.opacity(0.72)]
+                                : [Color(red: 0.31, green: 0.8, blue: 0.77), Color(red: 0.27, green: 0.66, blue: 0.88)],
                             startPoint: .topLeading, endPoint: .bottomTrailing
                         )
                     )
                     .frame(width: 52, height: 72)
                     .rotationEffect(.degrees(6))
                     .offset(x: 30)
-                    .shadow(color: Color(red: 0.31, green: 0.8, blue: 0.77).opacity(0.3), radius: 12, y: 6)
+                    .shadow(color: (isLightMode ? theme.brandAqua : Color(red: 0.31, green: 0.8, blue: 0.77)).opacity(isLightMode ? 0.18 : 0.3), radius: isLightMode ? 8 : 12, y: isLightMode ? 4 : 6)
 
                 // Center divider dot
                 Circle()
                     .fill(
                         LinearGradient(
-                            colors: [Color(red: 1, green: 0.42, blue: 0.42), Color(red: 0.31, green: 0.8, blue: 0.77)],
+                            colors: isLightMode
+                                ? [theme.brandCoral, theme.brandAqua]
+                                : [Color(red: 1, green: 0.42, blue: 0.42), Color(red: 0.31, green: 0.8, blue: 0.77)],
                             startPoint: .leading, endPoint: .trailing
                         )
                     )
@@ -89,14 +96,13 @@ struct EmptyStateView: View {
                     Capsule()
                         .fill(
                             LinearGradient(
-                                colors: [
-                                    theme.brandCoral,
-                                    theme.brandAqua
-                                ],
+                                colors: isLightMode
+                                    ? [theme.brandCoral, theme.brandAqua]
+                                    : [Color(red: 0.4, green: 0.45, blue: 0.95), Color(red: 0.55, green: 0.4, blue: 0.85)],
                                 startPoint: .leading, endPoint: .trailing
                             )
                         )
-                        .shadow(color: theme.chromeShadow.opacity(isHovering ? 0.22 : 0.14), radius: isHovering ? 10 : 5, y: 3)
+                        .shadow(color: isLightMode ? theme.chromeShadow.opacity(isHovering ? 0.22 : 0.14) : Color(red: 0.45, green: 0.4, blue: 0.9).opacity(isHovering ? 0.5 : 0.25), radius: isLightMode ? (isHovering ? 10 : 5) : (isHovering ? 12 : 6), y: 3)
                 )
                 .scaleEffect(isHovering ? 1.04 : 1.0)
                 .animation(.easeOut(duration: 0.15), value: isHovering)

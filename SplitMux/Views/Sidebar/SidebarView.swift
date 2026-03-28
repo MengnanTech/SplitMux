@@ -8,6 +8,7 @@ struct SidebarView: View {
     @State private var draggedSessionID: UUID?
 
     private var theme: AppTheme { SettingsManager.shared.theme }
+    private var isLightMode: Bool { theme.colorScheme == .light }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -26,16 +27,25 @@ struct SidebarView: View {
                 } label: {
                     Image(systemName: "plus")
                         .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(theme.iconDimmed)
+                        .foregroundStyle(isLightMode ? theme.iconDimmed : theme.secondaryText)
                         .frame(width: 24, height: 24)
-                        .background(
-                            RoundedRectangle(cornerRadius: 6)
-                                .fill(theme.subtleOverlay.opacity(0.85))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 6)
-                                        .strokeBorder(theme.subtleBorder.opacity(0.3), lineWidth: 0.5)
-                                )
-                        )
+                        .background {
+                            if isLightMode {
+                                RoundedRectangle(cornerRadius: 6)
+                                    .fill(theme.subtleOverlay.opacity(0.85))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 6)
+                                            .strokeBorder(theme.subtleBorder.opacity(0.3), lineWidth: 0.5)
+                                    )
+                            } else {
+                                RoundedRectangle(cornerRadius: 6)
+                                    .fill(.ultraThinMaterial)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 6)
+                                            .fill(theme.subtleOverlay)
+                                    )
+                            }
+                        }
                 }
                 .buttonStyle(.plain)
             }
@@ -147,33 +157,35 @@ struct SidebarView: View {
                     .foregroundStyle(theme.iconDimmed)
                 Text("Command Palette")
                     .font(.system(size: 10))
-                    .foregroundStyle(theme.tertiaryText)
+                    .foregroundStyle(theme.disabledText)
 
                 Spacer()
 
                 Text("\(appState.sessions.count) sessions")
                     .font(.system(size: 10, weight: .regular))
-                    .foregroundStyle(theme.tertiaryText)
+                    .foregroundStyle(theme.disabledText)
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
         }
         .background(
             ZStack {
-                // Base gradient for depth
                 theme.sidebarGradient
 
-                // Frosted glass overlay
-                theme.chromeOverlay
+                if isLightMode {
+                    // Frosted glass overlay
+                    theme.chromeOverlay
+                }
 
-                // Shared canvas material beneath the sidebar shell
                 Rectangle().fill(.ultraThinMaterial)
             }
         )
         .overlay(alignment: .trailing) {
-            Rectangle()
-                .fill(theme.subtleBorder.opacity(0.45))
-                .frame(width: 0.5)
+            if isLightMode {
+                Rectangle()
+                    .fill(theme.subtleBorder.opacity(0.45))
+                    .frame(width: 0.5)
+            }
         }
         .alert("Rename Session", isPresented: Binding(
             get: { renamingSession != nil },
@@ -265,6 +277,7 @@ struct SessionRow: View {
     let isHovered: Bool
 
     private var theme: AppTheme { SettingsManager.shared.theme }
+    private var isLightMode: Bool { theme.colorScheme == .light }
 
     var body: some View {
         HStack(spacing: 10) {
@@ -295,8 +308,8 @@ struct SessionRow: View {
                             .truncationMode(.tail)
                     }
                 }
-                .font(.system(size: 10))
-                .foregroundStyle(theme.tertiaryText)
+                    .font(.system(size: 10))
+                    .foregroundStyle(theme.disabledText)
 
                 // Per-tab Claude status indicators
                 let claudeTabs = session.claudeTabs
@@ -339,27 +352,56 @@ struct SessionRow: View {
         .background(
             Group {
                 if isSelected {
-                    // Softer selection wash that stays close to the shared canvas
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    theme.chromeSurfaceBackground.opacity(0.94),
-                                    theme.accentColor.opacity(0.10),
-                                    theme.accentColor.opacity(0.04)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .strokeBorder(
-                                    theme.accentColor.opacity(0.14),
-                                    lineWidth: 0.5
+                    if isLightMode {
+                        // Softer selection wash that stays close to the shared canvas
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(
+                                LinearGradient(
+                                    colors: [
+                                        theme.chromeSurfaceBackground.opacity(0.94),
+                                        theme.accentColor.opacity(0.10),
+                                        theme.accentColor.opacity(0.04)
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
                                 )
-                        )
-                        .shadow(color: theme.chromeShadow.opacity(0.09), radius: 4, y: 1)
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .strokeBorder(
+                                        theme.accentColor.opacity(0.14),
+                                        lineWidth: 0.5
+                                    )
+                            )
+                            .shadow(color: theme.chromeShadow.opacity(0.09), radius: 4, y: 1)
+                    } else {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(
+                                LinearGradient(
+                                    colors: [
+                                        theme.accentColor.opacity(0.18),
+                                        theme.accentColor.opacity(0.08)
+                                    ],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .strokeBorder(
+                                        LinearGradient(
+                                            colors: [
+                                                theme.accentColor.opacity(0.4),
+                                                theme.accentColor.opacity(0.15)
+                                            ],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        ),
+                                        lineWidth: 0.5
+                                    )
+                            )
+                            .shadow(color: theme.accentColor.opacity(0.15), radius: 8, y: 2)
+                    }
                 } else if isHovered {
                     RoundedRectangle(cornerRadius: 8)
                         .fill(theme.hoverBackground.opacity(0.6))
