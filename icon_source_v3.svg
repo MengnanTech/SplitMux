@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <!-- Background: clean warm white to soft peach -->
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fef9f4"/>
+      <stop offset="100%" stop-color="#f0e4f7"/>
+    </linearGradient>
+
+    <!-- Left shape gradient: warm coral to orange -->
+    <linearGradient id="leftGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FF6B6B"/>
+      <stop offset="100%" stop-color="#FFA07A"/>
+    </linearGradient>
+
+    <!-- Right shape gradient: cool blue to teal -->
+    <linearGradient id="rightGrad" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4ECDC4"/>
+      <stop offset="100%" stop-color="#44A8E0"/>
+    </linearGradient>
+
+    <!-- Center divider gradient -->
+    <linearGradient id="divGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FF6B6B" stop-opacity="0.8"/>
+      <stop offset="50%" stop-color="#A06CD5"/>
+      <stop offset="100%" stop-color="#4ECDC4" stop-opacity="0.8"/>
+    </linearGradient>
+
+    <!-- Shadow filter -->
+    <filter id="softShadow" x="-15%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="12" stdDeviation="24" flood-color="#a070b0" flood-opacity="0.2"/>
+    </filter>
+
+    <!-- Inner shadow for depth -->
+    <filter id="innerLight" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="-3" dy="-3" stdDeviation="6" flood-color="#ffffff" flood-opacity="0.6"/>
+    </filter>
+
+    <!-- Glow for divider -->
+    <filter id="divGlow" x="-200%" y="-5%" width="500%" height="110%">
+      <feGaussianBlur stdDeviation="16"/>
+    </filter>
+
+    <!-- macOS squircle -->
+    <clipPath id="iconMask">
+      <rect x="0" y="0" width="1024" height="1024" rx="228" ry="228"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#iconMask)">
+    <!-- Background -->
+    <rect width="1024" height="1024" fill="url(#bg)"/>
+
+    <!-- Subtle radial warmth -->
+    <radialGradient id="warmCenter" cx="0.5" cy="0.45" r="0.6">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <rect width="1024" height="1024" fill="url(#warmCenter)"/>
+
+    <!-- ===== Left abstract block ===== -->
+    <!-- A large rounded rectangle, slightly rotated, representing one "half" -->
+    <g filter="url(#softShadow)">
+      <g transform="translate(290, 512) rotate(-6) translate(-290, -512)">
+        <rect x="115" y="222" width="350" height="560" rx="48" ry="48" fill="url(#leftGrad)"/>
+        <!-- Surface highlight -->
+        <rect x="115" y="222" width="350" height="280" rx="48" ry="48" fill="white" opacity="0.12"/>
+        <rect x="115" y="420" width="350" height="82" fill="white" opacity="0.12"/>
+        <!-- Terminal chevron symbol - bold and simple -->
+        <text x="240" y="500" font-family="-apple-system, SF Pro Display, Helvetica Neue" font-size="140" font-weight="300" fill="white" opacity="0.9">&gt;_</text>
+      </g>
+    </g>
+
+    <!-- ===== Right abstract block ===== -->
+    <g filter="url(#softShadow)">
+      <g transform="translate(734, 512) rotate(6) translate(-734, -512)">
+        <rect x="559" y="222" width="350" height="560" rx="48" ry="48" fill="url(#rightGrad)"/>
+        <!-- Surface highlight -->
+        <rect x="559" y="222" width="350" height="280" rx="48" ry="48" fill="white" opacity="0.12"/>
+        <rect x="559" y="420" width="350" height="82" fill="white" opacity="0.12"/>
+        <!-- Code bracket symbol -->
+        <text x="670" y="500" font-family="-apple-system, SF Pro Display, Helvetica Neue" font-size="140" font-weight="300" fill="white" opacity="0.9">{ }</text>
+      </g>
+    </g>
+
+    <!-- ===== Center divider line ===== -->
+    <!-- Glow -->
+    <rect x="500" y="180" width="24" height="664" rx="12" fill="url(#divGrad)" opacity="0.3" filter="url(#divGlow)"/>
+    <!-- Core line -->
+    <rect x="506" y="200" width="12" height="624" rx="6" fill="url(#divGrad)"/>
+    <!-- Bright center pip -->
+    <circle cx="512" cy="512" r="10" fill="white" opacity="0.9"/>
+    <circle cx="512" cy="512" r="6" fill="url(#divGrad)"/>
+
+    <!-- Small decorative arrow hints on divider (split arrows) -->
+    <!-- Left arrow -->
+    <polygon points="498,505 488,512 498,519" fill="url(#leftGrad)" opacity="0.7"/>
+    <!-- Right arrow -->
+    <polygon points="526,505 536,512 526,519" fill="url(#rightGrad)" opacity="0.7"/>
+  </g>
+</svg>
