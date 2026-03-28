@@ -14,11 +14,10 @@ struct SidebarView: View {
             // Header
             HStack {
                 Text("Sessions")
-                    .font(.system(.caption, design: .monospaced))
-                    .fontWeight(.semibold)
+                    .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(theme.sectionHeaderText)
                     .textCase(.uppercase)
-                    .tracking(1.2)
+                    .tracking(0.8)
 
                 Spacer()
 
@@ -26,24 +25,23 @@ struct SidebarView: View {
                     appState.addSession()
                 } label: {
                     Image(systemName: "plus")
-                        .font(.system(size: 10, weight: .semibold))
+                        .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(theme.secondaryText)
-                        .frame(width: 22, height: 22)
+                        .frame(width: 24, height: 24)
                         .background(
-                            Circle()
+                            RoundedRectangle(cornerRadius: 6)
                                 .fill(theme.subtleOverlay)
-                                .overlay(Circle().stroke(theme.subtleBorder.opacity(0.5), lineWidth: 0.5))
                         )
                 }
                 .buttonStyle(.plain)
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 16)
-            .padding(.bottom, 12)
+            .padding(.horizontal, 14)
+            .padding(.top, 14)
+            .padding(.bottom, 10)
 
             // Session list
             ScrollView {
-                LazyVStack(spacing: 2) {
+                LazyVStack(spacing: 1) {
                     ForEach(appState.sessions) { session in
                         SessionRow(
                             session: session,
@@ -55,7 +53,6 @@ struct SidebarView: View {
                             withAnimation(.easeOut(duration: 0.12)) {
                                 appState.selectedSessionID = session.id
                             }
-                            // Clear notifications for active tab
                             if let activeTab = session.activeTab {
                                 activeTab.hasNotification = false
                                 activeTab.lastNotificationMessage = nil
@@ -101,7 +98,6 @@ struct SidebarView: View {
 
                             Divider()
 
-                            // Split options
                             ForEach(SplitDirection.allCases, id: \.rawValue) { direction in
                                 Button {
                                     appState.selectedSessionID = session.id
@@ -126,41 +122,42 @@ struct SidebarView: View {
                 .padding(.horizontal, 8)
             }
 
+            Spacer(minLength: 0)
+
             // Claude Agents section
             AgentsSidebarSection()
 
             // SSH Hosts section
             SSHHostsSection()
 
-            Spacer()
-
-            // Footer — helpful shortcut hint
-            HStack(spacing: 6) {
+            // Footer
+            HStack(spacing: 5) {
                 Image(systemName: "command")
                     .font(.system(size: 8))
                     .foregroundStyle(theme.iconDimmed)
                 Text("P")
-                    .font(.system(.caption2, design: .monospaced))
-                    .fontWeight(.medium)
+                    .font(.system(size: 10, weight: .medium, design: .monospaced))
                     .foregroundStyle(theme.iconDimmed)
                 Text("Command Palette")
-                    .font(.system(.caption2, design: .monospaced))
+                    .font(.system(size: 10))
                     .foregroundStyle(theme.disabledText)
 
                 Spacer()
 
-                Circle()
-                    .fill(theme.accentColor)
-                    .frame(width: 6, height: 6)
                 Text("\(appState.sessions.count)")
-                    .font(.system(.caption2, design: .monospaced))
-                    .foregroundStyle(theme.disabledText)
+                    .font(.system(size: 10, weight: .medium, design: .rounded))
+                    .foregroundStyle(theme.accentColor)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(
+                        Capsule().fill(theme.accentColor.opacity(0.12))
+                    )
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 14)
             .padding(.vertical, 10)
         }
         .background(.ultraThinMaterial)
-        .background(theme.sidebarBackground.opacity(0.7))
+        .background(theme.sidebarBackground.opacity(0.85))
         .alert("Rename Session", isPresented: Binding(
             get: { renamingSession != nil },
             set: { if !$0 { renamingSession = nil } }
@@ -187,7 +184,6 @@ struct SidebarView: View {
         if panel.runModal() == .OK, let url = panel.url {
             session.workingDirectory = url.path
 
-            // Restart terminal in the new directory (seamless, no visible cd)
             if session.tabs.count == 1,
                let tab = session.tabs.first,
                let tv = tab.terminalView as? NotifyingTerminalView {
@@ -264,15 +260,15 @@ struct SessionRow: View {
 
     var body: some View {
         HStack(spacing: 10) {
+            // Icon with accent tint when selected
             Image(systemName: session.icon)
-                .font(.system(size: 13))
+                .font(.system(size: 14, weight: isSelected ? .semibold : .regular))
                 .foregroundStyle(isSelected ? theme.accentColor : theme.tertiaryText)
-                .frame(width: 22)
+                .frame(width: 24)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(session.name)
-                    .font(.system(.callout, design: .default))
-                    .fontWeight(isSelected ? .semibold : .regular)
+                    .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
                     .foregroundStyle(isSelected ? theme.primaryText : theme.bodyText)
 
                 HStack(spacing: 4) {
@@ -291,7 +287,7 @@ struct SessionRow: View {
                             .truncationMode(.tail)
                     }
                 }
-                .font(.system(.caption2, design: .monospaced))
+                .font(.system(size: 10))
                 .foregroundStyle(theme.disabledText)
 
                 // Per-tab Claude status indicators
@@ -303,7 +299,7 @@ struct SessionRow: View {
                                 .font(.system(size: 8))
                             Text(claudeTabs.count > 1 ? "\(item.tab.title): \(item.status.label)" : item.status.label)
                         }
-                        .font(.system(.caption2, design: .monospaced))
+                        .font(.system(size: 10))
                         .foregroundStyle(item.status.color)
                     }
                 }
@@ -311,7 +307,7 @@ struct SessionRow: View {
                 // Notification message preview
                 if let msg = session.latestNotificationMessage, session.claudeStatus == nil {
                     Text(msg)
-                        .font(.system(.caption2, design: .monospaced))
+                        .font(.system(size: 10))
                         .foregroundStyle(Color.orange)
                         .lineLimit(1)
                         .truncationMode(.tail)
@@ -329,17 +325,17 @@ struct SessionRow: View {
                     .background(Color.orange)
                     .clipShape(Capsule())
             }
-
-            if isSelected {
-                RoundedRectangle(cornerRadius: 1)
-                    .fill(theme.accentColor)
-                    .frame(width: 3, height: 24)
-            }
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
-        .background(bgColor)
-        .clipShape(RoundedRectangle(cornerRadius: 6))
-        .contentShape(Rectangle())
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(bgColor)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .strokeBorder(isSelected ? theme.accentColor.opacity(0.3) : .clear, lineWidth: 1)
+        )
+        .contentShape(RoundedRectangle(cornerRadius: 8))
     }
 }

@@ -25,19 +25,17 @@ struct SSHHostsSection: View {
                             .frame(width: 10)
 
                         Text("SSH Hosts")
-                            .font(.system(.caption, design: .monospaced))
-                            .fontWeight(.semibold)
+                            .font(.system(size: 11, weight: .semibold))
                             .foregroundStyle(theme.sectionHeaderText)
                             .textCase(.uppercase)
-                            .tracking(1.2)
+                            .tracking(0.8)
                     }
                 }
                 .buttonStyle(.plain)
 
                 Spacer()
 
-                HStack(spacing: 4) {
-                    // Refresh config button
+                HStack(spacing: 6) {
                     Button {
                         sshManager.refreshConfig()
                     } label: {
@@ -48,30 +46,31 @@ struct SSHHostsSection: View {
                     .buttonStyle(.plain)
                     .help("Refresh ~/.ssh/config")
 
-                    // Add host button
                     Button { showAddHost = true } label: {
                         Image(systemName: "plus")
                             .font(.system(size: 10, weight: .medium))
-                            .foregroundStyle(theme.sectionHeaderText)
-                            .frame(width: 20, height: 20)
-                            .background(theme.subtleOverlay)
-                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                            .foregroundStyle(theme.secondaryText)
+                            .frame(width: 22, height: 22)
+                            .background(
+                                RoundedRectangle(cornerRadius: 5)
+                                    .fill(theme.subtleOverlay)
+                            )
                     }
                     .buttonStyle(.plain)
                 }
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 14)
             .padding(.vertical, 8)
 
             if isExpanded {
                 if sshManager.allHosts.isEmpty {
                     Text("No SSH hosts")
-                        .font(.system(.caption2, design: .monospaced))
+                        .font(.system(size: 11))
                         .foregroundStyle(theme.disabledText)
-                        .padding(.horizontal, 16)
+                        .padding(.horizontal, 14)
                         .padding(.bottom, 8)
                 } else {
-                    LazyVStack(spacing: 2) {
+                    LazyVStack(spacing: 1) {
                         ForEach(sshManager.allHosts) { host in
                             SSHHostRow(
                                 host: host,
@@ -156,14 +155,10 @@ struct SSHHostRow: View {
 
     private var theme: AppTheme { SettingsManager.shared.theme }
 
-    private var bgColor: Color {
-        isHovered ? theme.hoverBackground : .clear
-    }
-
     var body: some View {
         Button(action: onConnect) {
             HStack(spacing: 8) {
-                // Color tag + status dot
+                // Color tag + status
                 ZStack {
                     Circle()
                         .fill(host.colorTag.color)
@@ -177,9 +172,9 @@ struct SSHHostRow: View {
                 }
                 .frame(width: 16)
 
-                VStack(alignment: .leading, spacing: 1) {
+                VStack(alignment: .leading, spacing: 2) {
                     Text(host.displayName)
-                        .font(.system(.caption, design: .monospaced))
+                        .font(.system(size: 12))
                         .foregroundStyle(theme.bodyText)
                         .lineLimit(1)
 
@@ -193,23 +188,24 @@ struct SSHHostRow: View {
                             Text(":\(host.port)")
                         }
                     }
-                    .font(.system(.caption2, design: .monospaced))
+                    .font(.system(size: 10))
                     .foregroundStyle(theme.disabledText)
                     .lineLimit(1)
                 }
 
                 Spacer()
 
-                // Connection state indicator
                 Image(systemName: host.connectionState.icon)
                     .font(.system(size: 9))
                     .foregroundStyle(host.connectionState.color)
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
-            .background(bgColor)
-            .clipShape(RoundedRectangle(cornerRadius: 5))
-            .contentShape(Rectangle())
+            .background(
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(isHovered ? theme.hoverBackground : .clear)
+            )
+            .contentShape(RoundedRectangle(cornerRadius: 6))
         }
         .buttonStyle(.plain)
     }

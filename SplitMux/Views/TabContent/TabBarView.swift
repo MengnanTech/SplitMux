@@ -13,10 +13,9 @@ struct TabBarView: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            // Tabs — equal width, fill the bar
             ForEach(Array(session.tabs.enumerated()), id: \.element.id) { index, tab in
                 if index > 0 {
-                    theme.subtleBorder.frame(width: 1, height: 20)
+                    theme.subtleBorder.opacity(0.5).frame(width: 1, height: 18)
                 }
 
                 TabItemView(
@@ -65,7 +64,6 @@ struct TabBarView: View {
 
                     Divider()
 
-                    // Split options
                     ForEach(SplitDirection.allCases, id: \.rawValue) { direction in
                         Button {
                             session.activeTabID = tab.id
@@ -103,12 +101,12 @@ struct TabBarView: View {
                 }
             }
 
-            // Add button — minimal, right after last tab
+            // Add button
             Button(action: onAddTab) {
                 Image(systemName: "plus")
-                    .font(.system(size: 13, weight: .light))
+                    .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(theme.tertiaryText)
-                    .frame(width: 38, height: 38)
+                    .frame(width: 36, height: 36)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -116,8 +114,7 @@ struct TabBarView: View {
             Spacer()
         }
         .frame(height: 38)
-        .background(.ultraThinMaterial)
-        .background(theme.tabBarBackground.opacity(0.7))
+        .background(theme.tabBarBackground)
         .alert("Rename Tab", isPresented: Binding(
             get: { renamingTab != nil },
             set: { if !$0 { renamingTab = nil } }
@@ -204,77 +201,83 @@ struct TabItemView: View {
     var body: some View {
         Button(action: onSelect) {
             HStack(spacing: 0) {
-                // Shortcut badge (left)
+                // Shortcut badge
                 if index < 9 {
                     Text("\u{2318}\(index + 1)")
-                        .font(.system(size: 10))
-                        .foregroundStyle(isActive ? theme.iconDimmed : theme.disabledText)
-                        .frame(width: 28)
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundStyle(isActive ? theme.tertiaryText : theme.disabledText)
+                        .frame(width: 26)
                 } else {
-                    Spacer().frame(width: 28)
+                    Spacer().frame(width: 26)
                 }
 
                 Spacer(minLength: 0)
 
-                // Agent progress indicator
+                // Status indicators
                 if tab.claudeStatus == .running {
                     ProgressView()
                         .controlSize(.mini)
                         .scaleEffect(0.6)
-                        .padding(.trailing, 2)
+                        .padding(.trailing, 3)
                 } else if tab.claudeStatus == .needsInput {
                     Image(systemName: "exclamationmark.circle.fill")
                         .font(.system(size: 9))
                         .foregroundStyle(.orange)
-                        .padding(.trailing, 2)
+                        .padding(.trailing, 3)
                 }
 
-                // SSH connection indicator
                 if tab.isSSH {
                     Image(systemName: "network")
                         .font(.system(size: 9))
                         .foregroundStyle(.green)
-                        .padding(.trailing, 2)
+                        .padding(.trailing, 3)
                 }
 
                 // Notification dot
                 if tab.hasNotification && !isActive {
                     Circle()
                         .fill(Color.orange)
-                        .frame(width: 7, height: 7)
+                        .frame(width: 6, height: 6)
                         .padding(.trailing, 4)
                 }
 
-                // Title center
+                // Title
                 Text(tabDisplayTitle)
-                    .font(.system(size: 12))
-                    .foregroundStyle(tab.hasNotification && !isActive ? Color.orange : (isActive ? theme.primaryText : theme.secondaryText))
+                    .font(.system(size: 12, weight: isActive ? .medium : .regular))
+                    .foregroundStyle(
+                        tab.hasNotification && !isActive
+                        ? Color.orange
+                        : (isActive ? theme.primaryText : theme.secondaryText)
+                    )
                     .lineLimit(1)
 
                 Spacer(minLength: 0)
 
-                // Close button (right side — macOS convention)
+                // Close button
                 ZStack {
                     if isActive || isHovered {
                         Image(systemName: "xmark")
-                            .font(.system(size: 9, weight: .medium))
+                            .font(.system(size: 8, weight: .bold))
                             .foregroundStyle(theme.tertiaryText)
                             .frame(width: 18, height: 18)
-                            .background(Color.white.opacity(0.08))
-                            .clipShape(Circle())
-                            .contentShape(Circle())
+                            .background(
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(theme.subtleOverlay)
+                            )
+                            .contentShape(Rectangle())
                             .onTapGesture { onClose() }
                     }
                 }
-                .frame(width: 28)
+                .frame(width: 26)
             }
-            .padding(.horizontal, 6)
+            .padding(.horizontal, 4)
             .frame(height: 28)
             .background(
-                Capsule()
+                RoundedRectangle(cornerRadius: 6)
                     .fill(isActive
                           ? theme.activeTabBackground
-                          : isHovered ? theme.hoverBackground : Color.clear)
+                          : isHovered ? theme.hoverBackground.opacity(0.5) : Color.clear)
+                    .shadow(color: isActive ? Color.black.opacity(0.1) : .clear, radius: 1, y: 1)
             )
             .padding(.vertical, 5)
             .padding(.horizontal, 2)

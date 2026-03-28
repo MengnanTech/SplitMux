@@ -69,6 +69,10 @@ class AppState {
     func removeSession(_ id: UUID) {
         if let session = sessions.first(where: { $0.id == id }) {
             session.stopGitBranchPolling()
+            // Clean up Claude agent monitoring for all tabs in this session
+            for tab in session.tabs {
+                ClaudeHookService.shared.stopMonitoring(tabID: tab.id)
+            }
         }
         sessions.removeAll { $0.id == id }
         if selectedSessionID == id {

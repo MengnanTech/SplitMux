@@ -33,6 +33,12 @@ class TerminalSessionDelegate: NSObject, LocalProcessTerminalViewDelegate, @unch
             reconnectTask?.cancel()
             reconnectTask = Task { @MainActor [weak self, weak termView] in
                 guard let termView else { return }
+                // If Claude was running, mark as completed before resetting
+                if termView.claudeDetected, let tab = self?.tab {
+                    tab.claudeStatus = .completed
+                    let path = "/tmp/splitmux/\(tab.id.uuidString)"
+                    try? "completed".write(toFile: path, atomically: true, encoding: .utf8)
+                }
                 // Reset Claude detection on process exit
                 termView.claudeDetected = false
                 termView.recentOutput = ""
@@ -609,6 +615,8 @@ struct TerminalSwiftUIView: NSViewRepresentable {
         export HISTFILE="\(home)/.zsh_history"
         setopt SHARE_HISTORY
         setopt INC_APPEND_HISTORY
+        # Set cursor to steady bar (DECSCUSR 6)
+        echo -ne '\\e[6 q'
         """
 
         // .zlogin — sourced last for login shells

@@ -7,24 +7,29 @@ struct SSHHostEditorView: View {
     var onSave: (SSHHost) -> Void
     var onCancel: () -> Void
 
+    private var theme: AppTheme { SettingsManager.shared.theme }
+
     var body: some View {
         VStack(spacing: 0) {
             // Header
             HStack {
                 Text(isNew ? "New SSH Host" : "Edit SSH Host")
-                    .font(.system(.headline, design: .monospaced))
-                    .foregroundStyle(.white)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(theme.primaryText)
                 Spacer()
                 Button(action: onCancel) {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 16))
-                        .foregroundStyle(.secondary)
+                        .font(.system(size: 18))
+                        .foregroundStyle(theme.tertiaryText)
+                        .symbolRenderingMode(.hierarchical)
                 }
                 .buttonStyle(.plain)
             }
-            .padding()
+            .padding(.horizontal, 20)
+            .padding(.top, 20)
+            .padding(.bottom, 16)
 
-            Divider().overlay(Color(white: 0.2))
+            Divider().overlay(theme.subtleBorder)
 
             // Form
             Form {
@@ -79,24 +84,42 @@ struct SSHHostEditorView: View {
             }
             .formStyle(.grouped)
 
-            Divider().overlay(Color(white: 0.2))
+            Divider().overlay(theme.subtleBorder)
 
             // Footer buttons
-            HStack {
+            HStack(spacing: 12) {
                 Spacer()
                 Button("Cancel", action: onCancel)
                     .keyboardShortcut(.cancelAction)
+                    .buttonStyle(.plain)
+                    .foregroundStyle(theme.secondaryText)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 6)
+                    .background(
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(theme.subtleOverlay)
+                    )
 
-                Button(isNew ? "Add Host" : "Save") {
-                    onSave(host)
+                Button(action: { onSave(host) }) {
+                    Text(isNew ? "Add Host" : "Save")
+                        .fontWeight(.medium)
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 6)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(host.hostname.isEmpty ? theme.accentColor.opacity(0.4) : theme.accentColor)
+                        )
                 }
+                .buttonStyle(.plain)
                 .keyboardShortcut(.defaultAction)
                 .disabled(host.hostname.isEmpty)
             }
-            .padding()
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
         }
-        .frame(width: 420, height: 480)
-        .background(Color(red: 0.1, green: 0.1, blue: 0.12))
+        .frame(width: 440, height: 500)
+        .background(theme.elevatedSurface)
     }
 
     private func pickKeyFile() {

@@ -307,11 +307,10 @@ struct AgentsSidebarSection: View {
                                 .frame(width: 10)
 
                             Text("Claude Agents")
-                                .font(.system(.caption, design: .monospaced))
-                                .fontWeight(.semibold)
+                                .font(.system(size: 11, weight: .semibold))
                                 .foregroundStyle(theme.sectionHeaderText)
                                 .textCase(.uppercase)
-                                .tracking(1.2)
+                                .tracking(0.8)
                         }
                     }
                     .buttonStyle(.plain)
@@ -333,7 +332,7 @@ struct AgentsSidebarSection: View {
                             }
                         }
                     }
-                    .font(.system(.caption2, design: .monospaced))
+                    .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(theme.sectionHeaderText)
 
                     Button {
@@ -346,11 +345,11 @@ struct AgentsSidebarSection: View {
                     .buttonStyle(.plain)
                     .help("Open Agent Dashboard")
                 }
-                .padding(.horizontal, 16)
+                .padding(.horizontal, 14)
                 .padding(.vertical, 8)
 
                 if isExpanded {
-                    LazyVStack(spacing: 2) {
+                    LazyVStack(spacing: 1) {
                         ForEach(hookService.agentInfos) { agent in
                             HStack(spacing: 8) {
                                 Image(systemName: agent.status.icon)
@@ -358,18 +357,18 @@ struct AgentsSidebarSection: View {
                                     .foregroundStyle(agent.status.color)
 
                                 Text(agent.tabTitle.isEmpty ? "Terminal" : agent.tabTitle)
-                                    .font(.system(.caption2, design: .monospaced))
+                                    .font(.system(size: 11))
                                     .foregroundStyle(theme.secondaryText)
                                     .lineLimit(1)
 
                                 Spacer()
 
                                 Text(agent.durationString)
-                                    .font(.system(.caption2, design: .monospaced))
+                                    .font(.system(size: 10))
                                     .foregroundStyle(theme.disabledText)
                             }
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 3)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 4)
                             .contentShape(Rectangle())
                             .onTapGesture {
                                 if let sessionID = agent.sessionID {

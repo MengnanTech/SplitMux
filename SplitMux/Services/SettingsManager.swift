@@ -104,7 +104,7 @@ enum AppTheme: String, CaseIterable, Identifiable {
     var terminalBackground: NSColor {
         switch self {
         case .dark: return NSColor(red: 0.05, green: 0.05, blue: 0.07, alpha: 1.0)
-        case .light: return NSColor(red: 0.98, green: 0.98, blue: 0.96, alpha: 1.0)
+        case .light: return NSColor(white: 0.995, alpha: 1.0)
         case .solarized: return NSColor(red: 0.0, green: 0.17, blue: 0.21, alpha: 1.0)
         case .monokai: return NSColor(red: 0.15, green: 0.16, blue: 0.13, alpha: 1.0)
         }
@@ -121,8 +121,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
 
     var sidebarBackground: Color {
         switch self {
-        case .dark: return Color(red: 0.1, green: 0.1, blue: 0.12)
-        case .light: return Color(red: 0.94, green: 0.94, blue: 0.95)
+        case .dark: return Color(red: 0.11, green: 0.11, blue: 0.13)
+        case .light: return Color(red: 0.96, green: 0.96, blue: 0.98)
         case .solarized: return Color(red: 0.0, green: 0.14, blue: 0.18)
         case .monokai: return Color(red: 0.12, green: 0.12, blue: 0.1)
         }
@@ -131,7 +131,7 @@ enum AppTheme: String, CaseIterable, Identifiable {
     var contentBackground: Color {
         switch self {
         case .dark: return .black
-        case .light: return Color(white: 0.98)
+        case .light: return Color(white: 0.995)
         case .solarized: return Color(red: 0.0, green: 0.17, blue: 0.21)
         case .monokai: return Color(red: 0.15, green: 0.16, blue: 0.13)
         }
@@ -139,8 +139,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
 
     var tabBarBackground: Color {
         switch self {
-        case .dark: return Color(red: 0.12, green: 0.12, blue: 0.14)
-        case .light: return Color(red: 0.92, green: 0.92, blue: 0.93)
+        case .dark: return Color(red: 0.13, green: 0.13, blue: 0.15)
+        case .light: return Color(red: 0.96, green: 0.96, blue: 0.97)
         case .solarized: return Color(red: 0.02, green: 0.15, blue: 0.19)
         case .monokai: return Color(red: 0.13, green: 0.14, blue: 0.11)
         }
@@ -148,8 +148,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
 
     var primaryText: Color {
         switch self {
-        case .dark: return .white
-        case .light: return .black
+        case .dark: return Color(white: 0.95)
+        case .light: return Color(white: 0.1)
         case .solarized: return Color(red: 0.51, green: 0.58, blue: 0.59)
         case .monokai: return Color(red: 0.97, green: 0.97, blue: 0.95)
         }
@@ -157,8 +157,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
 
     var secondaryText: Color {
         switch self {
-        case .dark: return Color(white: 0.55)
-        case .light: return Color(white: 0.4)
+        case .dark: return Color(white: 0.6)
+        case .light: return Color(white: 0.35)
         case .solarized: return Color(red: 0.40, green: 0.48, blue: 0.51)
         case .monokai: return Color(white: 0.55)
         }
@@ -166,8 +166,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
 
     var accentColor: Color {
         switch self {
-        case .dark: return .green
-        case .light: return .blue
+        case .dark: return Color(red: 0.35, green: 0.68, blue: 1.0)
+        case .light: return Color(red: 0.2, green: 0.48, blue: 0.95)
         case .solarized: return Color(red: 0.52, green: 0.60, blue: 0.0)
         case .monokai: return Color(red: 0.40, green: 0.85, blue: 0.37)
         }
@@ -185,8 +185,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
     /// Hover background for list items and interactive elements
     var hoverBackground: Color {
         switch self {
-        case .dark: return Color(white: 0.15)
-        case .light: return Color(white: 0.88)
+        case .dark: return Color(white: 0.16)
+        case .light: return Color(white: 0.89)
         case .solarized: return Color(red: 0.04, green: 0.2, blue: 0.25)
         case .monokai: return Color(red: 0.18, green: 0.19, blue: 0.16)
         }
@@ -195,8 +195,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
     /// Selected item background
     var selectedBackground: Color {
         switch self {
-        case .dark: return Color(red: 0.18, green: 0.2, blue: 0.25)
-        case .light: return Color(red: 0.85, green: 0.9, blue: 0.95)
+        case .dark: return Color(red: 0.2, green: 0.25, blue: 0.35)
+        case .light: return Color(red: 0.22, green: 0.5, blue: 0.96).opacity(0.12)
         case .solarized: return Color(red: 0.04, green: 0.22, blue: 0.27)
         case .monokai: return Color(red: 0.2, green: 0.21, blue: 0.18)
         }
@@ -215,8 +215,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
     /// Disabled/dimmed text — paths, timestamps, least important info
     var disabledText: Color {
         switch self {
-        case .dark: return Color(white: 0.35)
-        case .light: return Color(white: 0.6)
+        case .dark: return Color(white: 0.38)
+        case .light: return Color(white: 0.55)
         case .solarized: return Color(red: 0.3, green: 0.38, blue: 0.4)
         case .monokai: return Color(white: 0.35)
         }
@@ -225,8 +225,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
     /// Subtle borders and dividers
     var subtleBorder: Color {
         switch self {
-        case .dark: return Color(white: 0.2)
-        case .light: return Color(white: 0.78)
+        case .dark: return Color(white: 0.18)
+        case .light: return Color(white: 0.82)
         case .solarized: return Color(red: 0.1, green: 0.25, blue: 0.3)
         case .monokai: return Color(white: 0.22)
         }
@@ -235,8 +235,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
     /// Section header text (SESSIONS, SSH HOSTS, etc.)
     var sectionHeaderText: Color {
         switch self {
-        case .dark: return Color(white: 0.5)
-        case .light: return Color(white: 0.45)
+        case .dark: return Color(white: 0.45)
+        case .light: return Color(white: 0.42)
         case .solarized: return Color(red: 0.4, green: 0.48, blue: 0.51)
         case .monokai: return Color(white: 0.5)
         }
@@ -245,8 +245,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
     /// Elevated surface backgrounds (command palette, history panel, overlays)
     var elevatedSurface: Color {
         switch self {
-        case .dark: return Color(red: 0.08, green: 0.08, blue: 0.1)
-        case .light: return Color(white: 0.96)
+        case .dark: return Color(red: 0.1, green: 0.1, blue: 0.12)
+        case .light: return Color(white: 0.97)
         case .solarized: return Color(red: 0.0, green: 0.12, blue: 0.16)
         case .monokai: return Color(red: 0.11, green: 0.12, blue: 0.1)
         }
@@ -255,8 +255,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
     /// Subtle white overlay for buttons/badges
     var subtleOverlay: Color {
         switch self {
-        case .dark: return Color.white.opacity(0.06)
-        case .light: return Color.black.opacity(0.06)
+        case .dark: return Color.white.opacity(0.07)
+        case .light: return Color.black.opacity(0.05)
         case .solarized: return Color.white.opacity(0.06)
         case .monokai: return Color.white.opacity(0.06)
         }
@@ -265,8 +265,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
     /// Active tab / active element capsule background
     var activeTabBackground: Color {
         switch self {
-        case .dark: return Color(white: 0.25)
-        case .light: return Color(white: 0.82)
+        case .dark: return Color(white: 0.22)
+        case .light: return Color.white.opacity(0.9)
         case .solarized: return Color(red: 0.06, green: 0.24, blue: 0.3)
         case .monokai: return Color(red: 0.22, green: 0.23, blue: 0.2)
         }
@@ -275,8 +275,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
     /// Inactive/body text — used for non-selected item labels
     var bodyText: Color {
         switch self {
-        case .dark: return Color(white: 0.7)
-        case .light: return Color(white: 0.3)
+        case .dark: return Color(white: 0.72)
+        case .light: return Color(white: 0.25)
         case .solarized: return Color(red: 0.45, green: 0.52, blue: 0.55)
         case .monokai: return Color(white: 0.7)
         }
@@ -285,8 +285,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
     /// Chevron / icon dimmed color
     var iconDimmed: Color {
         switch self {
-        case .dark: return Color(white: 0.4)
-        case .light: return Color(white: 0.55)
+        case .dark: return Color(white: 0.42)
+        case .light: return Color(white: 0.5)
         case .solarized: return Color(red: 0.35, green: 0.43, blue: 0.46)
         case .monokai: return Color(white: 0.4)
         }
