@@ -8,12 +8,13 @@ struct TabContentView: View {
     @State private var showHistory = false
 
     private var theme: AppTheme { SettingsManager.shared.theme }
+    private let titlebarBandTopInset: CGFloat = 20
 
     var body: some View {
         VStack(spacing: 0) {
             // Tab bar — always visible for discoverability
             TabBarView(session: session, onAddTab: addTab)
-                .padding(.top, 28) // Space for traffic light area in fullSizeContentView
+                .padding(.top, titlebarBandTopInset)
 
             // Breadcrumb path bar
             BreadcrumbBar(workingDirectory: session.workingDirectory, gitBranch: session.gitBranch)
@@ -89,7 +90,7 @@ struct TabContentView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
-        .background(SettingsManager.shared.theme.contentBackground)
+        .background(theme.appCanvasBackground)
         .onReceive(NotificationCenter.default.publisher(for: .toggleTerminalHistory)) { _ in
             guard session.id == appState.selectedSessionID else { return }
             withAnimation(.easeInOut(duration: 0.2)) { showHistory.toggle() }

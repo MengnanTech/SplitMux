@@ -28,13 +28,13 @@ struct ContentView: View {
                     }
 
                     if appState.sessions.isEmpty {
-                        theme.contentBackground
+                        theme.appCanvasBackground
                         EmptyStateView()
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            .background(theme.contentBackground)
+            .background(theme.appCanvasBackground)
             .ignoresSafeArea()
 
             // Notification toast overlay
@@ -290,13 +290,13 @@ class SidebarDividerNSView: NSView {
         let color: NSColor
         switch theme {
         case .light:
-            color = NSColor(white: 0.0, alpha: 0.08)
+            color = NSColor(white: 0.0, alpha: 0.045)
         case .dark:
-            color = NSColor(white: 1.0, alpha: 0.06)
+            color = NSColor(white: 1.0, alpha: 0.035)
         case .solarized:
-            color = NSColor(white: 1.0, alpha: 0.06)
+            color = NSColor(white: 1.0, alpha: 0.035)
         case .monokai:
-            color = NSColor(white: 1.0, alpha: 0.06)
+            color = NSColor(white: 1.0, alpha: 0.035)
         }
         color.setFill()
         NSRect(x: 0, y: 0, width: 1, height: bounds.height).fill()
