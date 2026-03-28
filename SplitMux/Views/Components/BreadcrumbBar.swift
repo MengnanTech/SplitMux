@@ -42,29 +42,28 @@ struct BreadcrumbBar: View {
     var body: some View {
         HStack(spacing: 0) {
             Image(systemName: "folder.fill")
-                .font(.system(size: 9))
-                .foregroundStyle(theme.iconDimmed)
-                .padding(.leading, 12)
-                .padding(.trailing, 4)
+                .font(.system(size: 8))
+                .foregroundStyle(theme.iconDimmed.opacity(0.75))
+                .padding(.leading, 10)
+                .padding(.trailing, 3)
 
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 2) {
+                HStack(spacing: 1) {
                     ForEach(Array(pathSegments.enumerated()), id: \.offset) { index, segment in
                         if index > 0 {
                             Image(systemName: "chevron.right")
-                                .font(.system(size: 7, weight: .semibold))
-                                .foregroundStyle(theme.disabledText)
+                                .font(.system(size: 6.5, weight: .semibold))
+                                .foregroundStyle(theme.disabledText.opacity(0.65))
                         }
 
                         Button {
                             NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: segment.fullPath)
                         } label: {
                             Text(segment.name)
-                                .font(.system(size: 11, design: .monospaced))
-                                .foregroundStyle(index == pathSegments.count - 1 ? theme.secondaryText : theme.disabledText)
-                                .padding(.horizontal, 4)
+                                .font(.system(size: 10, weight: .regular, design: .monospaced))
+                                .foregroundStyle(index == pathSegments.count - 1 ? theme.secondaryText.opacity(0.88) : theme.disabledText.opacity(0.82))
+                                .padding(.horizontal, 3)
                                 .padding(.vertical, 1)
-                                .background(Color.white.opacity(0.001)) // ensure hit area
                         }
                         .buttonStyle(.plain)
                         .onHover { hovering in
@@ -76,7 +75,7 @@ struct BreadcrumbBar: View {
                         }
                     }
                 }
-                .padding(.vertical, 3)
+                .padding(.vertical, 2)
             }
 
             Spacer()
@@ -85,19 +84,19 @@ struct BreadcrumbBar: View {
             if let branch = gitBranch {
                 HStack(spacing: 3) {
                     Image(systemName: "arrow.triangle.branch")
-                        .font(.system(size: 8))
+                        .font(.system(size: 7.5))
                     Text(branch)
-                        .font(.system(size: 10, design: .monospaced))
+                        .font(.system(size: 9.5, weight: .medium, design: .monospaced))
                         .lineLimit(1)
                 }
-                .foregroundStyle(theme.accentColor.opacity(0.8))
-                .padding(.trailing, 12)
+                .foregroundStyle(theme.brandCoral.opacity(0.75))
+                .padding(.trailing, 10)
             }
         }
-        .frame(height: 22)
-        .background(theme.tabBarBackground.opacity(0.5))
+        .frame(height: 18)
+        .background(theme.appCanvasBackground)
         .overlay(alignment: .bottom) {
-            theme.subtleBorder.frame(height: 0.5)
+            theme.subtleBorder.opacity(0.38).frame(height: 0.5)
         }
     }
 }

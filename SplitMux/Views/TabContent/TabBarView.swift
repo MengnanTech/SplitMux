@@ -103,16 +103,22 @@ struct TabBarView: View {
             Button(action: onAddTab) {
                 Image(systemName: "plus")
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(theme.tertiaryText)
-                    .frame(width: 36, height: 36)
+                    .foregroundStyle(theme.secondaryText)
+                    .frame(width: 28, height: 28)
                     .contentShape(Rectangle())
+                    .background(addButtonChrome)
             }
             .buttonStyle(.plain)
+            .padding(.leading, 4)
+            .padding(.vertical, 5)
 
             Spacer()
         }
-        .frame(height: 38)
-        .background(theme.tabBarBackground)
+        .frame(height: 40)
+        .background(theme.appCanvasBackground)
+        .overlay(alignment: .bottom) {
+            theme.subtleBorder.opacity(0.45).frame(height: 0.5)
+        }
         .alert("Rename Tab", isPresented: Binding(
             get: { renamingTab != nil },
             set: { if !$0 { renamingTab = nil } }
@@ -151,6 +157,16 @@ struct TabBarView: View {
                 session.activeTabID = tab.id
             }
         }
+    }
+
+    private var addButtonChrome: some View {
+        Capsule(style: .continuous)
+            .fill(theme.chromeSurfaceBackground)
+            .overlay(
+                Capsule(style: .continuous)
+                    .strokeBorder(theme.subtleBorder.opacity(0.35), lineWidth: 0.6)
+            )
+            .shadow(color: theme.chromeShadow.opacity(0.08), radius: 1.5, y: 0.5)
     }
 }
 
@@ -268,30 +284,23 @@ struct TabItemView: View {
                 }
                 .frame(width: 26)
             }
-            .padding(.horizontal, 4)
+            .padding(.horizontal, 10)
             .frame(height: 28)
             .background(
                 Group {
                     if isActive {
-                        RoundedRectangle(cornerRadius: 6)
-                            .fill(.ultraThinMaterial)
+                        Capsule(style: .continuous)
+                            .fill(theme.chromeSurfaceBackground)
                             .overlay(
-                                RoundedRectangle(cornerRadius: 6)
-                                    .fill(theme.activeTabBackground.opacity(0.7))
+                                Capsule(style: .continuous)
+                                    .strokeBorder(theme.subtleBorder.opacity(0.28), lineWidth: 0.6)
                             )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 6)
-                                    .strokeBorder(theme.subtleBorder.opacity(0.3), lineWidth: 0.5)
-                            )
-                            .shadow(color: Color.black.opacity(0.12), radius: 2, y: 1)
-                    } else if isHovered {
-                        RoundedRectangle(cornerRadius: 6)
-                            .fill(theme.hoverBackground.opacity(0.4))
+                            .shadow(color: theme.chromeShadow.opacity(0.14), radius: 2.5, y: 1)
                     }
                 }
             )
-            .padding(.vertical, 5)
-            .padding(.horizontal, 2)
+            .padding(.vertical, 4)
+            .padding(.horizontal, isActive ? 2 : 1)
         }
         .buttonStyle(.plain)
         .onHover { hovering in
