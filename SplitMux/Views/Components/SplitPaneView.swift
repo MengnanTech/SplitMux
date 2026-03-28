@@ -9,29 +9,47 @@ struct SplitPaneView: View {
     private var theme: AppTheme { SettingsManager.shared.theme }
 
     var body: some View {
-        switch node {
-        case .tab(let tabID):
-            if let tab = session.tabs.first(where: { $0.id == tabID }) {
-                splitTabPanel(tab: tab)
-            } else {
-                theme.contentBackground
+        // Zoom mode — show only the zoomed pane at full size (handled here
+        // so the terminal view stays in the same SplitPaneView hierarchy
+        // and never needs to move between containers).
+        if let zoomedID = session.zoomedTabID,
+           let zoomedTab = session.tabs.first(where: { $0.id == zoomedID }) {
+            ZStack(alignment: .topTrailing) {
+                splitTabPanel(tab: zoomedTab)
+
+                FloatingZoomButton {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        session.toggleZoom()
+                    }
+                }
+                .frame(width: 28, height: 28)
+                .padding(10)
             }
+        } else {
+            switch node {
+            case .tab(let tabID):
+                if let tab = session.tabs.first(where: { $0.id == tabID }) {
+                    splitTabPanel(tab: tab)
+                } else {
+                    theme.contentBackground
+                }
 
-        case .horizontal(let first, let second, let ratio):
-            HSplitContent(
-                session: session,
-                first: first,
-                second: second,
-                ratio: ratio
-            )
+            case .horizontal(let first, let second, let ratio):
+                HSplitContent(
+                    session: session,
+                    first: first,
+                    second: second,
+                    ratio: ratio
+                )
 
-        case .vertical(let first, let second, let ratio):
-            VSplitContent(
-                session: session,
-                first: first,
-                second: second,
-                ratio: ratio
-            )
+            case .vertical(let first, let second, let ratio):
+                VSplitContent(
+                    session: session,
+                    first: first,
+                    second: second,
+                    ratio: ratio
+                )
+            }
         }
     }
 

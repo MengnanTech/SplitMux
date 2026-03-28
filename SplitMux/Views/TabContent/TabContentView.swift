@@ -43,29 +43,14 @@ struct TabContentView: View {
                 let showZoom = session.splitRoot != nil
                     && session.zoomedTabID != nil
 
-                // Split pane mode — always kept alive if splitRoot exists
+                // Split pane mode — always kept alive if splitRoot exists.
+                // SplitPaneView handles zoom internally to avoid creating a
+                // second TabPanelView for the same tab (NSView can only have
+                // one superview — moving it between containers corrupts rendering).
                 if let root = session.splitRoot {
                     SplitPaneView(session: session, node: root)
-                        .opacity(showSplit ? 1 : 0)
-                        .allowsHitTesting(showSplit)
-                }
-
-                // Zoomed pane mode — floating exit button
-                if let zoomedID = session.zoomedTabID,
-                   let zoomedTab = session.tabs.first(where: { $0.id == zoomedID }) {
-                    ZStack(alignment: .topTrailing) {
-                        TabPanelView(tab: zoomedTab, workingDirectory: session.workingDirectory)
-
-                        FloatingZoomButton {
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                session.toggleZoom()
-                            }
-                        }
-                        .frame(width: 28, height: 28)
-                        .padding(10)
-                    }
-                    .opacity(showZoom ? 1 : 0)
-                    .allowsHitTesting(showZoom)
+                        .opacity(showSplit || showZoom ? 1 : 0)
+                        .allowsHitTesting(showSplit || showZoom)
                 }
 
                 // Non-split tabs — rendered individually, shown when active and not in split/zoom

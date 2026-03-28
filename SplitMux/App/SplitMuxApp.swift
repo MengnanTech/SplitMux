@@ -218,8 +218,9 @@ class WindowConfiguratorView: NSView, NSWindowDelegate {
 
         let response = alert.runModal()
         if response == .alertFirstButtonReturn {
-            // Clean up all Claude agent state before closing
-            ClaudeHookService.shared.cleanup()
+            // Terminate the entire app — just closing the window leaves AppState
+            // alive with dead terminal views, causing broken tabs on reopen.
+            NSApplication.shared.terminate(nil)
             return true
         }
         return false

@@ -315,9 +315,13 @@ class NotifyingTerminalView: LocalProcessTerminalView {
         let trimmed = compact.trimmingCharacters(in: .whitespacesAndNewlines)
         let isSubstantialOutput = trimmed.count > 10
 
-        // Step 1: Detect Claude startup — "Claude Code" followed by version
+        // Step 1: Detect Claude startup
+        // Match "Claude Code" (case-sensitive, both words capitalized) — the banner text.
+        // No version number required — new versions show "Opus 4.6" on a separate line
+        // with other text in between, which the old regex couldn't match.
+        // Won't false-positive on the command `claude` (lowercase).
         if !claudeDetected {
-            if recentOutput.range(of: #"Claude\s*Code\s*v?\s*\d+\.\d+"#, options: .regularExpression) != nil {
+            if recentOutput.contains("Claude Code") {
                 claudeDetected = true
                 tab.claudeStatus = .running
                 writeStatus(tab: tab, status: "running")

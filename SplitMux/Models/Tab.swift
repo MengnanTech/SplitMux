@@ -11,7 +11,10 @@ class Tab: Identifiable, Hashable {
     var hasNotification: Bool = false
     var lastNotificationMessage: String?
     var claudeStatus: ClaudeStatus?
-    weak var terminalView: NSView?
+    /// Strong reference — terminal view must survive SwiftUI view recreation
+    /// (e.g. split mode transitions) to preserve running process & Claude detection state.
+    /// Cleaned up when tab is removed via Session.removeTab().
+    var terminalView: NSView?
 
     /// SSH host ID for SSH terminal tabs
     var sshHostID: UUID?
