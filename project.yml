@@ -37,6 +37,10 @@ targets:
         MARKETING_VERSION: "1.0.0"
         CURRENT_PROJECT_VERSION: 1
         SWIFT_STRICT_CONCURRENCY: complete
+    info:
+      properties:
+        SUFeedURL: "https://calyx-ai.com/splitmux/appcast.xml"
+        SUPublicEDKey: "EbZeL4SmTBcud40r+8WuD4aFqK02Bl/DFeKYOHHClb8="
     entitlements:
       path: SplitMux/SplitMux.entitlements
       properties:

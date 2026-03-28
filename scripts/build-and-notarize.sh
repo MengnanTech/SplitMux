@@ -13,6 +13,19 @@ KEYCHAIN_PROFILE="SplitMux-Notary"
 TEAM_ID="2XGP34AR96"
 SIGNING_IDENTITY="Developer ID Application: DENG LI (2XGP34AR96)"
 
+# Remote server
+REMOTE="calyx"
+REMOTE_DIR="/opt/calyx/splitmux"
+
+# Read version from project.yml
+VERSION=$(grep 'MARKETING_VERSION' "$PROJECT_DIR/project.yml" | head -1 | sed 's/.*: *"\(.*\)"/\1/')
+BUILD_NUM=$(grep 'CURRENT_PROJECT_VERSION' "$PROJECT_DIR/project.yml" | head -1 | sed 's/.*: *\([0-9]*\)/\1/')
+
+echo "══════════════════════════════════════════"
+echo "  SplitMux Release v${VERSION} (build ${BUILD_NUM})"
+echo "══════════════════════════════════════════"
+echo ""
+
 # ─── Clean ───
 echo "🧹 Cleaning build directory..."
 rm -rf "$BUILD_DIR"
@@ -59,15 +72,24 @@ codesign --force --deep --options runtime --timestamp \
 codesign --verify --deep --strict "$APP_DST"
 echo "✅ Signing verified"
 
-# ─── Create DMG ───
+# ─── Create DMG (drag-to-install style) ───
 echo "💿 Creating DMG..."
-hdiutil create -volname "SplitMux" \
-  -srcfolder "$APP_DST" \
-  -ov -format UDZO \
-  "$DMG_PATH" \
-  -quiet
+rm -f "$DMG_PATH"
 
-echo "✅ DMG created"
+create-dmg \
+  --volname "SplitMux" \
+  --volicon "$APP_DST/Contents/Resources/AppIcon.icns" \
+  --window-pos 200 120 \
+  --window-size 660 400 \
+  --icon-size 128 \
+  --icon "SplitMux.app" 180 170 \
+  --hide-extension "SplitMux.app" \
+  --app-drop-link 480 170 \
+  --no-internet-enable \
+  "$DMG_PATH" \
+  "$APP_DST"
+
+echo "✅ DMG created (drag-to-install)"
 
 # ─── Notarize ───
 echo "🔏 Submitting for notarization (this may take a few minutes)..."
@@ -79,8 +101,55 @@ xcrun notarytool submit "$DMG_PATH" \
 echo "📎 Stapling notarization ticket..."
 xcrun stapler staple "$DMG_PATH"
 
+# ─── Sparkle Appcast ───
+echo "📡 Generating Sparkle appcast..."
+SPARKLE_BIN=$(find ~/Library/Developer/Xcode/DerivedData -path "*/Sparkle/bin/generate_appcast" -type f 2>/dev/null | head -1)
+APPCAST_DIR="$BUILD_DIR/appcast"
+mkdir -p "$APPCAST_DIR"
+cp "$DMG_PATH" "$APPCAST_DIR/"
+
+if [ -n "${SPARKLE_BIN:-}" ] && [ -x "$SPARKLE_BIN" ]; then
+  "$SPARKLE_BIN" "$APPCAST_DIR"
+  echo "✅ Appcast generated"
+else
+  echo "❌ Sparkle generate_appcast not found. Build in Xcode first."
+  exit 1
+fi
+
+# ─── Upload to calyx-ai.com ───
+echo "🚀 Uploading to calyx-ai.com..."
+ssh "$REMOTE" "mkdir -p $REMOTE_DIR/releases"
+
+VERSIONED_DMG="SplitMux-${VERSION}.dmg"
+rsync -az --info=progress2 "$DMG_PATH" "$REMOTE:$REMOTE_DIR/releases/$VERSIONED_DMG"
+rsync -az "$APPCAST_DIR/appcast.xml" "$REMOTE:$REMOTE_DIR/"
+
+echo "✅ Uploaded to server"
+
+# ─── Configure Nginx (first time only) ───
+ssh "$REMOTE" "cat > /tmp/splitmux-nginx.conf << 'NGINX'
+# SplitMux update feed & downloads
+location /splitmux/ {
+    alias $REMOTE_DIR/;
+    autoindex off;
+}
+NGINX
+
+if ! grep -q '/splitmux/' /opt/calyx/nginx/conf.d/calyx-ai.conf 2>/dev/null; then
+  echo '  First release — adding Nginx config...'
+  # Insert before the last closing brace of the server block
+  sed -i '/^}/i \\    include /tmp/splitmux-nginx.conf;' /opt/calyx/nginx/conf.d/calyx-ai.conf
+  docker exec calyx-nginx nginx -s reload 2>/dev/null || true
+  echo '  Nginx configured'
+else
+  echo '  Nginx already configured'
+fi
+"
+
 echo ""
 echo "══════════════════════════════════════════"
-echo "  ✅ Done! Notarized DMG ready at:"
-echo "  $DMG_PATH"
+echo "  ✅ SplitMux v${VERSION} released!"
+echo ""
+echo "  DMG:     https://calyx-ai.com/splitmux/releases/$VERSIONED_DMG"
+echo "  Appcast: https://calyx-ai.com/splitmux/appcast.xml"
 echo "══════════════════════════════════════════"

@@ -337,6 +337,7 @@ struct TabItemView: View {
             )
             .padding(.vertical, usesLightChrome ? 4 : 5)
             .padding(.horizontal, usesLightChrome ? (isActive ? 2 : 1) : 2)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .onHover { hovering in
