@@ -52,6 +52,7 @@ struct SidebarView: View {
             .padding(.horizontal, 14)
             .padding(.top, 36) // Space for traffic light buttons in fullSizeContentView
             .padding(.bottom, 10)
+            .background(WindowDragArea())
 
             // Session list
             ScrollView {

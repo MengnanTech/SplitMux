@@ -88,14 +88,13 @@ class Session: Identifiable, Hashable {
         }
     }
 
-    /// Aggregate Claude status across all tabs (prioritizes running > needs-input > idle > completed)
+    /// Aggregate Claude status across all tabs (prioritizes running > needs-input > idle)
     var claudeStatus: ClaudeStatus? {
         let statuses = tabs.compactMap(\.claudeStatus)
         if statuses.isEmpty { return nil }
         if statuses.contains(.running) { return .running }
         if statuses.contains(.needsInput) { return .needsInput }
         if statuses.contains(.idle) { return .idle }
-        if statuses.contains(.completed) { return .completed }
         return nil
     }
 

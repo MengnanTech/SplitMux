@@ -24,7 +24,7 @@ final class ClaudeHookService {
     var runningCount: Int { agentInfos.filter { $0.status == .running }.count }
     var needsInputCount: Int { agentInfos.filter { $0.status == .needsInput }.count }
     var idleCount: Int { agentInfos.filter { $0.status == .idle }.count }
-    var completedCount: Int { agentInfos.filter { $0.status == .completed }.count }
+
 
     private init() {
         // Clean up all old status files on startup
@@ -39,13 +39,26 @@ final class ClaudeHookService {
         )
     }
 
-    /// Start monitoring a tab's status file
+    /// Start monitoring a tab's status file.
+    /// If already monitoring (e.g. view recreated by SwiftUI during split),
+    /// preserve existing state to avoid losing Claude detection status.
     func startMonitoring(tabID: UUID, onStatusChange: @escaping @MainActor (ClaudeStatus) -> Void) {
         let path = "\(statusDir)/\(tabID.uuidString)"
+        let alreadyMonitoring = pollTimers[tabID] != nil
 
-        // Always reset status file to empty on start (clear stale data from previous sessions)
-        FileManager.default.createFile(atPath: path, contents: Data(), attributes: nil)
-        lastStatus.removeValue(forKey: path)
+        // Invalidate any existing timer (prevents duplicate timers on view recreation)
+        pollTimers[tabID]?.invalidate()
+        pollTimers.removeValue(forKey: tabID)
+
+        if alreadyMonitoring {
+            // View was recreated (e.g. split mode change) — keep existing status file
+            // and agent info, just restart the timer
+        } else {
+            // Fresh start — reset status file and agent info
+            FileManager.default.createFile(atPath: path, contents: Data(), attributes: nil)
+            lastStatus.removeValue(forKey: path)
+            agentInfos.removeAll { $0.tabID == tabID }
+        }
 
         // Poll-based monitoring (reliable across all scenarios)
         let timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
@@ -147,12 +160,15 @@ final class ClaudeHookService {
         }
     }
 
-    /// Clean up all monitors
+    /// Clean up all monitors and reset agent state
     func cleanup() {
         let ids = Array(pollTimers.keys)
         for id in ids {
             stopMonitoring(tabID: id)
         }
+        agentInfos.removeAll()
+        recentNotifications.removeAll()
+        lastStatus.removeAll()
     }
 }
 
@@ -196,7 +212,6 @@ enum ClaudeStatus: String {
     case running
     case idle
     case needsInput = "needs-input"
-    case completed
     case unknown
 
     var icon: String {
@@ -204,7 +219,6 @@ enum ClaudeStatus: String {
         case .running: return "bolt.fill"
         case .idle: return "pause.circle.fill"
         case .needsInput: return "bell.fill"
-        case .completed: return "checkmark.circle.fill"
         case .unknown: return "questionmark.circle"
         }
     }
@@ -214,7 +228,6 @@ enum ClaudeStatus: String {
         case .running: return "Running"
         case .idle: return "Idle"
         case .needsInput: return "Needs Input"
-        case .completed: return "Completed"
         case .unknown: return "Unknown"
         }
     }
@@ -224,7 +237,6 @@ enum ClaudeStatus: String {
         case .running: return .blue
         case .idle: return Color(white: 0.45)
         case .needsInput: return .orange
-        case .completed: return .green
         case .unknown: return Color(white: 0.35)
         }
     }

@@ -37,7 +37,6 @@ struct AgentOrchestrationView: View {
                 StatusPill(count: hookService.runningCount, label: "Running", color: .blue)
                 StatusPill(count: hookService.needsInputCount, label: "Needs Input", color: .orange)
                 StatusPill(count: hookService.idleCount, label: "Idle", color: theme.tertiaryText)
-                StatusPill(count: hookService.completedCount, label: "Completed", color: .green)
             }
             .padding(.horizontal)
             .padding(.bottom, 12)

@@ -114,6 +114,7 @@ struct TabBarView: View {
             .buttonStyle(.plain)
 
             Spacer()
+                .background(WindowDragArea())
         }
         .frame(height: 38)
         .background(.clear)

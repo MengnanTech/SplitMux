@@ -156,7 +156,7 @@ struct WindowConfigurator: NSViewRepresentable {
     func updateNSView(_ nsView: WindowConfiguratorView, context: Context) {}
 }
 
-class WindowConfiguratorView: NSView {
+class WindowConfiguratorView: NSView, NSWindowDelegate {
     private var kvoObservation: NSKeyValueObservation?
     private var toolbarObservation: NSKeyValueObservation?
     private var notificationToken: NSObjectProtocol?
@@ -173,6 +173,7 @@ class WindowConfiguratorView: NSView {
         guard let window else {
             return
         }
+        window.delegate = self
         applyConfig(window)
 
         // KVO: whenever SwiftUI resets styleMask, immediately re-insert fullSizeContentView
@@ -203,5 +204,24 @@ class WindowConfiguratorView: NSView {
         isApplying = true
         WindowChromeConfigurator.apply(to: window)
         isApplying = false
+    }
+
+    // MARK: - Window Close Confirmation
+
+    func windowShouldClose(_ sender: NSWindow) -> Bool {
+        let alert = NSAlert()
+        alert.messageText = "确认退出 SplitMux？"
+        alert.informativeText = "所有终端会话和正在运行的 Claude Agent 将被关闭。"
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "退出")
+        alert.addButton(withTitle: "取消")
+
+        let response = alert.runModal()
+        if response == .alertFirstButtonReturn {
+            // Clean up all Claude agent state before closing
+            ClaudeHookService.shared.cleanup()
+            return true
+        }
+        return false
     }
 }
