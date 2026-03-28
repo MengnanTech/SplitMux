@@ -9,11 +9,7 @@ class TerminalSessionDelegate: NSObject, LocalProcessTerminalViewDelegate, @unch
     var tabTitle: String
     weak var tab: Tab?
     weak var appState: AppState?
-    private var lastPromptTime: Date = Date()
-    private var commandStartTime: Date?
-    private var lastDirectory: String?
 
-    var notifyThreshold: TimeInterval = 5
     var suppressNextNotification = false
 
     init(tabTitle: String) {
@@ -23,71 +19,14 @@ class TerminalSessionDelegate: NSObject, LocalProcessTerminalViewDelegate, @unch
     func sizeChanged(source: LocalProcessTerminalView, newCols: Int, newRows: Int) {}
 
     func setTerminalTitle(source: LocalProcessTerminalView, title: String) {
-        let oldTitle = tabTitle
         tabTitle = title
-
-        // Skip if title didn't change — zsh re-emits the same title on prompt
-        // redraws (Enter, Delete, etc.) which would otherwise create false state
-        guard title != oldTitle else { return }
-
-        let isShellPrompt = title.contains("zsh") || title.contains("bash") || title.contains("-zsh")
-        let wasRunningCommand = !oldTitle.contains("zsh") && !oldTitle.contains("bash") && !oldTitle.contains("-zsh") && !oldTitle.isEmpty
-
-        if isShellPrompt && wasRunningCommand, let start = commandStartTime {
-            let elapsed = Date().timeIntervalSince(start)
-            if suppressNextNotification {
-                suppressNextNotification = false
-            } else if elapsed >= notifyThreshold {
-                let msg = "\(oldTitle) — \(Self.formatDuration(elapsed))"
-                notify(message: msg, title: "Command Finished")
-            }
-            commandStartTime = nil
-        } else if !isShellPrompt && commandStartTime == nil {
-            // Only treat as command start if enough time has passed since the last
-            // prompt — zsh themes set custom titles (e.g. "user@host") right after
-            // shell init/prompt rendering, which is NOT a command execution.
-            let timeSincePrompt = Date().timeIntervalSince(lastPromptTime)
-            if timeSincePrompt > 1.5 {
-                commandStartTime = Date()
-            }
-        }
     }
 
     func hostCurrentDirectoryUpdate(source: TerminalView, directory: String?) {
-        let now = Date()
-
-        // Skip if directory didn't change — zsh re-emits OSC 7 on every prompt
-        // (Enter, Delete, etc.) even when the directory hasn't changed
-        let dirChanged = directory != lastDirectory
-        lastDirectory = directory
-
-        guard dirChanged else {
-            lastPromptTime = now
-            return
-        }
-
-        // Only notify if a command was actually running
-        if let start = commandStartTime {
-            let elapsed = now.timeIntervalSince(start)
-            if suppressNextNotification {
-                suppressNextNotification = false
-            } else if elapsed >= notifyThreshold {
-                let dir = directory.map { URL(fileURLWithPath: $0).lastPathComponent } ?? "terminal"
-                let msg = "\(tabTitle) in \(dir) — \(Self.formatDuration(elapsed))"
-                notify(message: msg, title: "Command Finished")
-            }
-        } else if suppressNextNotification {
-            suppressNextNotification = false
-        }
-
-        lastPromptTime = now
-        commandStartTime = nil
+        // Title update only — no notifications
     }
 
     func processTerminated(source: TerminalView, exitCode: Int32?) {
-        let msg = "\(tabTitle) exited (\(exitCode ?? 0))"
-        notify(message: msg, title: "Process Exited")
-
         if let termView = source as? NotifyingTerminalView {
             Task { @MainActor [weak self] in
                 // Reset Claude detection on process exit
@@ -114,69 +53,11 @@ class TerminalSessionDelegate: NSObject, LocalProcessTerminalViewDelegate, @unch
         }
     }
 
-    /// Unified notification — marks tab, sends system notification with smart suppression, updates dock badge
-    private func notify(message: String, title: String) {
-        Task { @MainActor [weak self] in
-            guard let self, let tab = self.tab else { return }
-
-            // Mark tab notification state
-            tab.hasNotification = true
-            tab.lastNotificationMessage = message
-
-            // Smart suppression: is this tab currently active + visible?
-            let tabIsActive = self.isTabActive()
-
-            // Send (will suppress to beep-only if tab is active + app focused)
-            NotificationService.shared.send(
-                title: title,
-                body: message,
-                tabIsActive: tabIsActive
-            )
-
-            // Post inline toast notification (only if tab is NOT active)
-            if !tabIsActive, let appState = self.appState {
-                let session = appState.sessions.first { $0.tabs.contains(where: { $0.id == tab.id }) }
-                NotificationCenter.default.post(
-                    name: .tabNotification,
-                    object: nil,
-                    userInfo: [
-                        "tabID": tab.id,
-                        "tabTitle": tab.title,
-                        "message": message,
-                        "sessionID": session?.id as Any,
-                        "sessionName": session?.name as Any
-                    ]
-                )
-            }
-
-            // Update dock badge
-            if let appState = self.appState {
-                let total = appState.sessions.flatMap(\.tabs).filter(\.hasNotification).count
-                NotificationService.shared.updateDockBadge(count: total)
-            }
-        }
-    }
-
-    @MainActor
-    private func isTabActive() -> Bool {
-        return isTabCurrentlyActive()
-    }
-
     @MainActor
     func isTabCurrentlyActive() -> Bool {
         guard let tab, let appState else { return false }
         guard let session = appState.sessions.first(where: { $0.tabs.contains(where: { $0.id == tab.id }) }) else { return false }
         return session.id == appState.selectedSessionID && session.activeTabID == tab.id
-    }
-
-    private static func formatDuration(_ seconds: TimeInterval) -> String {
-        if seconds < 60 {
-            return "\(Int(seconds))s"
-        } else if seconds < 3600 {
-            return "\(Int(seconds / 60))m \(Int(seconds.truncatingRemainder(dividingBy: 60)))s"
-        } else {
-            return "\(Int(seconds / 3600))h \(Int((seconds / 60).truncatingRemainder(dividingBy: 60)))m"
-        }
     }
 }
 
@@ -188,9 +69,6 @@ class NotifyingTerminalView: LocalProcessTerminalView {
 
     /// Callback for terminal output capture (history recording)
     var onDataReceived: ((Data) -> Void)?
-
-    /// Bell debounce — suppress rapid-fire bell notifications (e.g. Delete on empty prompt)
-    private var lastBellNotificationTime: Date = .distantPast
 
     /// SSH host ID for auto-reconnect
     var sshHostID: UUID?
@@ -488,31 +366,7 @@ class NotifyingTerminalView: LocalProcessTerminalView {
 
     override func bell(source: Terminal) {
         super.bell(source: source)
-        Task { @MainActor in
-            guard let delegate = self.sessionDelegate, let tab = delegate.tab else { return }
-
-            // Debounce: suppress bell notifications within 3 seconds of each other
-            // (e.g. pressing Delete/Backspace repeatedly on empty prompt)
-            let now = Date()
-            guard now.timeIntervalSince(lastBellNotificationTime) >= 3 else { return }
-
-            // Only notify if tab is NOT active (user is looking at another tab/app)
-            let tabIsActive = delegate.appState.flatMap { appState in
-                appState.sessions.first(where: { $0.tabs.contains(where: { $0.id == tab.id }) })
-                    .map { $0.id == appState.selectedSessionID && $0.activeTabID == tab.id }
-            } ?? false
-
-            if !tabIsActive || !NSApp.isActive {
-                lastBellNotificationTime = now
-                tab.hasNotification = true
-                tab.lastNotificationMessage = "Bell — \(delegate.tabTitle)"
-                NotificationService.shared.send(
-                    title: "Terminal Bell",
-                    body: delegate.tabTitle,
-                    tabIsActive: tabIsActive
-                )
-            }
-        }
+        // No notification — only Claude Code task completion triggers notifications
     }
 }
 
@@ -534,7 +388,6 @@ struct TerminalSwiftUIView: NSViewRepresentable {
         let delegate = TerminalSessionDelegate(tabTitle: tab.title)
         delegate.tab = tab
         delegate.appState = appState
-        delegate.notifyThreshold = SettingsManager.shared.notifyThresholdSeconds
         return delegate
     }
 
@@ -663,7 +516,6 @@ struct TerminalSwiftUIView: NSViewRepresentable {
             nsView.applyTheme(settings.theme)
             nsView.lastAppliedThemeID = themeID
         }
-        context.coordinator.notifyThreshold = settings.notifyThresholdSeconds
     }
 
     /// Create a temporary ZDOTDIR that forwards to user dotfiles,
