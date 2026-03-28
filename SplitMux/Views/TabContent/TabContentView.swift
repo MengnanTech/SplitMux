@@ -8,13 +8,10 @@ struct TabContentView: View {
     @State private var showHistory = false
 
     private var theme: AppTheme { SettingsManager.shared.theme }
-    private let titlebarBandTopInset: CGFloat = 20
-
     var body: some View {
         VStack(spacing: 0) {
             // Tab bar — always visible for discoverability
             TabBarView(session: session, onAddTab: addTab)
-                .padding(.top, titlebarBandTopInset)
 
             // Breadcrumb path bar
             BreadcrumbBar(workingDirectory: session.workingDirectory, gitBranch: session.gitBranch)
