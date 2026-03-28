@@ -28,6 +28,7 @@ struct SplitMuxApp: App {
                 }
                 .onReceive(NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)) { _ in
                     appState.saveNow()
+                    ClaudeHookService.shared.cleanup()
                 }
         }
         .commands {

@@ -42,6 +42,10 @@ final class SSHManagerService {
     }
 
     func updateHost(_ host: SSHHost) {
+        // If host is from configHosts (not yet in savedHosts), promote it
+        if !savedHosts.contains(where: { $0.id == host.id }) {
+            savedHosts.append(host)
+        }
         save()
     }
 

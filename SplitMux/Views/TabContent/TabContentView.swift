@@ -14,8 +14,34 @@ struct TabContentView: View {
             // Tab bar — always visible for discoverability
             TabBarView(session: session, onAddTab: addTab)
 
-            // Breadcrumb path bar
-            BreadcrumbBar(workingDirectory: session.workingDirectory, gitBranch: session.gitBranch)
+            // Breadcrumb path bar + zoom indicator
+            HStack(spacing: 0) {
+                BreadcrumbBar(workingDirectory: session.workingDirectory, gitBranch: session.gitBranch)
+
+                if session.splitRoot != nil, session.zoomedTabID != nil {
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            session.toggleZoom()
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.down.right.and.arrow.up.left")
+                                .font(.system(size: 9))
+                            Text("ZOOM")
+                                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                        }
+                        .foregroundStyle(theme.accentColor)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(
+                            Capsule()
+                                .fill(theme.accentColor.opacity(0.15))
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.trailing, 10)
+                }
+            }
 
             // Search bar overlay
             if showSearch {
@@ -41,32 +67,8 @@ struct TabContentView: View {
                     SplitPaneView(session: session, node: root)
                 } else if session.splitRoot != nil, let zoomedID = session.zoomedTabID,
                           let zoomedTab = session.tabs.first(where: { $0.id == zoomedID }) {
-                    // Zoomed pane mode — single pane fills area, with zoom indicator
-                    ZStack(alignment: .topTrailing) {
-                        TabPanelView(tab: zoomedTab, workingDirectory: session.workingDirectory)
-
-                        // Zoom badge
-                        HStack(spacing: 4) {
-                            Image(systemName: "arrow.up.left.and.arrow.down.right")
-                                .font(.system(size: 9))
-                            Text("ZOOM")
-                                .font(.system(size: 9, weight: .bold, design: .monospaced))
-                        }
-                        .foregroundStyle(theme.primaryText.opacity(0.7))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(
-                            Capsule()
-                                .fill(theme.accentColor.opacity(0.3))
-                                .overlay(Capsule().stroke(theme.accentColor.opacity(0.5), lineWidth: 0.5))
-                        )
-                        .padding(8)
-                        .onTapGesture {
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                session.toggleZoom()
-                            }
-                        }
-                    }
+                    // Zoomed pane mode — single pane fills area
+                    TabPanelView(tab: zoomedTab, workingDirectory: session.workingDirectory)
                 } else {
                     // Single tab mode
                     ZStack {

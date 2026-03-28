@@ -184,7 +184,12 @@ final class PersistenceService {
         case "notes": .notes(dto.contentValue ?? "")
         case "webURL": .webURL(URL(string: dto.contentValue ?? "about:blank") ?? URL(string: "about:blank")!)
         case "sshTerminal":
-            .sshTerminal(hostID: UUID(uuidString: dto.contentValue ?? "") ?? UUID())
+            {
+                if let hostID = UUID(uuidString: dto.contentValue ?? "") {
+                    return .sshTerminal(hostID: hostID)
+                }
+                return .terminal
+            }()
         default: .terminal
         }
         let tab = Tab(id: id, title: dto.title, icon: dto.icon, content: content)

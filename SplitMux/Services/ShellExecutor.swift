@@ -11,6 +11,7 @@ class TerminalSessionDelegate: NSObject, LocalProcessTerminalViewDelegate, @unch
     weak var appState: AppState?
 
     var suppressNextNotification = false
+    private var reconnectTask: Task<Void, Never>?
 
     init(tabTitle: String) {
         self.tabTitle = tabTitle
@@ -28,7 +29,10 @@ class TerminalSessionDelegate: NSObject, LocalProcessTerminalViewDelegate, @unch
 
     func processTerminated(source: TerminalView, exitCode: Int32?) {
         if let termView = source as? NotifyingTerminalView {
-            Task { @MainActor [weak self] in
+            // Cancel any pending reconnect before starting a new one
+            reconnectTask?.cancel()
+            reconnectTask = Task { @MainActor [weak self, weak termView] in
+                guard let termView else { return }
                 // Reset Claude detection on process exit
                 termView.claudeDetected = false
                 termView.recentOutput = ""
@@ -43,6 +47,7 @@ class TerminalSessionDelegate: NSObject, LocalProcessTerminalViewDelegate, @unch
                 }
                 // Wait 3 seconds then reconnect
                 try? await Task.sleep(for: .seconds(3))
+                guard !Task.isCancelled else { return }
                 if let hostID = termView.sshHostID {
                     SSHManagerService.shared.host(for: hostID)?.connectionState = .connecting
                 }

@@ -26,11 +26,14 @@ struct SidebarView: View {
                     appState.addSession()
                 } label: {
                     Image(systemName: "plus")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(theme.sectionHeaderText)
-                        .frame(width: 24, height: 24)
-                        .background(theme.subtleOverlay)
-                        .clipShape(RoundedRectangle(cornerRadius: 5))
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(theme.secondaryText)
+                        .frame(width: 22, height: 22)
+                        .background(
+                            Circle()
+                                .fill(theme.subtleOverlay)
+                                .overlay(Circle().stroke(theme.subtleBorder.opacity(0.5), lineWidth: 0.5))
+                        )
                 }
                 .buttonStyle(.plain)
             }

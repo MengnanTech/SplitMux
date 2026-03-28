@@ -37,12 +37,12 @@ struct TabBarView: View {
                         }
                     }
                 )
-                .frame(maxWidth: .infinity)
                 .opacity(draggedTabID == tab.id ? 0.4 : 1.0)
                 .onDrag {
                     draggedTabID = tab.id
                     return NSItemProvider(object: tab.id.uuidString as NSString)
                 }
+                .frame(maxWidth: 200)
                 .onDrop(of: [.text], delegate: TabDropDelegate(
                     session: session,
                     targetTabID: tab.id,
@@ -103,16 +103,17 @@ struct TabBarView: View {
                 }
             }
 
-            // Add button — fixed width on the right
-            theme.subtleBorder.frame(width: 1, height: 20)
-
+            // Add button — minimal, right after last tab
             Button(action: onAddTab) {
                 Image(systemName: "plus")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(theme.sectionHeaderText)
-                    .frame(width: 40, height: 38)
+                    .font(.system(size: 13, weight: .light))
+                    .foregroundStyle(theme.tertiaryText)
+                    .frame(width: 38, height: 38)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+
+            Spacer()
         }
         .frame(height: 38)
         .background(.ultraThinMaterial)

@@ -64,6 +64,7 @@ final class ClaudeHookService {
 
         let path = "\(statusDir)/\(tabID.uuidString)"
         try? FileManager.default.removeItem(atPath: path)
+        lastStatus.removeValue(forKey: path)
 
         // Remove from agent tracking
         agentInfos.removeAll { $0.tabID == tabID }

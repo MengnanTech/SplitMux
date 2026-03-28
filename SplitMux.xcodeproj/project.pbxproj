@@ -40,6 +40,7 @@
 		AA1111111111111111111111 /* BreadcrumbBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA2222222222222222222222 /* BreadcrumbBar.swift */; };
 		AA3333333333333333333333 /* NotificationToast.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA4444444444444444444444 /* NotificationToast.swift */; };
 		AA5555555555555555555555 /* SplitDropZone.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6666666666666666666666 /* SplitDropZone.swift */; };
+		BB7777777777777777777777 /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB8888888888888888888888 /* EmptyStateView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -78,6 +79,7 @@
 		AA2222222222222222222222 /* BreadcrumbBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreadcrumbBar.swift; sourceTree = "<group>"; };
 		AA4444444444444444444444 /* NotificationToast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationToast.swift; sourceTree = "<group>"; };
 		AA6666666666666666666666 /* SplitDropZone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitDropZone.swift; sourceTree = "<group>"; };
+		BB8888888888888888888888 /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -183,6 +185,7 @@
 				94CFE7C5BD49F7C5AA2E257B /* AgentOrchestrationView.swift */,
 				AA2222222222222222222222 /* BreadcrumbBar.swift */,
 				0450FA03717F0A10E8B13CCC /* CommandPaletteView.swift */,
+				BB8888888888888888888888 /* EmptyStateView.swift */,
 				AA4444444444444444444444 /* NotificationToast.swift */,
 				AF1A68A30C80A52EE65AF9EF /* SettingsView.swift */,
 				AA6666666666666666666666 /* SplitDropZone.swift */,
@@ -307,6 +310,7 @@
 				EDE1EFD4FCFAF4CD7DD6F5DC /* ClaudeHookService.swift in Sources */,
 				9045A91F80361305B8F68C04 /* CommandPaletteView.swift in Sources */,
 				CF0E7EFE2E8FE8FDDEDF1CFF /* ContentView.swift in Sources */,
+				BB7777777777777777777777 /* EmptyStateView.swift in Sources */,
 				91988B19EB460BE7E6A877E1 /* NotificationService.swift in Sources */,
 				15B3480BBD6D0A4DDB2B9CBE /* PersistenceService.swift in Sources */,
 				80A672CEF423F5AFE68B7CE1 /* SSHHost.swift in Sources */,

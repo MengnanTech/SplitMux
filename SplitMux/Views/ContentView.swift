@@ -29,17 +29,7 @@ struct ContentView: View {
 
                     if appState.sessions.isEmpty {
                         theme.contentBackground
-                        VStack(spacing: 12) {
-                            Image(systemName: "terminal")
-                                .font(.system(size: 32))
-                                .foregroundStyle(theme.disabledText)
-                            Text("No Session")
-                                .foregroundStyle(theme.secondaryText)
-                                .font(.system(.title3, design: .monospaced))
-                            Text("Press \u{2318}N to create a new session")
-                                .foregroundStyle(theme.disabledText)
-                                .font(.system(.caption, design: .monospaced))
-                        }
+                        EmptyStateView()
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
