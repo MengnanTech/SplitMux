@@ -121,7 +121,7 @@ echo "🚀 Uploading to calyx-ai.com..."
 ssh "$REMOTE" "mkdir -p $REMOTE_DIR/releases"
 
 VERSIONED_DMG="SplitMux-${VERSION}.dmg"
-rsync -az --info=progress2 "$DMG_PATH" "$REMOTE:$REMOTE_DIR/releases/$VERSIONED_DMG"
+rsync -az --progress "$DMG_PATH" "$REMOTE:$REMOTE_DIR/releases/$VERSIONED_DMG"
 rsync -az "$APPCAST_DIR/appcast.xml" "$REMOTE:$REMOTE_DIR/"
 
 echo "✅ Uploaded to server"
