@@ -9,47 +9,29 @@ struct SplitPaneView: View {
     private var theme: AppTheme { SettingsManager.shared.theme }
 
     var body: some View {
-        // Zoom mode — show only the zoomed pane at full size (handled here
-        // so the terminal view stays in the same SplitPaneView hierarchy
-        // and never needs to move between containers).
-        if let zoomedID = session.zoomedTabID,
-           let zoomedTab = session.tabs.first(where: { $0.id == zoomedID }) {
-            ZStack(alignment: .topTrailing) {
-                splitTabPanel(tab: zoomedTab)
-
-                FloatingZoomButton {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        session.toggleZoom()
-                    }
-                }
-                .frame(width: 28, height: 28)
-                .padding(10)
+        switch node {
+        case .tab(let tabID):
+            if let tab = session.tabs.first(where: { $0.id == tabID }) {
+                splitTabPanel(tab: tab)
+            } else {
+                theme.contentBackground
             }
-        } else {
-            switch node {
-            case .tab(let tabID):
-                if let tab = session.tabs.first(where: { $0.id == tabID }) {
-                    splitTabPanel(tab: tab)
-                } else {
-                    theme.contentBackground
-                }
 
-            case .horizontal(let first, let second, let ratio):
-                HSplitContent(
-                    session: session,
-                    first: first,
-                    second: second,
-                    ratio: ratio
-                )
+        case .horizontal(let first, let second, let ratio):
+            HSplitContent(
+                session: session,
+                first: first,
+                second: second,
+                ratio: ratio
+            )
 
-            case .vertical(let first, let second, let ratio):
-                VSplitContent(
-                    session: session,
-                    first: first,
-                    second: second,
-                    ratio: ratio
-                )
-            }
+        case .vertical(let first, let second, let ratio):
+            VSplitContent(
+                session: session,
+                first: first,
+                second: second,
+                ratio: ratio
+            )
         }
     }
 
@@ -95,37 +77,73 @@ struct HSplitContent: View {
         self._currentRatio = State(initialValue: ratio)
     }
 
+    /// Effective ratio during zoom — zoomed pane takes all space
+    private var displayRatio: Double {
+        guard let zoomedID = session.zoomedTabID else { return currentRatio }
+        if first.tabIDs.contains(zoomedID) { return 1.0 }
+        if second.tabIDs.contains(zoomedID) { return 0.0 }
+        return currentRatio
+    }
+
+    private var isZoomed: Bool { session.zoomedTabID != nil }
+    private var firstVisible: Bool {
+        guard let z = session.zoomedTabID else { return true }
+        return first.tabIDs.contains(z)
+    }
+    private var secondVisible: Bool {
+        guard let z = session.zoomedTabID else { return true }
+        return second.tabIDs.contains(z)
+    }
+
     var body: some View {
         GeometryReader { geo in
-            HStack(spacing: 0) {
-                SplitPaneView(session: session, node: first)
-                    .frame(width: geo.size.width * currentRatio - 2)
+            let r = displayRatio
+            ZStack(alignment: .topTrailing) {
+                HStack(spacing: 0) {
+                    SplitPaneView(session: session, node: first)
+                        .frame(width: max(geo.size.width * r - 2, 0))
+                        .opacity(firstVisible ? 1 : 0)
 
-                // Draggable divider with hover highlight
-                Rectangle()
-                    .fill(isDividerHovered ? theme.splitDividerHover : theme.splitDivider)
-                    .frame(width: isDividerHovered ? 6 : 4)
-                    .animation(.easeInOut(duration: 0.12), value: isDividerHovered)
-                    .onHover { hovering in
-                        isDividerHovered = hovering
-                        if hovering {
-                            NSCursor.resizeLeftRight.push()
-                        } else {
-                            NSCursor.pop()
+                    if !isZoomed {
+                        // Draggable divider (hidden during zoom)
+                        Rectangle()
+                            .fill(isDividerHovered ? theme.splitDividerHover : theme.splitDivider)
+                            .frame(width: isDividerHovered ? 6 : 4)
+                            .animation(.easeInOut(duration: 0.12), value: isDividerHovered)
+                            .onHover { hovering in
+                                isDividerHovered = hovering
+                                if hovering {
+                                    NSCursor.resizeLeftRight.push()
+                                } else {
+                                    NSCursor.pop()
+                                }
+                            }
+                            .gesture(
+                                DragGesture()
+                                    .onChanged { value in
+                                        let newRatio = max(0.15, min(0.85, Double(value.location.x / geo.size.width)))
+                                        currentRatio = newRatio
+                                    }
+                                    .onEnded { _ in
+                                        updateSessionRatio()
+                                    }
+                            )
+                    }
+
+                    SplitPaneView(session: session, node: second)
+                        .opacity(secondVisible ? 1 : 0)
+                }
+
+                // Floating zoom exit button
+                if isZoomed {
+                    FloatingZoomButton {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            session.toggleZoom()
                         }
                     }
-                    .gesture(
-                        DragGesture()
-                            .onChanged { value in
-                                let newRatio = max(0.15, min(0.85, Double(value.location.x / geo.size.width)))
-                                currentRatio = newRatio
-                            }
-                            .onEnded { _ in
-                                updateSessionRatio()
-                            }
-                    )
-
-                SplitPaneView(session: session, node: second)
+                    .frame(width: 28, height: 28)
+                    .padding(10)
+                }
             }
         }
     }
@@ -179,36 +197,70 @@ struct VSplitContent: View {
         self._currentRatio = State(initialValue: ratio)
     }
 
+    private var displayRatio: Double {
+        guard let zoomedID = session.zoomedTabID else { return currentRatio }
+        if first.tabIDs.contains(zoomedID) { return 1.0 }
+        if second.tabIDs.contains(zoomedID) { return 0.0 }
+        return currentRatio
+    }
+
+    private var isZoomed: Bool { session.zoomedTabID != nil }
+    private var firstVisible: Bool {
+        guard let z = session.zoomedTabID else { return true }
+        return first.tabIDs.contains(z)
+    }
+    private var secondVisible: Bool {
+        guard let z = session.zoomedTabID else { return true }
+        return second.tabIDs.contains(z)
+    }
+
     var body: some View {
         GeometryReader { geo in
-            VStack(spacing: 0) {
-                SplitPaneView(session: session, node: first)
-                    .frame(height: geo.size.height * currentRatio - 2)
+            let r = displayRatio
+            ZStack(alignment: .topTrailing) {
+                VStack(spacing: 0) {
+                    SplitPaneView(session: session, node: first)
+                        .frame(height: max(geo.size.height * r - 2, 0))
+                        .opacity(firstVisible ? 1 : 0)
 
-                Rectangle()
-                    .fill(isDividerHovered ? theme.splitDividerHover : theme.splitDivider)
-                    .frame(height: isDividerHovered ? 6 : 4)
-                    .animation(.easeInOut(duration: 0.12), value: isDividerHovered)
-                    .onHover { hovering in
-                        isDividerHovered = hovering
-                        if hovering {
-                            NSCursor.resizeUpDown.push()
-                        } else {
-                            NSCursor.pop()
+                    if !isZoomed {
+                        Rectangle()
+                            .fill(isDividerHovered ? theme.splitDividerHover : theme.splitDivider)
+                            .frame(height: isDividerHovered ? 6 : 4)
+                            .animation(.easeInOut(duration: 0.12), value: isDividerHovered)
+                            .onHover { hovering in
+                                isDividerHovered = hovering
+                                if hovering {
+                                    NSCursor.resizeUpDown.push()
+                                } else {
+                                    NSCursor.pop()
+                                }
+                            }
+                            .gesture(
+                                DragGesture()
+                                    .onChanged { value in
+                                        let newRatio = max(0.15, min(0.85, Double(value.location.y / geo.size.height)))
+                                        currentRatio = newRatio
+                                    }
+                                    .onEnded { _ in
+                                        updateSessionRatio()
+                                    }
+                            )
+                    }
+
+                    SplitPaneView(session: session, node: second)
+                        .opacity(secondVisible ? 1 : 0)
+                }
+
+                if isZoomed {
+                    FloatingZoomButton {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            session.toggleZoom()
                         }
                     }
-                    .gesture(
-                        DragGesture()
-                            .onChanged { value in
-                                let newRatio = max(0.15, min(0.85, Double(value.location.y / geo.size.height)))
-                                currentRatio = newRatio
-                            }
-                            .onEnded { _ in
-                                updateSessionRatio()
-                            }
-                    )
-
-                SplitPaneView(session: session, node: second)
+                    .frame(width: 28, height: 28)
+                    .padding(10)
+                }
             }
         }
     }

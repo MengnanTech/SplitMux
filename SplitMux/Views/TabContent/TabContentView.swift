@@ -44,14 +44,15 @@ struct TabContentView: View {
                     && session.zoomedTabID != nil
 
                 // Split pane mode — always kept alive if splitRoot exists.
-                // SplitPaneView handles zoom internally to avoid creating a
-                // second TabPanelView for the same tab (NSView can only have
-                // one superview — moving it between containers corrupts rendering).
+                // Zoom is handled internally by HSplitContent/VSplitContent
+                // (ratio adjustment) so terminal views never move between containers.
                 if let root = session.splitRoot {
                     SplitPaneView(session: session, node: root)
                         .opacity(showSplit || showZoom ? 1 : 0)
                         .allowsHitTesting(showSplit || showZoom)
                 }
+
+                // No separate zoom view — handled within SplitPaneView via ratio
 
                 // Non-split tabs — rendered individually, shown when active and not in split/zoom
                 ForEach(session.tabs.filter { !splitTabIDs.contains($0.id) }) { tab in
