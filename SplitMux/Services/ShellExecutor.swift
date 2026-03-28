@@ -75,6 +75,42 @@ class NotifyingTerminalView: LocalProcessTerminalView {
     /// Callback for terminal output capture (history recording)
     var onDataReceived: ((Data) -> Void)?
 
+    /// Callback when user clicks in this terminal pane (for split pane focus switching)
+    var onPaneClicked: (() -> Void)?
+    var onPaneDoubleClicked: (() -> Void)?
+    private var mouseMonitor: Any?
+
+    func installClickMonitor() {
+        guard mouseMonitor == nil else { return }
+        mouseMonitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { [weak self] event in
+            guard let self = self, let eventWindow = event.window,
+                  eventWindow == self.window else { return event }
+            // Use hitTest from the window's contentView to find the actual
+            // frontmost view at the click point — this respects z-order and
+            // ignores hidden/zero-opacity views
+            let windowPoint = event.locationInWindow
+            guard let hitView = eventWindow.contentView?.hitTest(windowPoint),
+                  hitView === self || hitView.isDescendant(of: self)
+            else { return event }
+            self.onPaneClicked?()
+            if event.clickCount == 2 {
+                self.onPaneDoubleClicked?()
+            }
+            return event
+        }
+    }
+
+    func removeClickMonitor() {
+        if let monitor = mouseMonitor {
+            NSEvent.removeMonitor(monitor)
+            mouseMonitor = nil
+        }
+    }
+
+    deinit {
+        removeClickMonitor()
+    }
+
     /// SSH host ID for auto-reconnect
     var sshHostID: UUID?
     var sshAutoReconnect: Bool = false
@@ -401,6 +437,31 @@ struct TerminalSwiftUIView: NSViewRepresentable {
         termView.focusRingType = .none
         termView.sessionDelegate = context.coordinator
         tab.terminalView = termView
+
+        // Switch active pane on click (for split pane mode)
+        let tabID = tab.id
+        termView.onPaneClicked = { [weak appState] in
+            guard let appState = appState,
+                  let session = appState.sessions.first(where: { $0.tabs.contains(where: { $0.id == tabID }) }),
+                  let splitRoot = session.splitRoot,
+                  splitRoot.tabIDs.contains(tabID),
+                  session.activeTabID != tabID
+            else { return }
+            session.activeTabID = tabID
+        }
+        termView.onPaneDoubleClicked = { [weak appState] in
+            guard let appState = appState,
+                  let session = appState.sessions.first(where: { $0.tabs.contains(where: { $0.id == tabID }) }),
+                  session.splitRoot != nil
+            else { return }
+            DispatchQueue.main.async {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    session.activeTabID = tabID
+                    session.toggleZoom()
+                }
+            }
+        }
+        termView.installClickMonitor()
 
         let settings = SettingsManager.shared
         termView.applyTheme(settings.theme)

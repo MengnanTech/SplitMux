@@ -14,34 +14,8 @@ struct TabContentView: View {
             // Tab bar — always visible for discoverability
             TabBarView(session: session, onAddTab: addTab)
 
-            // Breadcrumb path bar + zoom indicator
-            HStack(spacing: 0) {
-                BreadcrumbBar(workingDirectory: session.workingDirectory, gitBranch: session.gitBranch)
-
-                if session.splitRoot != nil, session.zoomedTabID != nil {
-                    Button {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            session.toggleZoom()
-                        }
-                    } label: {
-                        HStack(spacing: 4) {
-                            Image(systemName: "arrow.down.right.and.arrow.up.left")
-                                .font(.system(size: 9))
-                            Text("ZOOM")
-                                .font(.system(size: 9, weight: .bold, design: .monospaced))
-                        }
-                        .foregroundStyle(theme.accentColor)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(
-                            Capsule()
-                                .fill(theme.accentColor.opacity(0.15))
-                        )
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.trailing, 10)
-                }
-            }
+            // Breadcrumb path bar
+            BreadcrumbBar(workingDirectory: session.workingDirectory, gitBranch: session.gitBranch)
 
             // Search bar overlay
             if showSearch {
@@ -62,26 +36,50 @@ struct TabContentView: View {
 
             // Content area with drag-to-split overlay
             ZStack {
-                if let root = session.splitRoot, session.zoomedTabID == nil {
-                    // Split pane mode
+                // Determine which mode to show
+                let splitTabIDs = session.splitRoot?.tabIDs ?? []
+                let showSplit = session.splitRoot != nil
+                    && session.zoomedTabID == nil
+                    && splitTabIDs.contains(session.activeTabID ?? UUID())
+                let showZoom = session.splitRoot != nil
+                    && session.zoomedTabID != nil
+
+                // Split pane mode — always kept alive if splitRoot exists
+                if let root = session.splitRoot {
                     SplitPaneView(session: session, node: root)
-                } else if session.splitRoot != nil, let zoomedID = session.zoomedTabID,
-                          let zoomedTab = session.tabs.first(where: { $0.id == zoomedID }) {
-                    // Zoomed pane mode — single pane fills area
-                    TabPanelView(tab: zoomedTab, workingDirectory: session.workingDirectory)
-                } else {
-                    // Single tab mode
-                    ZStack {
-                        ForEach(session.tabs) { tab in
-                            TabPanelView(tab: tab, workingDirectory: session.workingDirectory)
-                                .opacity(tab.id == session.activeTabID ? 1 : 0)
-                                .allowsHitTesting(tab.id == session.activeTabID)
-                        }
-                    }
+                        .opacity(showSplit ? 1 : 0)
+                        .allowsHitTesting(showSplit)
                 }
 
-                // Drop zone overlay for drag-to-split
+                // Zoomed pane mode — floating exit button
+                if let zoomedID = session.zoomedTabID,
+                   let zoomedTab = session.tabs.first(where: { $0.id == zoomedID }) {
+                    ZStack(alignment: .topTrailing) {
+                        TabPanelView(tab: zoomedTab, workingDirectory: session.workingDirectory)
+
+                        FloatingZoomButton {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                session.toggleZoom()
+                            }
+                        }
+                        .frame(width: 28, height: 28)
+                        .padding(10)
+                    }
+                    .opacity(showZoom ? 1 : 0)
+                    .allowsHitTesting(showZoom)
+                }
+
+                // Non-split tabs — rendered individually, shown when active and not in split/zoom
+                ForEach(session.tabs.filter { !splitTabIDs.contains($0.id) }) { tab in
+                    let isVisible = tab.id == session.activeTabID && !showSplit && !showZoom
+                    TabPanelView(tab: tab, workingDirectory: session.workingDirectory)
+                        .opacity(isVisible ? 1 : 0)
+                        .allowsHitTesting(isVisible)
+                }
+
+                // Drop zone overlay for drag-to-split (passthrough for normal clicks)
                 SplitDropZoneOverlay(session: session)
+                    .allowsHitTesting(false)
             }
 
             // Terminal history panel

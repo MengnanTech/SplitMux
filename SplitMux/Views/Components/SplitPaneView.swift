@@ -45,15 +45,14 @@ struct SplitPaneView: View {
                     .stroke(isActive ? theme.accentColor.opacity(0.5) : .clear, lineWidth: 1.5)
                     .padding(1)
             )
-            .onTapGesture(count: 2) {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    session.activeTabID = tab.id
-                    session.toggleZoom()
+            .overlay(alignment: .topTrailing) {
+                if let status = tab.claudeStatus, status != .unknown {
+                    SplitPaneStatusBadge(status: status, hasNotification: tab.hasNotification)
+                        .padding(8)
                 }
             }
-            .onTapGesture {
-                session.activeTabID = tab.id
-            }
+            // Pane click-to-focus is handled by NotifyingTerminalView.onPaneClicked
+            // Double-click zoom via ⌘⇧Z keyboard shortcut
     }
 }
 
@@ -221,5 +220,48 @@ struct VSplitContent: View {
         default:
             return node
         }
+    }
+}
+
+/// Floating status badge shown on each split pane
+struct SplitPaneStatusBadge: View {
+    let status: ClaudeStatus
+    let hasNotification: Bool
+
+    private var theme: AppTheme { SettingsManager.shared.theme }
+
+    var body: some View {
+        HStack(spacing: 4) {
+            if status == .running {
+                ProgressView()
+                    .controlSize(.mini)
+                    .scaleEffect(0.6)
+            } else {
+                Image(systemName: status.icon)
+                    .font(.system(size: 9))
+                    .foregroundStyle(status.color)
+            }
+
+            Text(status.label)
+                .font(.system(size: 9, weight: .medium, design: .monospaced))
+                .foregroundStyle(status.color)
+
+            if hasNotification {
+                Circle()
+                    .fill(Color.orange)
+                    .frame(width: 5, height: 5)
+            }
+        }
+        .padding(.horizontal, 6)
+        .padding(.vertical, 3)
+        .background(
+            RoundedRectangle(cornerRadius: 4)
+                .fill(theme.elevatedSurface.opacity(0.85))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 4)
+                        .stroke(status.color.opacity(0.3), lineWidth: 0.5)
+                )
+        )
+        .allowsHitTesting(false)
     }
 }
