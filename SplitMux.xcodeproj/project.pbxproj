@@ -23,8 +23,6 @@
 		6D04D771F9DDBD603412B9CA /* SplitPaneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C5637445360D508E1A265A6 /* SplitPaneView.swift */; };
 		75896E33B7F227DC257262C5 /* TerminalHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9317565C43CD3745A495839 /* TerminalHistoryView.swift */; };
 		76224873C9A3B07E5BB4DB10 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A29FB0FA907A1116BD352F22 /* Assets.xcassets */; };
-		A1B2C3D4E5F60718091A2B3C /* claude in Copy Wrapper Scripts */ = {isa = PBXBuildFile; fileRef = 3B05BA369355CCACE63EF27A /* claude */; };
-		A1B2C3D4E5F60718091A2B3D /* codex in Copy Wrapper Scripts */ = {isa = PBXBuildFile; fileRef = 99894009C3CB2EA0D6F83741 /* codex */; };
 		80A672CEF423F5AFE68B7CE1 /* SSHHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDCEA570CCC09D2C9721C5FD /* SSHHost.swift */; };
 		80D7C0A9D2062366C81138D7 /* TabPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F66998C1C01601FFB7495CB /* TabPanelView.swift */; };
 		838CCD0A18F6D42FACCA1214 /* NotificationToast.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C39C38404B471CD98B0F5EE /* NotificationToast.swift */; };
@@ -46,38 +44,6 @@
 		F46C56F3D59185B62B999BF9 /* ShellExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CA791722194F1B9618ED6E1 /* ShellExecutor.swift */; };
 		F946BB61A50A6124AA9E60DB /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCDF76A742361D9CA88C024 /* EmptyStateView.swift */; };
 /* End PBXBuildFile section */
-
-/* Begin PBXCopyFilesBuildPhase section */
-		A1B2C3D4E5F60718091A2B30 /* Copy Wrapper Scripts */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = bin;
-			dstSubfolderSpec = 7;
-			files = (
-				A1B2C3D4E5F60718091A2B3C /* claude in Copy Wrapper Scripts */,
-				A1B2C3D4E5F60718091A2B3D /* codex in Copy Wrapper Scripts */,
-			);
-			name = "Copy Wrapper Scripts";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		A1B2C3D4E5F60718091A2B31 /* Make Wrappers Executable */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Make Wrappers Executable";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "chmod +x \"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/Resources/bin/claude\"\nchmod +x \"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/Resources/bin/codex\"\n";
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXFileReference section */
 		0363EC81A3AE7DA34F86689B /* FloatingZoomButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingZoomButton.swift; sourceTree = "<group>"; };
@@ -104,6 +70,7 @@
 		9BCF76A9B67B992A48E88E9D /* SSHHostsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHHostsSection.swift; sourceTree = "<group>"; };
 		A29FB0FA907A1116BD352F22 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A3A3F11B4021ECCA5F2B8172 /* TerminalSearchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalSearchBar.swift; sourceTree = "<group>"; };
+		A84FEAD698B8DD8897724E27 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		A9317565C43CD3745A495839 /* TerminalHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalHistoryView.swift; sourceTree = "<group>"; };
 		AC117D2A5C7BE36B48F6B79E /* SplitDropZone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitDropZone.swift; sourceTree = "<group>"; };
 		AE127C75EE05E61FA4E9DFA7 /* BreadcrumbBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreadcrumbBar.swift; sourceTree = "<group>"; };
@@ -156,6 +123,7 @@
 			isa = PBXGroup;
 			children = (
 				A29FB0FA907A1116BD352F22 /* Assets.xcassets */,
+				A84FEAD698B8DD8897724E27 /* Info.plist */,
 				8AE3BADABDA7191D7EA65125 /* SplitMux.entitlements */,
 				0B13FB3AC9006BE60A51D478 /* App */,
 				72144FC06731CA5685F4EDA1 /* Models */,
@@ -275,8 +243,6 @@
 				DEA3C444B2E11506084AEDF9 /* Sources */,
 				754868263CFF2F44B1F45218 /* Resources */,
 				53E55D1292A3B2101D429A95 /* Frameworks */,
-				A1B2C3D4E5F60718091A2B30 /* Copy Wrapper Scripts */,
-				A1B2C3D4E5F60718091A2B31 /* Make Wrappers Executable */,
 			);
 			buildRules = (
 			);
@@ -432,7 +398,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -451,6 +416,7 @@
 				CODE_SIGN_ENTITLEMENTS = SplitMux/SplitMux.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = SplitMux/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -469,6 +435,7 @@
 				CODE_SIGN_ENTITLEMENTS = SplitMux/SplitMux.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = SplitMux/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -535,7 +502,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;

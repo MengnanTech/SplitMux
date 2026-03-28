@@ -8,7 +8,6 @@ options:
 settings:
   base:
     SWIFT_VERSION: "6.0"
-    GENERATE_INFOPLIST_FILE: YES
     DEVELOPMENT_TEAM: 2XGP34AR96
     DEAD_CODE_STRIPPING: YES
     ENABLE_USER_SCRIPT_SANDBOXING: YES
@@ -38,6 +37,7 @@ targets:
         CURRENT_PROJECT_VERSION: 1
         SWIFT_STRICT_CONCURRENCY: complete
     info:
+      path: SplitMux/Info.plist
       properties:
         SUFeedURL: "https://calyx-ai.com/splitmux/appcast.xml"
         SUPublicEDKey: "EbZeL4SmTBcud40r+8WuD4aFqK02Bl/DFeKYOHHClb8="
