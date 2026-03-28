@@ -11,6 +11,7 @@ class TerminalSessionDelegate: NSObject, LocalProcessTerminalViewDelegate, @unch
     weak var appState: AppState?
     private var lastPromptTime: Date = Date()
     private var commandStartTime: Date?
+    private var lastDirectory: String?
 
     var notifyThreshold: TimeInterval = 5
     var suppressNextNotification = false
@@ -24,6 +25,10 @@ class TerminalSessionDelegate: NSObject, LocalProcessTerminalViewDelegate, @unch
     func setTerminalTitle(source: LocalProcessTerminalView, title: String) {
         let oldTitle = tabTitle
         tabTitle = title
+
+        // Skip if title didn't change — zsh re-emits the same title on prompt
+        // redraws (Enter, Delete, etc.) which would otherwise create false state
+        guard title != oldTitle else { return }
 
         let isShellPrompt = title.contains("zsh") || title.contains("bash") || title.contains("-zsh")
         let wasRunningCommand = !oldTitle.contains("zsh") && !oldTitle.contains("bash") && !oldTitle.contains("-zsh") && !oldTitle.isEmpty
@@ -45,9 +50,17 @@ class TerminalSessionDelegate: NSObject, LocalProcessTerminalViewDelegate, @unch
     func hostCurrentDirectoryUpdate(source: TerminalView, directory: String?) {
         let now = Date()
 
-        // Only notify if a command was actually running — zsh re-emits OSC 7
-        // on prompt redraws (e.g. pressing Delete), which would otherwise
-        // trigger false "Command Finished" notifications.
+        // Skip if directory didn't change — zsh re-emits OSC 7 on every prompt
+        // (Enter, Delete, etc.) even when the directory hasn't changed
+        let dirChanged = directory != lastDirectory
+        lastDirectory = directory
+
+        guard dirChanged else {
+            lastPromptTime = now
+            return
+        }
+
+        // Only notify if a command was actually running
         if let start = commandStartTime {
             let elapsed = now.timeIntervalSince(start)
             if suppressNextNotification {
