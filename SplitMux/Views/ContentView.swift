@@ -292,11 +292,11 @@ class SidebarDividerNSView: NSView {
         case .light:
             color = NSColor(white: 0.0, alpha: 0.045)
         case .dark:
-            color = NSColor(white: 1.0, alpha: 0.035)
+            color = NSColor(white: 1.0, alpha: 0.06)
         case .solarized:
-            color = NSColor(white: 1.0, alpha: 0.035)
+            color = NSColor(white: 1.0, alpha: 0.06)
         case .monokai:
-            color = NSColor(white: 1.0, alpha: 0.035)
+            color = NSColor(white: 1.0, alpha: 0.06)
         }
         color.setFill()
         NSRect(x: 0, y: 0, width: 1, height: bounds.height).fill()

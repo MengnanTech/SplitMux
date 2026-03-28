@@ -278,13 +278,15 @@ struct SessionRow: View {
 
     private var theme: AppTheme { SettingsManager.shared.theme }
     private var isLightMode: Bool { theme.colorScheme == .light }
+    private var selectionPrimary: Color { isLightMode ? theme.brandCoral : theme.accentColor }
+    private var selectionSecondary: Color { isLightMode ? theme.brandAqua : theme.accentColor }
 
     var body: some View {
         HStack(spacing: 10) {
             // Icon
             Image(systemName: session.icon)
                 .font(.system(size: 14, weight: isSelected ? .semibold : .regular))
-                .foregroundStyle(isSelected ? theme.accentColor : theme.tertiaryText)
+                .foregroundStyle(isSelected ? selectionPrimary : theme.tertiaryText)
                 .frame(width: 24)
 
             VStack(alignment: .leading, spacing: 3) {
@@ -353,14 +355,13 @@ struct SessionRow: View {
             Group {
                 if isSelected {
                     if isLightMode {
-                        // Softer selection wash that stays close to the shared canvas
                         RoundedRectangle(cornerRadius: 8)
                             .fill(
                                 LinearGradient(
                                     colors: [
-                                        theme.chromeSurfaceBackground.opacity(0.94),
-                                        theme.accentColor.opacity(0.10),
-                                        theme.accentColor.opacity(0.04)
+                                        theme.chromeSurfaceBackground.opacity(0.96),
+                                        selectionPrimary.opacity(0.12),
+                                        selectionSecondary.opacity(0.08)
                                     ],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
@@ -369,11 +370,18 @@ struct SessionRow: View {
                             .overlay(
                                 RoundedRectangle(cornerRadius: 8)
                                     .strokeBorder(
-                                        theme.accentColor.opacity(0.14),
+                                        LinearGradient(
+                                            colors: [
+                                                selectionPrimary.opacity(0.34),
+                                                selectionSecondary.opacity(0.24)
+                                            ],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        ),
                                         lineWidth: 0.5
                                     )
                             )
-                            .shadow(color: theme.chromeShadow.opacity(0.09), radius: 4, y: 1)
+                            .shadow(color: theme.chromeShadow.opacity(0.08), radius: 4, y: 1)
                     } else {
                         RoundedRectangle(cornerRadius: 8)
                             .fill(
