@@ -30,18 +30,22 @@ struct SidebarView: View {
                         .frame(width: 24, height: 24)
                         .background(
                             RoundedRectangle(cornerRadius: 6)
-                                .fill(theme.subtleOverlay)
+                                .fill(.ultraThinMaterial)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 6)
+                                        .fill(theme.subtleOverlay)
+                                )
                         )
                 }
                 .buttonStyle(.plain)
             }
             .padding(.horizontal, 14)
-            .padding(.top, 14)
+            .padding(.top, 36) // Space for traffic light buttons in fullSizeContentView
             .padding(.bottom, 10)
 
             // Session list
             ScrollView {
-                LazyVStack(spacing: 1) {
+                LazyVStack(spacing: 2) {
                     ForEach(appState.sessions) { session in
                         SessionRow(
                             session: session,
@@ -50,9 +54,7 @@ struct SidebarView: View {
                         )
                         .opacity(draggedSessionID == session.id ? 0.4 : 1.0)
                         .onTapGesture {
-                            withAnimation(.easeOut(duration: 0.12)) {
-                                appState.selectedSessionID = session.id
-                            }
+                            appState.selectedSessionID = session.id
                             if let activeTab = session.activeTab {
                                 activeTab.hasNotification = false
                                 activeTab.lastNotificationMessage = nil
@@ -124,6 +126,11 @@ struct SidebarView: View {
 
             Spacer(minLength: 0)
 
+            // Subtle divider above bottom sections
+            theme.subtleBorder.opacity(0.4)
+                .frame(height: 0.5)
+                .padding(.horizontal, 14)
+
             // Claude Agents section
             AgentsSidebarSection()
 
@@ -144,20 +151,22 @@ struct SidebarView: View {
 
                 Spacer()
 
-                Text("\(appState.sessions.count)")
-                    .font(.system(size: 10, weight: .medium, design: .rounded))
-                    .foregroundStyle(theme.accentColor)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(
-                        Capsule().fill(theme.accentColor.opacity(0.12))
-                    )
+                Text("\(appState.sessions.count) sessions")
+                    .font(.system(size: 10, weight: .regular))
+                    .foregroundStyle(theme.disabledText)
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
         }
-        .background(.ultraThinMaterial)
-        .background(theme.sidebarBackground.opacity(0.85))
+        .background(
+            ZStack {
+                // Base gradient for depth
+                theme.sidebarGradient
+
+                // Frosted glass overlay
+                Rectangle().fill(.ultraThinMaterial)
+            }
+        )
         .alert("Rename Session", isPresented: Binding(
             get: { renamingSession != nil },
             set: { if !$0 { renamingSession = nil } }
@@ -249,18 +258,9 @@ struct SessionRow: View {
 
     private var theme: AppTheme { SettingsManager.shared.theme }
 
-    private var bgColor: Color {
-        if isSelected {
-            return theme.selectedBackground
-        } else if isHovered {
-            return theme.hoverBackground
-        }
-        return .clear
-    }
-
     var body: some View {
         HStack(spacing: 10) {
-            // Icon with accent tint when selected
+            // Icon
             Image(systemName: session.icon)
                 .font(.system(size: 14, weight: isSelected ? .semibold : .regular))
                 .foregroundStyle(isSelected ? theme.accentColor : theme.tertiaryText)
@@ -329,12 +329,42 @@ struct SessionRow: View {
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
         .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(bgColor)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .strokeBorder(isSelected ? theme.accentColor.opacity(0.3) : .clear, lineWidth: 1)
+            Group {
+                if isSelected {
+                    // Gradient selection with glow
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    theme.accentColor.opacity(0.18),
+                                    theme.accentColor.opacity(0.08)
+                                ],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .strokeBorder(
+                                    LinearGradient(
+                                        colors: [
+                                            theme.accentColor.opacity(0.4),
+                                            theme.accentColor.opacity(0.15)
+                                        ],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    ),
+                                    lineWidth: 0.5
+                                )
+                        )
+                        .shadow(color: theme.accentColor.opacity(0.15), radius: 8, y: 2)
+                } else if isHovered {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(theme.hoverBackground.opacity(0.6))
+                } else {
+                    Color.clear
+                }
+            }
         )
         .contentShape(RoundedRectangle(cornerRadius: 8))
     }

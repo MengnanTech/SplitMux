@@ -23,9 +23,7 @@ struct TabBarView: View {
                     index: index,
                     isActive: tab.id == session.activeTabID,
                     onSelect: {
-                        withAnimation(.easeInOut(duration: 0.1)) {
-                            session.activeTabID = tab.id
-                        }
+                        session.activeTabID = tab.id
                         tab.hasNotification = false
                         tab.lastNotificationMessage = nil
                         appState.updateDockBadge()
@@ -273,11 +271,24 @@ struct TabItemView: View {
             .padding(.horizontal, 4)
             .frame(height: 28)
             .background(
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(isActive
-                          ? theme.activeTabBackground
-                          : isHovered ? theme.hoverBackground.opacity(0.5) : Color.clear)
-                    .shadow(color: isActive ? Color.black.opacity(0.1) : .clear, radius: 1, y: 1)
+                Group {
+                    if isActive {
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(.ultraThinMaterial)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .fill(theme.activeTabBackground.opacity(0.7))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .strokeBorder(theme.subtleBorder.opacity(0.3), lineWidth: 0.5)
+                            )
+                            .shadow(color: Color.black.opacity(0.12), radius: 2, y: 1)
+                    } else if isHovered {
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(theme.hoverBackground.opacity(0.4))
+                    }
+                }
             )
             .padding(.vertical, 5)
             .padding(.horizontal, 2)

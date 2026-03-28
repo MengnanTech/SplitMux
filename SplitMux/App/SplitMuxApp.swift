@@ -16,6 +16,8 @@ struct SplitMuxApp: App {
             ContentView()
                 .environment(appState)
                 .preferredColorScheme(SettingsManager.shared.theme.colorScheme)
+                .background(WindowConfigurator())
+                .toolbar(removing: .title)
                 .onAppear {
                     NotificationService.shared.requestPermission()
                     appState.restoreIfNeeded()
@@ -140,4 +142,66 @@ struct CheckForUpdatesView: View {
 
 extension Notification.Name {
     static let toggleCommandPalette = Notification.Name("toggleCommandPalette")
+}
+
+// MARK: - Window Configurator
+
+/// Persistently configures the NSWindow for seamless title bar.
+/// Observes window changes to reapply settings when SwiftUI resets them.
+struct WindowConfigurator: NSViewRepresentable {
+    func makeNSView(context: Context) -> WindowConfiguratorView {
+        WindowConfiguratorView()
+    }
+
+    func updateNSView(_ nsView: WindowConfiguratorView, context: Context) {}
+}
+
+class WindowConfiguratorView: NSView {
+    private var kvoObservation: NSKeyValueObservation?
+    private var toolbarObservation: NSKeyValueObservation?
+    private var notificationToken: NSObjectProtocol?
+    private var isApplying = false
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        kvoObservation = nil
+        toolbarObservation = nil
+        if let notificationToken {
+            NotificationCenter.default.removeObserver(notificationToken)
+            self.notificationToken = nil
+        }
+        guard let window else {
+            return
+        }
+        applyConfig(window)
+
+        // KVO: whenever SwiftUI resets styleMask, immediately re-insert fullSizeContentView
+        kvoObservation = window.observe(\.styleMask, options: [.new]) { [weak self] win, _ in
+            Task { @MainActor [weak self] in
+                guard let self, !self.isApplying else { return }
+                self.applyConfig(win)
+            }
+        }
+        toolbarObservation = window.observe(\.toolbar, options: [.new]) { [weak self] win, _ in
+            Task { @MainActor [weak self] in
+                guard let self, !self.isApplying else { return }
+                self.applyConfig(win)
+            }
+        }
+        notificationToken = NotificationCenter.default.addObserver(
+            forName: NSWindow.didBecomeKeyNotification,
+            object: window,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.applyConfig(window)
+            }
+        }
+    }
+
+    private func applyConfig(_ window: NSWindow) {
+        isApplying = true
+        WindowChromeConfigurator.apply(to: window)
+        isApplying = false
+    }
 }

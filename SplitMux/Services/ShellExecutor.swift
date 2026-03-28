@@ -441,6 +441,8 @@ struct TerminalSwiftUIView: NSViewRepresentable {
     func makeNSView(context: Context) -> NotifyingTerminalView {
         let termView = NotifyingTerminalView(frame: .zero)
         termView.focusRingType = .none
+        // Set default cursor to steady bar before process starts
+        termView.feed(text: "\u{1B}[6 q")
         termView.sessionDelegate = context.coordinator
         tab.terminalView = termView
 

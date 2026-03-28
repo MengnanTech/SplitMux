@@ -35,6 +35,7 @@ struct ContentView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             .background(theme.contentBackground)
+            .ignoresSafeArea()
 
             // Notification toast overlay
             NotificationToastOverlay()

@@ -297,4 +297,48 @@ enum AppTheme: String, CaseIterable, Identifiable {
 
     /// Split pane divider color (hover state)
     var splitDividerHover: Color { accentColor.opacity(0.6) }
+
+    /// Sidebar gradient background for depth and richness
+    var sidebarGradient: LinearGradient {
+        switch self {
+        case .dark:
+            return LinearGradient(
+                colors: [
+                    Color(red: 0.08, green: 0.08, blue: 0.12),
+                    Color(red: 0.10, green: 0.09, blue: 0.14),
+                    Color(red: 0.09, green: 0.08, blue: 0.13)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        case .light:
+            return LinearGradient(
+                colors: [
+                    Color(red: 0.95, green: 0.95, blue: 0.98),
+                    Color(red: 0.93, green: 0.94, blue: 0.97),
+                    Color(red: 0.94, green: 0.93, blue: 0.97)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        case .solarized:
+            return LinearGradient(
+                colors: [
+                    Color(red: 0.0, green: 0.13, blue: 0.17),
+                    Color(red: 0.0, green: 0.14, blue: 0.19)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        case .monokai:
+            return LinearGradient(
+                colors: [
+                    Color(red: 0.11, green: 0.11, blue: 0.09),
+                    Color(red: 0.12, green: 0.12, blue: 0.10)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        }
+    }
 }
