@@ -10,6 +10,10 @@ struct TabBarView: View {
     @State private var draggedTabID: UUID?
 
     private var theme: AppTheme { SettingsManager.shared.theme }
+    private var usesLightChrome: Bool {
+        if case .light = theme { return true }
+        return false
+    }
 
     var body: some View {
         HStack(spacing: 0) {
@@ -101,23 +105,39 @@ struct TabBarView: View {
 
             // Add button
             Button(action: onAddTab) {
-                Image(systemName: "plus")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(theme.secondaryText)
-                    .frame(width: 28, height: 28)
-                    .contentShape(Rectangle())
-                    .background(addButtonChrome)
+                if usesLightChrome {
+                    Image(systemName: "plus")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(theme.secondaryText)
+                        .frame(width: 28, height: 28)
+                        .contentShape(Rectangle())
+                        .background(lightChromeCapsule(shadowOpacity: 0.08))
+                } else {
+                    Image(systemName: "plus")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(theme.tertiaryText)
+                        .frame(width: 36, height: 36)
+                        .contentShape(Rectangle())
+                }
             }
             .buttonStyle(.plain)
-            .padding(.leading, 4)
-            .padding(.vertical, 5)
+            .padding(.leading, usesLightChrome ? 4 : 0)
+            .padding(.vertical, usesLightChrome ? 5 : 0)
 
             Spacer()
         }
-        .frame(height: 40)
-        .background(theme.appCanvasBackground)
+        .frame(height: usesLightChrome ? 40 : 38)
+        .background {
+            if usesLightChrome {
+                theme.appCanvasBackground
+            } else {
+                theme.tabBarBackground
+            }
+        }
         .overlay(alignment: .bottom) {
-            theme.subtleBorder.opacity(0.45).frame(height: 0.5)
+            if usesLightChrome {
+                theme.subtleBorder.opacity(0.45).frame(height: 0.5)
+            }
         }
         .alert("Rename Tab", isPresented: Binding(
             get: { renamingTab != nil },
@@ -159,14 +179,15 @@ struct TabBarView: View {
         }
     }
 
-    private var addButtonChrome: some View {
+    @ViewBuilder
+    private func lightChromeCapsule(shadowOpacity: Double = 0.14) -> some View {
         Capsule(style: .continuous)
             .fill(theme.chromeSurfaceBackground)
             .overlay(
                 Capsule(style: .continuous)
                     .strokeBorder(theme.subtleBorder.opacity(0.35), lineWidth: 0.6)
             )
-            .shadow(color: theme.chromeShadow.opacity(0.08), radius: 1.5, y: 0.5)
+            .shadow(color: theme.chromeShadow.opacity(shadowOpacity), radius: 1.5, y: 0.5)
     }
 }
 
@@ -211,6 +232,10 @@ struct TabItemView: View {
 
     @State private var isHovered = false
     private var theme: AppTheme { SettingsManager.shared.theme }
+    private var usesLightChrome: Bool {
+        if case .light = theme { return true }
+        return false
+    }
 
     var body: some View {
         Button(action: onSelect) {
@@ -288,19 +313,30 @@ struct TabItemView: View {
             .frame(height: 28)
             .background(
                 Group {
-                    if isActive {
-                        Capsule(style: .continuous)
-                            .fill(theme.chromeSurfaceBackground)
+                    if usesLightChrome {
+                        if isActive {
+                            lightChromeCapsule()
+                        }
+                    } else if isActive {
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(.ultraThinMaterial)
                             .overlay(
-                                Capsule(style: .continuous)
-                                    .strokeBorder(theme.subtleBorder.opacity(0.28), lineWidth: 0.6)
+                                RoundedRectangle(cornerRadius: 6)
+                                    .fill(theme.activeTabBackground.opacity(0.7))
                             )
-                            .shadow(color: theme.chromeShadow.opacity(0.14), radius: 2.5, y: 1)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .strokeBorder(theme.subtleBorder.opacity(0.3), lineWidth: 0.5)
+                            )
+                            .shadow(color: Color.black.opacity(0.12), radius: 2, y: 1)
+                    } else if isHovered {
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(theme.hoverBackground.opacity(0.4))
                     }
                 }
             )
-            .padding(.vertical, 4)
-            .padding(.horizontal, isActive ? 2 : 1)
+            .padding(.vertical, usesLightChrome ? 4 : 5)
+            .padding(.horizontal, usesLightChrome ? (isActive ? 2 : 1) : 2)
         }
         .buttonStyle(.plain)
         .onHover { hovering in
@@ -316,5 +352,16 @@ struct TabItemView: View {
             return "ssh: \(tab.title)"
         }
         return tab.title
+    }
+
+    @ViewBuilder
+    private func lightChromeCapsule() -> some View {
+        Capsule(style: .continuous)
+            .fill(theme.chromeSurfaceBackground)
+            .overlay(
+                Capsule(style: .continuous)
+                    .strokeBorder(theme.subtleBorder.opacity(0.28), lineWidth: 0.6)
+            )
+            .shadow(color: theme.chromeShadow.opacity(0.14), radius: 2.5, y: 1)
     }
 }
