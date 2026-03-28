@@ -90,13 +90,13 @@ struct EmptyStateView: View {
                         .fill(
                             LinearGradient(
                                 colors: [
-                                    Color(red: 0.4, green: 0.45, blue: 0.95),
-                                    Color(red: 0.55, green: 0.4, blue: 0.85)
+                                    theme.brandCoral,
+                                    theme.brandAqua
                                 ],
                                 startPoint: .leading, endPoint: .trailing
                             )
                         )
-                        .shadow(color: Color(red: 0.45, green: 0.4, blue: 0.9).opacity(isHovering ? 0.5 : 0.25), radius: isHovering ? 12 : 6, y: 4)
+                        .shadow(color: theme.chromeShadow.opacity(isHovering ? 0.22 : 0.14), radius: isHovering ? 10 : 5, y: 3)
                 )
                 .scaleEffect(isHovering ? 1.04 : 1.0)
                 .animation(.easeOut(duration: 0.15), value: isHovering)

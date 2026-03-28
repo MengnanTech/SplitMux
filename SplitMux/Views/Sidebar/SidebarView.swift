@@ -26,14 +26,14 @@ struct SidebarView: View {
                 } label: {
                     Image(systemName: "plus")
                         .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(theme.secondaryText)
+                        .foregroundStyle(theme.iconDimmed)
                         .frame(width: 24, height: 24)
                         .background(
                             RoundedRectangle(cornerRadius: 6)
-                                .fill(.ultraThinMaterial)
+                                .fill(theme.subtleOverlay.opacity(0.85))
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 6)
-                                        .fill(theme.subtleOverlay)
+                                        .strokeBorder(theme.subtleBorder.opacity(0.3), lineWidth: 0.5)
                                 )
                         )
                 }
@@ -147,13 +147,13 @@ struct SidebarView: View {
                     .foregroundStyle(theme.iconDimmed)
                 Text("Command Palette")
                     .font(.system(size: 10))
-                    .foregroundStyle(theme.disabledText)
+                    .foregroundStyle(theme.tertiaryText)
 
                 Spacer()
 
                 Text("\(appState.sessions.count) sessions")
                     .font(.system(size: 10, weight: .regular))
-                    .foregroundStyle(theme.disabledText)
+                    .foregroundStyle(theme.tertiaryText)
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
@@ -164,9 +164,17 @@ struct SidebarView: View {
                 theme.sidebarGradient
 
                 // Frosted glass overlay
+                theme.chromeOverlay
+
+                // Shared canvas material beneath the sidebar shell
                 Rectangle().fill(.ultraThinMaterial)
             }
         )
+        .overlay(alignment: .trailing) {
+            Rectangle()
+                .fill(theme.subtleBorder.opacity(0.45))
+                .frame(width: 0.5)
+        }
         .alert("Rename Session", isPresented: Binding(
             get: { renamingSession != nil },
             set: { if !$0 { renamingSession = nil } }
@@ -288,7 +296,7 @@ struct SessionRow: View {
                     }
                 }
                 .font(.system(size: 10))
-                .foregroundStyle(theme.disabledText)
+                .foregroundStyle(theme.tertiaryText)
 
                 // Per-tab Claude status indicators
                 let claudeTabs = session.claudeTabs
@@ -331,33 +339,27 @@ struct SessionRow: View {
         .background(
             Group {
                 if isSelected {
-                    // Gradient selection with glow
+                    // Softer selection wash that stays close to the shared canvas
                     RoundedRectangle(cornerRadius: 8)
                         .fill(
                             LinearGradient(
                                 colors: [
-                                    theme.accentColor.opacity(0.18),
-                                    theme.accentColor.opacity(0.08)
+                                    theme.chromeSurfaceBackground.opacity(0.94),
+                                    theme.accentColor.opacity(0.10),
+                                    theme.accentColor.opacity(0.04)
                                 ],
-                                startPoint: .leading,
-                                endPoint: .trailing
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
                             )
                         )
                         .overlay(
                             RoundedRectangle(cornerRadius: 8)
                                 .strokeBorder(
-                                    LinearGradient(
-                                        colors: [
-                                            theme.accentColor.opacity(0.4),
-                                            theme.accentColor.opacity(0.15)
-                                        ],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    ),
+                                    theme.accentColor.opacity(0.14),
                                     lineWidth: 0.5
                                 )
                         )
-                        .shadow(color: theme.accentColor.opacity(0.15), radius: 8, y: 2)
+                        .shadow(color: theme.chromeShadow.opacity(0.09), radius: 4, y: 1)
                 } else if isHovered {
                     RoundedRectangle(cornerRadius: 8)
                         .fill(theme.hoverBackground.opacity(0.6))
