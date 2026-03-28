@@ -15,7 +15,7 @@ SIGNING_IDENTITY="Developer ID Application: DENG LI (2XGP34AR96)"
 
 # Remote server
 REMOTE="calyx"
-REMOTE_DIR="/opt/calyx/splitmux"
+REMOTE_DIR="/opt/calyx/nginx/html/splitmux"
 
 # Read version from project.yml
 VERSION=$(grep 'MARKETING_VERSION' "$PROJECT_DIR/project.yml" | head -1 | sed 's/.*: *"\(.*\)"/\1/')
@@ -126,25 +126,19 @@ rsync -az "$APPCAST_DIR/appcast.xml" "$REMOTE:$REMOTE_DIR/"
 
 echo "✅ Uploaded to server"
 
-# ─── Configure Nginx (first time only) ───
-ssh "$REMOTE" "cat > /tmp/splitmux-nginx.conf << 'NGINX'
-# SplitMux update feed & downloads
-location /splitmux/ {
-    alias $REMOTE_DIR/;
-    autoindex off;
-}
-NGINX
-
-if ! grep -q '/splitmux/' /opt/calyx/nginx/conf.d/calyx-ai.conf 2>/dev/null; then
-  echo '  First release — adding Nginx config...'
-  # Insert before the last closing brace of the server block
-  sed -i '/^}/i \\    include /tmp/splitmux-nginx.conf;' /opt/calyx/nginx/conf.d/calyx-ai.conf
-  docker exec calyx-nginx nginx -s reload 2>/dev/null || true
-  echo '  Nginx configured'
+# ─── Verify Nginx (skip if already configured) ───
+if ssh "$REMOTE" "grep -q '/splitmux/' /opt/calyx/nginx/conf.d/calyx-ai.conf 2>/dev/null"; then
+  echo "✅ Nginx already configured"
 else
-  echo '  Nginx already configured'
+  echo "⚠️  Nginx not configured for /splitmux/. Add this to the Official site server block in calyx-ai.conf:"
+  echo ""
+  echo "    location /splitmux/ {"
+  echo "        alias /usr/share/nginx/html/splitmux/;"
+  echo "        autoindex off;"
+  echo "    }"
+  echo ""
+  echo "  Then run: docker exec nginx nginx -t && docker exec nginx nginx -s reload"
 fi
-"
 
 echo ""
 echo "══════════════════════════════════════════"
