@@ -194,10 +194,11 @@ enum AppTheme: String, CaseIterable, Identifiable {
 
     // Light mode target palette:
     // appCanvasBackground: warm off-white
-    // chromeSurface: elevated white
-    // glassOverlay: low-alpha cool fog
-    // brandCoral: primary action accent
-    // brandAqua: secondary technical accent
+    // chromeSurfaceBackground: elevated white
+    // chromeOverlay: low-alpha cool fog
+    // brandCoral: primary branded accent
+    // brandAqua: secondary branded technical accent
+    // chromeShadow: soft shell shadow
 
     /// Base canvas background for the app shell.
     var appCanvasBackground: Color {
@@ -229,7 +230,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
         }
     }
 
-    /// Primary action accent for the refreshed light shell.
+    /// Deliberate brand hue token for the primary branded accent in the light shell.
+    /// Non-light themes intentionally map this to the existing accent system.
     var brandCoral: Color {
         switch self {
         case .light: return Color(red: 0.95, green: 0.47, blue: 0.34)
@@ -239,7 +241,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
         }
     }
 
-    /// Secondary technical accent for the refreshed light shell.
+    /// Deliberate brand hue token for the secondary branded technical accent in the light shell.
+    /// Non-light themes intentionally map this to the existing accent system.
     var brandAqua: Color {
         switch self {
         case .light: return Color(red: 0.16, green: 0.68, blue: 0.76)
