@@ -87,7 +87,7 @@ struct TabContentView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
-        .background(theme.appCanvasBackground)
+        .background(theme.contentBackground)
         .onReceive(NotificationCenter.default.publisher(for: .toggleTerminalHistory)) { _ in
             guard session.id == appState.selectedSessionID else { return }
             withAnimation(.easeInOut(duration: 0.2)) { showHistory.toggle() }

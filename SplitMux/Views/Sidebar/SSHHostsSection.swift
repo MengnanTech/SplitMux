@@ -35,28 +35,30 @@ struct SSHHostsSection: View {
 
                 Spacer()
 
-                HStack(spacing: 6) {
-                    Button {
-                        sshManager.refreshConfig()
-                    } label: {
-                        Image(systemName: "arrow.clockwise")
-                            .font(.system(size: 10))
-                            .foregroundStyle(theme.iconDimmed)
-                    }
-                    .buttonStyle(.plain)
-                    .help("Refresh ~/.ssh/config")
+                if isExpanded {
+                    HStack(spacing: 6) {
+                        Button {
+                            sshManager.refreshConfig()
+                        } label: {
+                            Image(systemName: "arrow.clockwise")
+                                .font(.system(size: 10))
+                                .foregroundStyle(theme.iconDimmed)
+                        }
+                        .buttonStyle(.plain)
+                        .help("Refresh ~/.ssh/config")
 
-                    Button { showAddHost = true } label: {
-                        Image(systemName: "plus")
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundStyle(theme.secondaryText)
-                            .frame(width: 22, height: 22)
-                            .background(
-                                RoundedRectangle(cornerRadius: 5)
-                                    .fill(theme.subtleOverlay)
-                            )
+                        Button { showAddHost = true } label: {
+                            Image(systemName: "plus")
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundStyle(theme.secondaryText)
+                                .frame(width: 22, height: 22)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 5)
+                                        .fill(theme.subtleOverlay)
+                                )
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
             }
             .padding(.horizontal, 14)

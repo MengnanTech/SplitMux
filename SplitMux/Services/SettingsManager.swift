@@ -121,16 +121,16 @@ enum AppTheme: String, CaseIterable, Identifiable {
 
     var sidebarBackground: Color {
         switch self {
-        case .dark: return Color(red: 0.11, green: 0.11, blue: 0.13)
-        case .light: return Color(red: 0.96, green: 0.96, blue: 0.98)
+        case .dark: return Color(red: 0.09, green: 0.09, blue: 0.11)
+        case .light: return Color(white: 0.95)
         case .solarized: return Color(red: 0.0, green: 0.14, blue: 0.18)
-        case .monokai: return Color(red: 0.12, green: 0.12, blue: 0.1)
+        case .monokai: return Color(red: 0.13, green: 0.13, blue: 0.11)
         }
     }
 
     var contentBackground: Color {
         switch self {
-        case .dark: return .black
+        case .dark: return Color(red: 0.05, green: 0.05, blue: 0.07)
         case .light: return Color(white: 0.995)
         case .solarized: return Color(red: 0.0, green: 0.17, blue: 0.21)
         case .monokai: return Color(red: 0.15, green: 0.16, blue: 0.13)
@@ -203,10 +203,10 @@ enum AppTheme: String, CaseIterable, Identifiable {
     /// Base canvas background for the app shell.
     var appCanvasBackground: Color {
         switch self {
-        case .light: return Color(red: 0.985, green: 0.978, blue: 0.968)
+        case .light: return Color(white: 0.995)
         case .dark: return contentBackground
-        case .solarized: return contentBackground
-        case .monokai: return contentBackground
+        case .solarized: return Color(red: 0.0, green: 0.17, blue: 0.21)
+        case .monokai: return Color(red: 0.15, green: 0.16, blue: 0.13)
         }
     }
 

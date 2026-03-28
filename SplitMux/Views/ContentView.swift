@@ -28,7 +28,6 @@ struct ContentView: View {
                     }
 
                     if appState.sessions.isEmpty {
-                        theme.appCanvasBackground
                         EmptyStateView()
                     }
                 }
@@ -290,7 +289,7 @@ class SidebarDividerNSView: NSView {
         let color: NSColor
         switch theme {
         case .light:
-            color = NSColor(white: 0.0, alpha: 0.045)
+            color = NSColor(white: 0.0, alpha: 0.08)
         case .dark:
             color = NSColor(white: 1.0, alpha: 0.06)
         case .solarized:

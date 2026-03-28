@@ -168,25 +168,7 @@ struct SidebarView: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
         }
-        .background(
-            ZStack {
-                theme.sidebarGradient
-
-                if isLightMode {
-                    // Frosted glass overlay
-                    theme.chromeOverlay
-                }
-
-                Rectangle().fill(.ultraThinMaterial)
-            }
-        )
-        .overlay(alignment: .trailing) {
-            if isLightMode {
-                Rectangle()
-                    .fill(theme.subtleBorder.opacity(0.45))
-                    .frame(width: 0.5)
-            }
-        }
+        .background(theme.sidebarBackground)
         .alert("Rename Session", isPresented: Binding(
             get: { renamingSession != nil },
             set: { if !$0 { renamingSession = nil } }
@@ -286,7 +268,7 @@ struct SessionRow: View {
             // Icon
             Image(systemName: session.icon)
                 .font(.system(size: 14, weight: isSelected ? .semibold : .regular))
-                .foregroundStyle(isSelected ? selectionPrimary : theme.tertiaryText)
+                .foregroundStyle(isSelected ? theme.accentColor : theme.tertiaryText)
                 .frame(width: 24)
 
             VStack(alignment: .leading, spacing: 3) {
@@ -354,62 +336,8 @@ struct SessionRow: View {
         .background(
             Group {
                 if isSelected {
-                    if isLightMode {
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(
-                                LinearGradient(
-                                    colors: [
-                                        theme.chromeSurfaceBackground.opacity(0.96),
-                                        selectionPrimary.opacity(0.12),
-                                        selectionSecondary.opacity(0.08)
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .strokeBorder(
-                                        LinearGradient(
-                                            colors: [
-                                                selectionPrimary.opacity(0.34),
-                                                selectionSecondary.opacity(0.24)
-                                            ],
-                                            startPoint: .leading,
-                                            endPoint: .trailing
-                                        ),
-                                        lineWidth: 0.5
-                                    )
-                            )
-                            .shadow(color: theme.chromeShadow.opacity(0.08), radius: 4, y: 1)
-                    } else {
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(
-                                LinearGradient(
-                                    colors: [
-                                        theme.accentColor.opacity(0.18),
-                                        theme.accentColor.opacity(0.08)
-                                    ],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .strokeBorder(
-                                        LinearGradient(
-                                            colors: [
-                                                theme.accentColor.opacity(0.4),
-                                                theme.accentColor.opacity(0.15)
-                                            ],
-                                            startPoint: .leading,
-                                            endPoint: .trailing
-                                        ),
-                                        lineWidth: 0.5
-                                    )
-                            )
-                            .shadow(color: theme.accentColor.opacity(0.15), radius: 8, y: 2)
-                    }
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(theme.accentColor.opacity(isLightMode ? 0.12 : 0.18))
                 } else if isHovered {
                     RoundedRectangle(cornerRadius: 8)
                         .fill(theme.hoverBackground.opacity(0.6))

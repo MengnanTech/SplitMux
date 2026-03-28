@@ -105,35 +105,18 @@ struct TabBarView: View {
 
             // Add button
             Button(action: onAddTab) {
-                if usesLightChrome {
-                    Image(systemName: "plus")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(theme.secondaryText)
-                        .frame(width: 28, height: 28)
-                        .contentShape(Rectangle())
-                        .background(lightChromeCapsule(shadowOpacity: 0.08))
-                } else {
-                    Image(systemName: "plus")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(theme.tertiaryText)
-                        .frame(width: 36, height: 36)
-                        .contentShape(Rectangle())
-                }
+                Image(systemName: "plus")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(theme.secondaryText)
+                    .frame(width: 32, height: 32)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .padding(.leading, usesLightChrome ? 4 : 0)
-            .padding(.vertical, usesLightChrome ? 5 : 0)
 
             Spacer()
         }
-        .frame(height: usesLightChrome ? 40 : 38)
-        .background {
-            if usesLightChrome {
-                theme.appCanvasBackground
-            } else {
-                theme.tabBarBackground
-            }
-        }
+        .frame(height: 38)
+        .background(.clear)
         .overlay(alignment: .bottom) {
             if usesLightChrome {
                 theme.subtleBorder.opacity(0.45).frame(height: 0.5)
@@ -313,13 +296,9 @@ struct TabItemView: View {
             .frame(height: 28)
             .background(
                 Group {
-                    if usesLightChrome {
-                        if isActive {
-                            lightChromeCapsule()
-                        }
-                    } else if isActive {
+                    if isActive {
                         RoundedRectangle(cornerRadius: 6)
-                            .fill(theme.activeTabBackground.opacity(0.7))
+                            .fill(theme.accentColor.opacity(usesLightChrome ? 0.1 : 0.2))
                     } else if isHovered {
                         RoundedRectangle(cornerRadius: 6)
                             .fill(theme.hoverBackground.opacity(0.4))
