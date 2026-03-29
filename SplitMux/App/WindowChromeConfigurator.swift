@@ -1,4 +1,5 @@
 import AppKit
+import SwiftTerm
 import SwiftUI
 
 enum WindowChromeConfigurator {
@@ -22,9 +23,14 @@ enum WindowChromeConfigurator {
     static func applyGlassIfNeeded(to window: NSWindow) {
         let isGlass = SettingsManager.shared.theme.isGlass
 
+        let theme = SettingsManager.shared.theme
+
         if isGlass {
             window.isOpaque = false
             window.backgroundColor = .clear
+            // Set window appearance so ALL NSVisualEffectViews render
+            // in the correct light/dark mode regardless of system setting
+            window.appearance = NSAppearance(named: theme == .glassLight ? .aqua : .darkAqua)
 
             // Replace contentView with NSVisualEffectView wrapping the SwiftUI hosting view
             if let currentContent = window.contentView,
@@ -50,20 +56,22 @@ enum WindowChromeConfigurator {
                 window.contentView = blurView
             }
 
-            // Make SwiftUI views transparent so blur shows through
+            // Make SwiftUI hosting views transparent so blur shows through
+            // sidebar/tabbar areas. Terminal views are skipped — they manage
+            // their own near-opaque themed background.
             if let contentView = window.contentView {
                 makeTransparent(contentView)
             }
-            for delay in [0.1, 0.3, 0.8, 1.5] {
-                DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-                    if let contentView = window.contentView {
-                        self.makeTransparent(contentView)
-                    }
+            // Re-apply once after SwiftUI finishes its initial layout pass
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                if let contentView = window.contentView {
+                    self.makeTransparent(contentView)
                 }
             }
         } else {
             window.isOpaque = true
             window.backgroundColor = NSColor.windowBackgroundColor
+            window.appearance = nil  // Follow system
 
             // Restore: move SwiftUI hosting view back out of blur view
             if let blurView = window.contentView as? NSVisualEffectView,
@@ -75,8 +83,20 @@ enum WindowChromeConfigurator {
     }
 
     private static func makeTransparent(_ view: NSView) {
-        // Skip the blur view itself
-        if view.identifier?.rawValue == blurID { return }
+        // Skip terminal container — it manages its own glass layers
+        // (blur + tint + glaze). Recursing into it would clear them.
+        if view is TerminalContainerView { return }
+
+        // Skip SwiftTerm terminal views
+        if view is LocalProcessTerminalView { return }
+
+        // Don't clear NSVisualEffectView backgrounds, but still recurse children
+        if view is NSVisualEffectView {
+            for subview in view.subviews {
+                makeTransparent(subview)
+            }
+            return
+        }
 
         view.wantsLayer = true
         view.layer?.backgroundColor = .clear

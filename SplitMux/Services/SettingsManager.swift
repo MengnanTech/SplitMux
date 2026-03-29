@@ -121,8 +121,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .light: return NSColor(white: 0.995, alpha: 1.0)
         case .solarized: return NSColor(red: 0.0, green: 0.17, blue: 0.21, alpha: 1.0)
         case .monokai: return NSColor(red: 0.15, green: 0.16, blue: 0.13, alpha: 1.0)
-        case .glass: return NSColor(red: 0.05, green: 0.05, blue: 0.07, alpha: 0.85)
-        case .glassLight: return NSColor(white: 0.995, alpha: 0.85)
+        case .glass: return NSColor(red: 0.05, green: 0.05, blue: 0.08, alpha: 0.15)
+        case .glassLight: return NSColor(white: 1.0, alpha: 0.15)
         }
     }
 
@@ -132,8 +132,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .light: return NSColor(red: 0.2, green: 0.2, blue: 0.2, alpha: 1.0)
         case .solarized: return NSColor(red: 0.51, green: 0.58, blue: 0.59, alpha: 1.0)
         case .monokai: return NSColor(red: 0.97, green: 0.97, blue: 0.95, alpha: 1.0)
-        case .glass: return NSColor(white: 0.9, alpha: 1.0)
-        case .glassLight: return NSColor(red: 0.2, green: 0.2, blue: 0.2, alpha: 1.0)
+        case .glass: return NSColor(white: 0.95, alpha: 1.0)
+        case .glassLight: return NSColor(red: 0.12, green: 0.12, blue: 0.15, alpha: 1.0)
         }
     }
 
@@ -176,8 +176,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .light: return Color(white: 0.1)
         case .solarized: return Color(red: 0.51, green: 0.58, blue: 0.59)
         case .monokai: return Color(red: 0.97, green: 0.97, blue: 0.95)
-        case .glass: return Color(white: 0.95)
-        case .glassLight: return Color(white: 0.1)
+        case .glass: return Color(white: 1.0)
+        case .glassLight: return Color(white: 0.05)
         }
     }
 
@@ -187,8 +187,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .light: return Color(white: 0.35)
         case .solarized: return Color(red: 0.40, green: 0.48, blue: 0.51)
         case .monokai: return Color(white: 0.55)
-        case .glass: return Color(white: 0.6)
-        case .glassLight: return Color(white: 0.35)
+        case .glass: return Color(white: 0.7)
+        case .glassLight: return Color(white: 0.25)
         }
     }
 
@@ -325,8 +325,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .light: return Color(white: 0.5)
         case .solarized: return Color(red: 0.35, green: 0.43, blue: 0.46)
         case .monokai: return Color(white: 0.45)
-        case .glass: return Color(white: 0.45)
-        case .glassLight: return Color(white: 0.5)
+        case .glass: return Color(white: 0.55)
+        case .glassLight: return Color(white: 0.38)
         }
     }
 
@@ -337,8 +337,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .light: return Color(white: 0.55)
         case .solarized: return Color(red: 0.3, green: 0.38, blue: 0.4)
         case .monokai: return Color(white: 0.35)
-        case .glass: return Color(white: 0.38)
-        case .glassLight: return Color(white: 0.55)
+        case .glass: return Color(white: 0.48)
+        case .glassLight: return Color(white: 0.42)
         }
     }
 
@@ -361,8 +361,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .light: return Color(white: 0.42)
         case .solarized: return Color(red: 0.4, green: 0.48, blue: 0.51)
         case .monokai: return Color(white: 0.5)
-        case .glass: return Color(white: 0.45)
-        case .glassLight: return Color(white: 0.42)
+        case .glass: return Color(white: 0.55)
+        case .glassLight: return Color(white: 0.32)
         }
     }
 
@@ -409,8 +409,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .light: return Color(white: 0.25)
         case .solarized: return Color(red: 0.45, green: 0.52, blue: 0.55)
         case .monokai: return Color(white: 0.7)
-        case .glass: return Color(white: 0.72)
-        case .glassLight: return Color(white: 0.25)
+        case .glass: return Color(white: 0.82)
+        case .glassLight: return Color(white: 0.15)
         }
     }
 
@@ -421,8 +421,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .light: return Color(white: 0.5)
         case .solarized: return Color(red: 0.35, green: 0.43, blue: 0.46)
         case .monokai: return Color(white: 0.4)
-        case .glass: return Color(white: 0.42)
-        case .glassLight: return Color(white: 0.5)
+        case .glass: return Color(white: 0.52)
+        case .glassLight: return Color(white: 0.38)
         }
     }
 

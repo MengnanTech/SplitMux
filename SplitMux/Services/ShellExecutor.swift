@@ -72,6 +72,19 @@ class TerminalSessionDelegate: NSObject, LocalProcessTerminalViewDelegate, @unch
 // MARK: - Custom Terminal View (bell notification + search + font + history capture)
 
 class NotifyingTerminalView: LocalProcessTerminalView {
+    /// When true, the view's layer is non-opaque so glass blur shows through
+    var glassMode = false
+
+    override var isOpaque: Bool { !glassMode }
+
+    override func makeBackingLayer() -> CALayer {
+        let layer = super.makeBackingLayer()
+        if glassMode {
+            layer.isOpaque = false
+        }
+        return layer
+    }
+
     var sessionDelegate: TerminalSessionDelegate?
     var cachedEnv: [String]?
 
@@ -123,6 +136,7 @@ class NotifyingTerminalView: LocalProcessTerminalView {
     var lastAppliedFontSize: CGFloat = 0
     var lastAppliedFontName: String = ""
     var lastAppliedThemeID: String = ""
+    var lastAppliedGlassOpacity: Double = -1
 
     /// Deferred process start — waits until the view has a real frame so the PTY
     /// reports correct terminal dimensions (columns/rows) to child processes.
@@ -169,8 +183,56 @@ class NotifyingTerminalView: LocalProcessTerminalView {
     // MARK: - Theme
 
     func applyTheme(_ theme: AppTheme) {
-        self.nativeBackgroundColor = theme.terminalBackground
+        glassMode = false
+        self.nativeBackgroundColor = Self.terminalBackgroundColor(for: theme)
         self.nativeForegroundColor = theme.terminalForeground
+
+        if theme == .glassLight {
+            // Light-optimized ANSI palette: dark-themed TUIs often paint panels
+            // with ANSI black backgrounds. In glassLight we remap those fills to
+            // a muted shell tone so terminal apps don't force the whole pane dark.
+            // Order: black, red, green, yellow, blue, magenta, cyan, white,
+            //        bright black, bright red, bright green, bright yellow,
+            //        bright blue, bright magenta, bright cyan, bright white
+            let c = { (r: UInt16, g: UInt16, b: UInt16) in
+                SwiftTerm.Color(red: r &* 257, green: g &* 257, blue: b &* 257)
+            }
+            let palette: [SwiftTerm.Color] = [
+                c(158, 170, 186),   // black -> lifted shell gray for TUI backgrounds
+                c(198,  63,  67),   // red — warm brick
+                c( 74, 131,  79),   // green — forest
+                c(173, 125,  17),   // yellow — amber
+                c( 69, 120, 191),   // blue — cobalt
+                c(150,  89, 153),   // magenta — plum
+                c( 54, 137, 138),   // cyan — teal
+                c(242, 245, 248),   // white
+                c(110, 122, 138),   // bright black
+                c(215,  83,  87),   // bright red
+                c( 96, 150, 102),   // bright green
+                c(196, 149,  33),   // bright yellow
+                c( 92, 143, 214),   // bright blue
+                c(172, 111, 175),   // bright magenta
+                c( 75, 160, 162),   // bright cyan
+                c(255, 255, 255),   // bright white
+            ]
+            installColors(palette)
+        }
+    }
+
+    private static func terminalBackgroundColor(for theme: AppTheme) -> NSColor {
+        guard theme.isGlass else { return theme.terminalBackground }
+        // SwiftTerm's internal Color has no alpha — it converts any
+        // NSColor to solid RGB for per-cell background drawing.
+        // So true transparency is impossible. Instead we use solid
+        // colors that visually match the frosted glass aesthetic.
+        switch theme {
+        case .glassLight:
+            return NSColor(calibratedRed: 0.905, green: 0.92, blue: 0.945, alpha: 1.0)
+        case .glass:
+            return NSColor(calibratedRed: 0.13, green: 0.14, blue: 0.18, alpha: 1.0)
+        default:
+            return theme.terminalBackground
+        }
     }
 
     // MARK: - Right-click context menu
@@ -305,6 +367,107 @@ class NotifyingTerminalView: LocalProcessTerminalView {
 
 // MARK: - SwiftUI Wrapper
 
+/// Container that hosts an optional NSVisualEffectView (glass blur)
+/// behind the terminal, so the frosted glass effect shows through
+/// SwiftTerm's transparent background.
+class TerminalContainerView: NSView {
+    private static let blurID = NSUserInterfaceItemIdentifier("terminal.glass.blur")
+    private static let tintID = NSUserInterfaceItemIdentifier("terminal.glass.tint")
+    private static let glazeID = NSUserInterfaceItemIdentifier("terminal.glass.glaze")
+
+    func installGlass(
+        material: NSVisualEffectView.Material,
+        blendingMode: NSVisualEffectView.BlendingMode,
+        appearance: NSAppearance?,
+        tintColor: NSColor,
+        glazeColor: NSColor
+    ) {
+        // Set appearance on the container itself so all children inherit it
+        self.appearance = appearance
+
+        if let existing = subviews.first(where: { $0.identifier == Self.blurID }) as? NSVisualEffectView {
+            existing.material = material
+            existing.blendingMode = blendingMode
+            existing.appearance = appearance
+        } else {
+            let blur = NSVisualEffectView()
+            blur.identifier = Self.blurID
+            blur.material = material
+            blur.blendingMode = blendingMode
+            blur.state = .active
+            blur.appearance = appearance
+            blur.translatesAutoresizingMaskIntoConstraints = false
+            addSubview(blur, positioned: .below, relativeTo: subviews.first)
+            NSLayoutConstraint.activate([
+                blur.topAnchor.constraint(equalTo: topAnchor),
+                blur.bottomAnchor.constraint(equalTo: bottomAnchor),
+                blur.leadingAnchor.constraint(equalTo: leadingAnchor),
+                blur.trailingAnchor.constraint(equalTo: trailingAnchor),
+            ])
+        }
+
+        if let tintView = subviews.first(where: { $0.identifier == Self.tintID }) {
+            tintView.wantsLayer = true
+            tintView.layer?.backgroundColor = tintColor.cgColor
+            tintView.appearance = appearance
+            return
+        }
+
+        let tintView = NSView()
+        tintView.identifier = Self.tintID
+        tintView.wantsLayer = true
+        tintView.layer?.backgroundColor = tintColor.cgColor
+        tintView.translatesAutoresizingMaskIntoConstraints = false
+        tintView.appearance = appearance
+        if let blurView = subviews.first(where: { $0.identifier == Self.blurID }) {
+            addSubview(tintView, positioned: .above, relativeTo: blurView)
+        } else {
+            addSubview(tintView, positioned: .below, relativeTo: subviews.first)
+        }
+        NSLayoutConstraint.activate([
+            tintView.topAnchor.constraint(equalTo: topAnchor),
+            tintView.bottomAnchor.constraint(equalTo: bottomAnchor),
+            tintView.leadingAnchor.constraint(equalTo: leadingAnchor),
+            tintView.trailingAnchor.constraint(equalTo: trailingAnchor),
+        ])
+
+        if let glazeView = subviews.first(where: { $0.identifier == Self.glazeID }) {
+            glazeView.wantsLayer = true
+            glazeView.layer?.backgroundColor = glazeColor.cgColor
+            glazeView.appearance = appearance
+            return
+        }
+
+        let glazeView = MousePassthroughOverlayView()
+        glazeView.identifier = Self.glazeID
+        glazeView.wantsLayer = true
+        glazeView.layer?.backgroundColor = glazeColor.cgColor
+        glazeView.translatesAutoresizingMaskIntoConstraints = false
+        glazeView.appearance = appearance
+        if let terminalView = subviews.first(where: { $0 is NotifyingTerminalView }) {
+            addSubview(glazeView, positioned: .above, relativeTo: terminalView)
+        } else {
+            addSubview(glazeView, positioned: .above, relativeTo: subviews.last)
+        }
+        NSLayoutConstraint.activate([
+            glazeView.topAnchor.constraint(equalTo: topAnchor),
+            glazeView.bottomAnchor.constraint(equalTo: bottomAnchor),
+            glazeView.leadingAnchor.constraint(equalTo: leadingAnchor),
+            glazeView.trailingAnchor.constraint(equalTo: trailingAnchor),
+        ])
+    }
+
+    func removeBlur() {
+        subviews.first(where: { $0.identifier == Self.blurID })?.removeFromSuperview()
+        subviews.first(where: { $0.identifier == Self.tintID })?.removeFromSuperview()
+        subviews.first(where: { $0.identifier == Self.glazeID })?.removeFromSuperview()
+    }
+}
+
+final class MousePassthroughOverlayView: NSView {
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
+}
+
 struct TerminalSwiftUIView: NSViewRepresentable {
     let workingDirectory: String
     let tab: Tab
@@ -324,7 +487,9 @@ struct TerminalSwiftUIView: NSViewRepresentable {
         return delegate
     }
 
-    func makeNSView(context: Context) -> NotifyingTerminalView {
+    func makeNSView(context: Context) -> TerminalContainerView {
+        let container = TerminalContainerView()
+
         // If tab already has a live terminal view (e.g. view recreated by SwiftUI
         // during split mode change), reuse it to preserve process & detection state
         if let existing = tab.terminalView as? NotifyingTerminalView {
@@ -332,7 +497,18 @@ struct TerminalSwiftUIView: NSViewRepresentable {
             context.coordinator.tab = tab
             context.coordinator.appState = appState
             existing.installClickMonitor()
-            return existing
+            // Re-parent into new container
+            existing.removeFromSuperview()
+            existing.translatesAutoresizingMaskIntoConstraints = false
+            container.addSubview(existing)
+            NSLayoutConstraint.activate([
+                existing.topAnchor.constraint(equalTo: container.topAnchor),
+                existing.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+                existing.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+                existing.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+            ])
+            Self.applyGlassBlur(to: container)
+            return container
         }
 
         let termView = NotifyingTerminalView(frame: .zero)
@@ -384,6 +560,7 @@ struct TerminalSwiftUIView: NSViewRepresentable {
         termView.lastAppliedFontSize = settings.fontSize
         termView.lastAppliedFontName = settings.fontName
         termView.lastAppliedThemeID = settings.theme.rawValue
+        termView.lastAppliedGlassOpacity = settings.glassOpacity
         termView.processDelegate = context.coordinator
 
         var env = ProcessInfo.processInfo.environment
@@ -508,23 +685,43 @@ struct TerminalSwiftUIView: NSViewRepresentable {
             }
         }
 
-        return termView
+        // Add terminal into container
+        termView.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(termView)
+        NSLayoutConstraint.activate([
+            termView.topAnchor.constraint(equalTo: container.topAnchor),
+            termView.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+            termView.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            termView.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+        ])
+        Self.applyGlassBlur(to: container)
+
+        return container
     }
 
-    func updateNSView(_ nsView: NotifyingTerminalView, context: Context) {
+    func updateNSView(_ nsView: TerminalContainerView, context: Context) {
+        guard let termView = nsView.subviews.compactMap({ $0 as? NotifyingTerminalView }).first else { return }
         // Only apply settings when values actually changed — avoids redundant
         // font/theme resets that can disrupt terminal rendering mid-output
         let settings = SettingsManager.shared
-        if nsView.lastAppliedFontSize != settings.fontSize || nsView.lastAppliedFontName != settings.fontName {
-            nsView.updateFontSize(settings.fontSize, fontName: settings.fontName)
-            nsView.lastAppliedFontSize = settings.fontSize
-            nsView.lastAppliedFontName = settings.fontName
+        if termView.lastAppliedFontSize != settings.fontSize || termView.lastAppliedFontName != settings.fontName {
+            termView.updateFontSize(settings.fontSize, fontName: settings.fontName)
+            termView.lastAppliedFontSize = settings.fontSize
+            termView.lastAppliedFontName = settings.fontName
         }
         let themeID = settings.theme.rawValue
-        if nsView.lastAppliedThemeID != themeID {
-            nsView.applyTheme(settings.theme)
-            nsView.lastAppliedThemeID = themeID
+        if termView.lastAppliedThemeID != themeID || termView.lastAppliedGlassOpacity != settings.glassOpacity {
+            termView.applyTheme(settings.theme)
+            termView.lastAppliedThemeID = themeID
+            termView.lastAppliedGlassOpacity = settings.glassOpacity
+            Self.applyGlassBlur(to: nsView)
         }
+    }
+
+    private static func applyGlassBlur(to container: TerminalContainerView) {
+        let theme = SettingsManager.shared.theme
+        let glassOpacity = min(max(SettingsManager.shared.glassOpacity, 0.2), 1.0)
+        container.removeBlur()
     }
 
     /// Post in-app toast notification for Claude status changes
