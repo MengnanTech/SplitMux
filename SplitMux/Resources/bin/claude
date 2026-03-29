@@ -72,7 +72,8 @@ cat > "$SETTINGS_FILE" <<ENDJSON
 }
 ENDJSON
 
-# Clean up temp settings file on exit
-trap "rm -f '$SETTINGS_FILE'" EXIT
+# Clean up on exit: mark status idle and remove temp settings
+trap "echo idle > '$STATUS_FILE'; rm -f '$SETTINGS_FILE'" EXIT
 
-exec "$REAL_CLAUDE" --settings "$SETTINGS_FILE" "$@"
+# Run claude as subprocess (not exec) so trap fires when claude exits
+"$REAL_CLAUDE" --settings "$SETTINGS_FILE" "$@"

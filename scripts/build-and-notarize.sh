@@ -1,6 +1,12 @@
 #!/bin/bash
 set -euo pipefail
 
+# Usage: ./scripts/build-and-notarize.sh [patch|minor|major|x.y.z]
+#   patch  — 1.0.2 → 1.0.3 (default)
+#   minor  — 1.0.2 → 1.1.0
+#   major  — 1.0.2 → 2.0.0
+#   x.y.z  — set exact version
+
 # ─── Config ───
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 PROJECT="$PROJECT_DIR/SplitMux.xcodeproj"
@@ -16,13 +22,39 @@ SIGNING_IDENTITY="Developer ID Application: DENG LI (2XGP34AR96)"
 # GitHub
 GITHUB_REPO="MengnanTech/SplitMux"
 
-# Read version from project.yml
-VERSION=$(grep 'MARKETING_VERSION' "$PROJECT_DIR/project.yml" | head -1 | sed 's/.*: *"\(.*\)"/\1/')
-BUILD_NUM=$(grep 'CURRENT_PROJECT_VERSION' "$PROJECT_DIR/project.yml" | head -1 | sed 's/.*: *\([0-9]*\)/\1/')
+# ─── Auto bump version ───
+OLD_VERSION=$(grep 'MARKETING_VERSION' "$PROJECT_DIR/project.yml" | head -1 | sed 's/.*: *"\(.*\)"/\1/')
+OLD_BUILD=$(grep 'CURRENT_PROJECT_VERSION' "$PROJECT_DIR/project.yml" | head -1 | sed 's/.*: *\([0-9]*\)/\1/')
+
+BUMP="${1:-patch}"
+IFS='.' read -r MAJOR MINOR PATCH <<< "$OLD_VERSION"
+
+case "$BUMP" in
+  patch) PATCH=$((PATCH + 1)) ;;
+  minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+  major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+  *.*.*)  IFS='.' read -r MAJOR MINOR PATCH <<< "$BUMP" ;;
+  *) echo "❌ Usage: $0 [patch|minor|major|x.y.z]"; exit 1 ;;
+esac
+
+VERSION="${MAJOR}.${MINOR}.${PATCH}"
+BUILD_NUM=$((OLD_BUILD + 1))
+
+# Update project.yml
+sed -i '' "s/MARKETING_VERSION: \".*\"/MARKETING_VERSION: \"${VERSION}\"/" "$PROJECT_DIR/project.yml"
+sed -i '' "s/CURRENT_PROJECT_VERSION: [0-9]*/CURRENT_PROJECT_VERSION: ${BUILD_NUM}/" "$PROJECT_DIR/project.yml"
 
 echo "══════════════════════════════════════════"
 echo "  SplitMux Release v${VERSION} (build ${BUILD_NUM})"
+echo "  bumped from v${OLD_VERSION} (build ${OLD_BUILD})"
 echo "══════════════════════════════════════════"
+echo ""
+
+# ─── Commit version bump ───
+echo "📌 Committing version bump..."
+cd "$PROJECT_DIR"
+git add project.yml
+git commit -m "chore: bump version to ${VERSION} (build ${BUILD_NUM})"
 echo ""
 
 # ─── Sync Xcode project from project.yml ───
