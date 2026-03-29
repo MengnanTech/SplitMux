@@ -31,6 +31,7 @@
 		AC8EB4C59954B7993FC17B26 /* TerminalHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DB0D582624EB54FE1534670 /* TerminalHistory.swift */; };
 		ADF1C4C302275A723244D70B /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = BB51791940E0588FFF39BB96 /* Sparkle */; };
 		B1A5B915D432D1063CE49A21 /* SSHHostEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B791AC577EE279C637592AAE /* SSHHostEditorView.swift */; };
+		B4E0F734055B26A5F632DDA8 /* bin in Resources */ = {isa = PBXBuildFile; fileRef = D5D9BAABFB4C3CD03DEB4BD2 /* bin */; };
 		B959724F3733DC1DF1145313 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF1A68A30C80A52EE65AF9EF /* SettingsView.swift */; };
 		C18E185C52DFAC23171C2F49 /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89BBBE1D992BC359C869F114 /* Session.swift */; };
 		C3492213A12230A5169EE20F /* BreadcrumbBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE127C75EE05E61FA4E9DFA7 /* BreadcrumbBar.swift */; };
@@ -54,7 +55,6 @@
 		2705F34CBFF710F0B3B61093 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		2D5B37ABA0DB8467985088D4 /* SplitNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitNode.swift; sourceTree = "<group>"; };
 		2DB0D582624EB54FE1534670 /* TerminalHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalHistory.swift; sourceTree = "<group>"; };
-		3B05BA369355CCACE63EF27A /* claude */ = {isa = PBXFileReference; path = claude; sourceTree = "<group>"; };
 		403BA34C7DF212B769699C23 /* TerminalHistoryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalHistoryService.swift; sourceTree = "<group>"; };
 		454AD7737E071BBD07A15594 /* TabContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabContentView.swift; sourceTree = "<group>"; };
 		6284E25BADA3425EDB7A9E62 /* WindowChromeConfigurator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowChromeConfigurator.swift; sourceTree = "<group>"; };
@@ -66,7 +66,6 @@
 		8CA791722194F1B9618ED6E1 /* ShellExecutor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellExecutor.swift; sourceTree = "<group>"; };
 		8F66998C1C01601FFB7495CB /* TabPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabPanelView.swift; sourceTree = "<group>"; };
 		94CFE7C5BD49F7C5AA2E257B /* AgentOrchestrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentOrchestrationView.swift; sourceTree = "<group>"; };
-		99894009C3CB2EA0D6F83741 /* codex */ = {isa = PBXFileReference; path = codex; sourceTree = "<group>"; };
 		9BCF76A9B67B992A48E88E9D /* SSHHostsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHHostsSection.swift; sourceTree = "<group>"; };
 		A29FB0FA907A1116BD352F22 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A3A3F11B4021ECCA5F2B8172 /* TerminalSearchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalSearchBar.swift; sourceTree = "<group>"; };
@@ -79,6 +78,7 @@
 		B791AC577EE279C637592AAE /* SSHHostEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHHostEditorView.swift; sourceTree = "<group>"; };
 		BDCEA570CCC09D2C9721C5FD /* SSHHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHHost.swift; sourceTree = "<group>"; };
 		D38A76841084268D605FC270 /* SettingsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsManager.swift; sourceTree = "<group>"; };
+		D5D9BAABFB4C3CD03DEB4BD2 /* bin */ = {isa = PBXFileReference; lastKnownFileType = folder; name = bin; path = SplitMux/Resources/bin; sourceTree = SOURCE_ROOT; };
 		DA94958C7B3C9598143CD854 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		DCF1D3D1A0FF0AD4CA36A3A3 /* Tab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tab.swift; sourceTree = "<group>"; };
 		E5A887AD18F9732AED899516 /* SplitMux.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SplitMux.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -127,7 +127,6 @@
 				8AE3BADABDA7191D7EA65125 /* SplitMux.entitlements */,
 				0B13FB3AC9006BE60A51D478 /* App */,
 				72144FC06731CA5685F4EDA1 /* Models */,
-				D450B84EE844116C15616EE5 /* Resources */,
 				B34B49222ED8F4DC0B1844FF /* Services */,
 				D4ABA6EF709F24DC494CFAF2 /* Views */,
 			);
@@ -137,6 +136,7 @@
 		3F873ACDA3EC485CD58EA9CD = {
 			isa = PBXGroup;
 			children = (
+				D5D9BAABFB4C3CD03DEB4BD2 /* bin */,
 				1E2130CC13F98BB452B62F5F /* SplitMux */,
 				66200C6B44B0D218932911C0 /* Products */,
 			);
@@ -161,15 +161,6 @@
 				2DB0D582624EB54FE1534670 /* TerminalHistory.swift */,
 			);
 			path = Models;
-			sourceTree = "<group>";
-		};
-		9042480A6BA8706610EFA104 /* bin */ = {
-			isa = PBXGroup;
-			children = (
-				3B05BA369355CCACE63EF27A /* claude */,
-				99894009C3CB2EA0D6F83741 /* codex */,
-			);
-			path = bin;
 			sourceTree = "<group>";
 		};
 		B34B49222ED8F4DC0B1844FF /* Services */ = {
@@ -205,14 +196,6 @@
 			path = Components;
 			sourceTree = "<group>";
 		};
-		D450B84EE844116C15616EE5 /* Resources */ = {
-			isa = PBXGroup;
-			children = (
-				9042480A6BA8706610EFA104 /* bin */,
-			);
-			path = Resources;
-			sourceTree = "<group>";
-		};
 		D4ABA6EF709F24DC494CFAF2 /* Views */ = {
 			isa = PBXGroup;
 			children = (
@@ -231,6 +214,13 @@
 				9BCF76A9B67B992A48E88E9D /* SSHHostsSection.swift */,
 			);
 			path = Sidebar;
+			sourceTree = "<group>";
+		};
+		"TEMP_4A8E20EB-18E7-4565-8DD3-36D854A2E1CE" /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -300,6 +290,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				76224873C9A3B07E5BB4DB10 /* Assets.xcassets in Resources */,
+				B4E0F734055B26A5F632DDA8 /* bin in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -415,13 +406,13 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = SplitMux/SplitMux.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				INFOPLIST_FILE = SplitMux/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.levi.SplitMux;
 				SDKROOT = macosx;
 				SWIFT_STRICT_CONCURRENCY = complete;
@@ -434,13 +425,13 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = SplitMux/SplitMux.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				INFOPLIST_FILE = SplitMux/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.levi.SplitMux;
 				SDKROOT = macosx;
 				SWIFT_STRICT_CONCURRENCY = complete;

@@ -1,6 +1,6 @@
 #!/bin/bash
 # SplitMux claude wrapper — injects hooks for status tracking
-# Claude Code supports --settings to inject hooks inline.
+# Claude Code supports --settings to inject hooks from a file.
 
 # Remove our directory from PATH to find the real claude
 CLEANED_PATH=$(echo "$PATH" | tr ':' '\n' | grep -v "SplitMux.app/Contents/Resources/bin" | tr '\n' ':' | sed 's/:$//')
@@ -27,8 +27,9 @@ STATUS_DIR="/tmp/splitmux"
 mkdir -p "$STATUS_DIR"
 STATUS_FILE="$STATUS_DIR/$SPLITMUX_TAB_ID"
 
-# Build hooks JSON — write status to temp file on lifecycle events
-HOOKS_JSON=$(cat <<ENDJSON
+# Write hooks JSON to a temp file (more reliable than inline JSON on CLI)
+SETTINGS_FILE=$(mktemp "${TMPDIR:-/tmp}/splitmux-settings-XXXXXX")
+cat > "$SETTINGS_FILE" <<ENDJSON
 {
   "hooks": {
     "UserPromptSubmit": [
@@ -70,6 +71,8 @@ HOOKS_JSON=$(cat <<ENDJSON
   }
 }
 ENDJSON
-)
 
-exec "$REAL_CLAUDE" --settings "$HOOKS_JSON" "$@"
+# Clean up temp settings file on exit
+trap "rm -f '$SETTINGS_FILE'" EXIT
+
+exec "$REAL_CLAUDE" --settings "$SETTINGS_FILE" "$@"

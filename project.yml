@@ -26,15 +26,20 @@ targets:
     type: application
     platform: macOS
     sources:
-      - SplitMux
+      - path: SplitMux
+        excludes:
+          - "Resources/bin"
+      - path: SplitMux/Resources/bin
+        type: folder
+        buildPhase: resources
     dependencies:
       - package: SwiftTerm
       - package: Sparkle
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.levi.SplitMux
-        MARKETING_VERSION: "1.0.0"
-        CURRENT_PROJECT_VERSION: 1
+        MARKETING_VERSION: "1.0.1"
+        CURRENT_PROJECT_VERSION: 2
         SWIFT_STRICT_CONCURRENCY: complete
     info:
       path: SplitMux/Info.plist
