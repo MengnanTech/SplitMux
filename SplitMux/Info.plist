@@ -19,7 +19,7 @@
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>SUFeedURL</key>
-	<string>https://calyx-ai.com/splitmux/appcast.xml</string>
+	<string>https://raw.githubusercontent.com/MengnanTech/SplitMux/main/appcast.xml</string>
 	<key>SUPublicEDKey</key>
 	<string>EbZeL4SmTBcud40r+8WuD4aFqK02Bl/DFeKYOHHClb8=</string>
 </dict>

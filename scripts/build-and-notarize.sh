@@ -13,10 +13,6 @@ KEYCHAIN_PROFILE="SplitMux-Notary"
 TEAM_ID="2XGP34AR96"
 SIGNING_IDENTITY="Developer ID Application: DENG LI (2XGP34AR96)"
 
-# Remote server
-REMOTE="calyx"
-REMOTE_DIR="/opt/calyx/nginx/html/splitmux"
-
 # GitHub
 GITHUB_REPO="MengnanTech/SplitMux"
 
@@ -125,15 +121,6 @@ else
   exit 1
 fi
 
-# ─── Upload to calyx-ai.com ───
-echo "🚀 Uploading to calyx-ai.com..."
-ssh "$REMOTE" "mkdir -p $REMOTE_DIR/releases"
-
-rsync -az --progress "$APPCAST_DIR/$VERSIONED_DMG" "$REMOTE:$REMOTE_DIR/releases/$VERSIONED_DMG"
-rsync -az "$APPCAST_DIR/appcast.xml" "$REMOTE:$REMOTE_DIR/"
-
-echo "✅ Uploaded to server"
-
 # ─── GitHub Release ───
 echo "🐙 Creating GitHub Release..."
 RELEASE_NOTES=$(git log --pretty=format:"- %s" "$(git describe --tags --abbrev=0 2>/dev/null || git rev-list --max-parents=0 HEAD)"..HEAD 2>/dev/null || echo "- v${VERSION} release")
@@ -149,25 +136,20 @@ else
 fi
 echo "✅ GitHub Release published"
 
-# ─── Verify Nginx (skip if already configured) ───
-if ssh "$REMOTE" "grep -q '/splitmux/' /opt/calyx/nginx/conf.d/calyx-ai.conf 2>/dev/null"; then
-  echo "✅ Nginx already configured"
-else
-  echo "⚠️  Nginx not configured for /splitmux/. Add this to the Official site server block in calyx-ai.conf:"
-  echo ""
-  echo "    location /splitmux/ {"
-  echo "        alias /usr/share/nginx/html/splitmux/;"
-  echo "        autoindex off;"
-  echo "    }"
-  echo ""
-  echo "  Then run: docker exec nginx nginx -t && docker exec nginx nginx -s reload"
-fi
+# ─── Commit appcast.xml to repo ───
+echo "📡 Committing appcast.xml to repo..."
+cp "$APPCAST_DIR/appcast.xml" "$PROJECT_DIR/appcast.xml"
+cd "$PROJECT_DIR"
+git add appcast.xml
+git commit -m "chore: update appcast.xml for v${VERSION}" || echo "  (appcast unchanged, skipping commit)"
+git push origin main
+echo "✅ Appcast pushed to GitHub"
 
 echo ""
 echo "══════════════════════════════════════════"
 echo "  ✅ SplitMux v${VERSION} released!"
 echo ""
 echo "  GitHub:  https://github.com/$GITHUB_REPO/releases/tag/v${VERSION}"
-echo "  DMG:     https://calyx-ai.com/splitmux/releases/$VERSIONED_DMG"
-echo "  Appcast: https://calyx-ai.com/splitmux/appcast.xml"
+echo "  DMG:     https://github.com/$GITHUB_REPO/releases/download/v${VERSION}/$VERSIONED_DMG"
+echo "  Appcast: https://raw.githubusercontent.com/$GITHUB_REPO/main/appcast.xml"
 echo "══════════════════════════════════════════"

@@ -44,7 +44,7 @@ targets:
     info:
       path: SplitMux/Info.plist
       properties:
-        SUFeedURL: "https://calyx-ai.com/splitmux/appcast.xml"
+        SUFeedURL: "https://raw.githubusercontent.com/MengnanTech/SplitMux/main/appcast.xml"
         SUPublicEDKey: "EbZeL4SmTBcud40r+8WuD4aFqK02Bl/DFeKYOHHClb8="
     entitlements:
       path: SplitMux/SplitMux.entitlements
