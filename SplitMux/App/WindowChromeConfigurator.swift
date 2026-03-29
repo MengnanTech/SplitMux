@@ -15,6 +15,7 @@ enum WindowChromeConfigurator {
             window.styleMask.insert(.fullSizeContentView)
         }
         window.isMovableByWindowBackground = false
+        window.isMovable = false
 
         applyGlassIfNeeded(to: window)
     }
@@ -69,15 +70,12 @@ enum WindowChromeConfigurator {
                 }
             }
         } else {
-            window.isOpaque = true
-            window.backgroundColor = NSColor.windowBackgroundColor
-            window.appearance = nil  // Follow system
-
-            // Restore: move SwiftUI hosting view back out of blur view
+            // Restore from glass mode only when needed
             if let blurView = window.contentView as? NSVisualEffectView,
                let hostingView = blurView.subviews.first {
                 hostingView.removeFromSuperview()
                 window.contentView = hostingView
+                window.appearance = nil
             }
         }
     }
@@ -128,3 +126,4 @@ class WindowDragNSView: NSView {
         window?.performDrag(with: event)
     }
 }
+

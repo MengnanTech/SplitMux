@@ -99,19 +99,14 @@ APP_SRC="$ARCHIVE_PATH/Products/Applications/SplitMux.app"
 APP_DST="$EXPORT_PATH/SplitMux.app"
 cp -R "$APP_SRC" "$APP_DST"
 
-# Sign all nested frameworks/bundles first, then the app itself
+# Sign all nested frameworks/bundles (deepest first so inner XPC/app are signed before their parent framework)
 echo "  Signing nested components..."
-find "$APP_DST" -type d \( -name "*.framework" -o -name "*.xpc" -o -name "*.app" -o -name "*.dylib" \) -print0 | \
+find "$APP_DST" -depth \( -name "*.dylib" -o -type d \( -name "*.framework" -o -name "*.xpc" -o -name "*.app" \) \) -print0 | \
   while IFS= read -r -d '' component; do
+    [ "$component" = "$APP_DST" ] && continue
+    echo "    $(basename "$component")"
     codesign --force --options runtime --timestamp \
-      --sign "$SIGNING_IDENTITY" "$component" 2>/dev/null || true
-  done
-
-# Sign any dylibs directly
-find "$APP_DST" -name "*.dylib" -print0 | \
-  while IFS= read -r -d '' dylib; do
-    codesign --force --options runtime --timestamp \
-      --sign "$SIGNING_IDENTITY" "$dylib" 2>/dev/null || true
+      --sign "$SIGNING_IDENTITY" "$component"
   done
 
 # Sign the main app
