@@ -20,7 +20,10 @@ final class SettingsManager {
     // MARK: - Theme
 
     var theme: AppTheme {
-        didSet { UserDefaults.standard.set(theme.rawValue, forKey: "appTheme") }
+        didSet {
+            UserDefaults.standard.set(theme.rawValue, forKey: "appTheme")
+            ClaudeHookService.shared.refreshAllStatuses()
+        }
     }
 
     // MARK: - Notifications

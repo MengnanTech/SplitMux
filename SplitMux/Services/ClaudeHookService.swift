@@ -166,6 +166,13 @@ final class ClaudeHookService {
         }
     }
 
+    /// Force the next poll cycle to re-fire all status callbacks.
+    /// Call this when the view tree is heavily rebuilt (e.g. theme switch)
+    /// so that observation subscriptions are re-established.
+    func refreshAllStatuses() {
+        lastStatus.removeAll()
+    }
+
     /// Clean up all monitors and reset agent state
     func cleanup() {
         let ids = Array(pollTimers.keys)

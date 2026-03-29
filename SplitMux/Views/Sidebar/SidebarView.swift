@@ -260,6 +260,7 @@ struct SessionRow: View {
     let isHovered: Bool
 
     private var theme: AppTheme { SettingsManager.shared.theme }
+    private var hookService: ClaudeHookService { ClaudeHookService.shared }
     private var isLightMode: Bool { theme.colorScheme == .light }
     private var selectionPrimary: Color { isLightMode ? theme.brandCoral : theme.accentColor }
     private var selectionSecondary: Color { isLightMode ? theme.brandAqua : theme.accentColor }
@@ -296,22 +297,23 @@ struct SessionRow: View {
                     .font(.system(size: 10))
                     .foregroundStyle(theme.disabledText)
 
-                // Per-tab Claude status indicators
-                let claudeTabs = session.claudeTabs
-                if !claudeTabs.isEmpty {
-                    ForEach(claudeTabs, id: \.tab.id) { item in
+                // Per-tab Claude status indicators (read from hookService — the sole source of truth)
+                let tabIDs = Set(session.tabs.map(\.id))
+                let agents = hookService.agentInfos.filter { tabIDs.contains($0.tabID) }
+                if !agents.isEmpty {
+                    ForEach(agents) { agent in
                         HStack(spacing: 4) {
-                            Image(systemName: item.status.icon)
+                            Image(systemName: agent.status.icon)
                                 .font(.system(size: 8))
-                            Text(claudeTabs.count > 1 ? "\(item.tab.title): \(item.status.label)" : item.status.label)
+                            Text(agents.count > 1 ? "\(agent.tabTitle.isEmpty ? "Terminal" : agent.tabTitle): \(agent.status.label)" : agent.status.label)
                         }
                         .font(.system(size: 10))
-                        .foregroundStyle(item.status.color)
+                        .foregroundStyle(agent.status.color)
                     }
                 }
 
                 // Notification message preview
-                if let msg = session.latestNotificationMessage, session.claudeStatus == nil {
+                if let msg = session.latestNotificationMessage, agents.isEmpty {
                     Text(msg)
                         .font(.system(size: 10))
                         .foregroundStyle(Color.orange)

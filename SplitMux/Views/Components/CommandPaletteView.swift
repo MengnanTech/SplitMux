@@ -65,7 +65,13 @@ struct CommandPaletteView: View {
             .frame(maxHeight: 300)
         }
         .frame(width: 500)
-        .background(theme.elevatedSurface)
+        .background {
+            if theme.elevatedSurface == .clear {
+                VisualEffectBackground(material: .popover, blendingMode: .behindWindow)
+            } else {
+                theme.elevatedSurface
+            }
+        }
         .clipShape(RoundedRectangle(cornerRadius: 10))
         .shadow(color: .black.opacity(0.5), radius: 20)
         .onAppear {
@@ -327,6 +333,24 @@ struct PaletteItemRow: View {
         case .command: return "Command"
         case .sshHost: return "SSH"
         }
+    }
+}
+
+private struct VisualEffectBackground: NSViewRepresentable {
+    let material: NSVisualEffectView.Material
+    let blendingMode: NSVisualEffectView.BlendingMode
+
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let view = NSVisualEffectView()
+        view.material = material
+        view.blendingMode = blendingMode
+        view.state = .active
+        return view
+    }
+
+    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
+        nsView.material = material
+        nsView.blendingMode = blendingMode
     }
 }
 
