@@ -39,7 +39,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.levi.SplitMux
         MARKETING_VERSION: "1.0.5"
-        CURRENT_PROJECT_VERSION: 6
+        CURRENT_PROJECT_VERSION: 7
         SWIFT_STRICT_CONCURRENCY: complete
     info:
       path: SplitMux/Info.plist
