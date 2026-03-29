@@ -109,10 +109,13 @@ echo "📡 Generating Sparkle appcast..."
 SPARKLE_BIN=$(find ~/Library/Developer/Xcode/DerivedData -path "*/Sparkle/bin/generate_appcast" -type f 2>/dev/null | head -1)
 APPCAST_DIR="$BUILD_DIR/appcast"
 mkdir -p "$APPCAST_DIR"
-cp "$DMG_PATH" "$APPCAST_DIR/"
+
+# Use versioned DMG name so appcast URL matches the uploaded file
+VERSIONED_DMG="SplitMux-${VERSION}.dmg"
+cp "$DMG_PATH" "$APPCAST_DIR/$VERSIONED_DMG"
 
 if [ -n "${SPARKLE_BIN:-}" ] && [ -x "$SPARKLE_BIN" ]; then
-  "$SPARKLE_BIN" "$APPCAST_DIR"
+  "$SPARKLE_BIN" --download-url-prefix "https://calyx-ai.com/splitmux/releases/" "$APPCAST_DIR"
   echo "✅ Appcast generated"
 else
   echo "❌ Sparkle generate_appcast not found. Build in Xcode first."
@@ -123,8 +126,7 @@ fi
 echo "🚀 Uploading to calyx-ai.com..."
 ssh "$REMOTE" "mkdir -p $REMOTE_DIR/releases"
 
-VERSIONED_DMG="SplitMux-${VERSION}.dmg"
-rsync -az --progress "$DMG_PATH" "$REMOTE:$REMOTE_DIR/releases/$VERSIONED_DMG"
+rsync -az --progress "$APPCAST_DIR/$VERSIONED_DMG" "$REMOTE:$REMOTE_DIR/releases/$VERSIONED_DMG"
 rsync -az "$APPCAST_DIR/appcast.xml" "$REMOTE:$REMOTE_DIR/"
 
 echo "✅ Uploaded to server"
