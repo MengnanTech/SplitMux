@@ -17,6 +17,9 @@ SIGNING_IDENTITY="Developer ID Application: DENG LI (2XGP34AR96)"
 REMOTE="calyx"
 REMOTE_DIR="/opt/calyx/nginx/html/splitmux"
 
+# GitHub
+GITHUB_REPO="MengnanTech/SplitMux"
+
 # Read version from project.yml
 VERSION=$(grep 'MARKETING_VERSION' "$PROJECT_DIR/project.yml" | head -1 | sed 's/.*: *"\(.*\)"/\1/')
 BUILD_NUM=$(grep 'CURRENT_PROJECT_VERSION' "$PROJECT_DIR/project.yml" | head -1 | sed 's/.*: *\([0-9]*\)/\1/')
@@ -115,7 +118,7 @@ VERSIONED_DMG="SplitMux-${VERSION}.dmg"
 cp "$DMG_PATH" "$APPCAST_DIR/$VERSIONED_DMG"
 
 if [ -n "${SPARKLE_BIN:-}" ] && [ -x "$SPARKLE_BIN" ]; then
-  "$SPARKLE_BIN" --download-url-prefix "https://calyx-ai.com/splitmux/releases/" "$APPCAST_DIR"
+  "$SPARKLE_BIN" --download-url-prefix "https://github.com/$GITHUB_REPO/releases/download/v${VERSION}/" "$APPCAST_DIR"
   echo "✅ Appcast generated"
 else
   echo "❌ Sparkle generate_appcast not found. Build in Xcode first."
@@ -130,6 +133,21 @@ rsync -az --progress "$APPCAST_DIR/$VERSIONED_DMG" "$REMOTE:$REMOTE_DIR/releases
 rsync -az "$APPCAST_DIR/appcast.xml" "$REMOTE:$REMOTE_DIR/"
 
 echo "✅ Uploaded to server"
+
+# ─── GitHub Release ───
+echo "🐙 Creating GitHub Release..."
+RELEASE_NOTES=$(git log --pretty=format:"- %s" "$(git describe --tags --abbrev=0 2>/dev/null || git rev-list --max-parents=0 HEAD)"..HEAD 2>/dev/null || echo "- v${VERSION} release")
+
+if gh release view "v${VERSION}" --repo "$GITHUB_REPO" &>/dev/null; then
+  echo "  Release v${VERSION} already exists, uploading asset..."
+  gh release upload "v${VERSION}" "$APPCAST_DIR/$VERSIONED_DMG" --repo "$GITHUB_REPO" --clobber
+else
+  gh release create "v${VERSION}" "$APPCAST_DIR/$VERSIONED_DMG" \
+    --repo "$GITHUB_REPO" \
+    --title "v${VERSION}" \
+    --notes "$RELEASE_NOTES"
+fi
+echo "✅ GitHub Release published"
 
 # ─── Verify Nginx (skip if already configured) ───
 if ssh "$REMOTE" "grep -q '/splitmux/' /opt/calyx/nginx/conf.d/calyx-ai.conf 2>/dev/null"; then
@@ -149,6 +167,7 @@ echo ""
 echo "══════════════════════════════════════════"
 echo "  ✅ SplitMux v${VERSION} released!"
 echo ""
+echo "  GitHub:  https://github.com/$GITHUB_REPO/releases/tag/v${VERSION}"
 echo "  DMG:     https://calyx-ai.com/splitmux/releases/$VERSIONED_DMG"
 echo "  Appcast: https://calyx-ai.com/splitmux/appcast.xml"
 echo "══════════════════════════════════════════"
