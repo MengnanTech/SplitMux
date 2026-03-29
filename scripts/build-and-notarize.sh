@@ -72,6 +72,9 @@ codesign --force --deep --options runtime --timestamp \
 codesign --verify --deep --strict "$APP_DST"
 echo "✅ Signing verified"
 
+# Strip provenance xattr (blocks hdiutil DMG creation on macOS)
+xattr -cr "$APP_DST"
+
 # ─── Create DMG (drag-to-install style) ───
 echo "💿 Creating DMG..."
 rm -f "$DMG_PATH"

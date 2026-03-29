@@ -180,7 +180,7 @@ struct ContentView: View {
 
     private func addTab() {
         guard let session = appState.selectedSession else { return }
-        let tab = Tab(title: "zsh", icon: "terminal", content: .terminal)
+        let tab = session.createTab()
         withAnimation(.easeInOut(duration: 0.15)) {
             session.addTab(tab)
         }

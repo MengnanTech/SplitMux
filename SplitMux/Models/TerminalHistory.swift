@@ -5,7 +5,21 @@ struct TerminalHistoryEntry {
     let timestamp: Date
     let data: Data
     let text: String
+
+    /// Text with ANSI escape codes stripped for display
+    var cleanText: String {
+        TerminalHistory.stripAnsi(text)
+    }
 }
+
+private let ansiPattern = try! NSRegularExpression(pattern: [
+    "\u{1B}\\[[0-9;:?]*[A-Za-z]",                              // CSI sequences
+    "\u{1B}\\][^\u{07}\u{1B}]*(?:\u{07}|\u{1B}\\\\)",          // OSC sequences
+    "\u{1B}P[^\u{1B}]*\u{1B}\\\\",                             // DCS sequences
+    "\u{1B}[()][A-Za-z]",                                       // Character set designation
+    "\u{1B}[=>78]",                                              // Keypad mode + cursor save/restore
+    "\u{1B}#[0-9]",                                              // Double-width/height lines
+].joined(separator: "|"))
 
 /// Records and manages terminal output history for a single tab
 @Observable
@@ -27,6 +41,12 @@ class TerminalHistory {
 
     init(tabID: UUID) {
         self.tabID = tabID
+    }
+
+    /// Strip ANSI escape codes from terminal output
+    nonisolated static func stripAnsi(_ raw: String) -> String {
+        let range = NSRange(raw.startIndex..., in: raw)
+        return ansiPattern.stringByReplacingMatches(in: raw, range: range, withTemplate: "")
     }
 
     /// Append terminal output data

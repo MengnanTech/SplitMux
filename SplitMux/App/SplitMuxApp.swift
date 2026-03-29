@@ -43,7 +43,7 @@ struct SplitMuxApp: App {
 
                 Button("New Tab") {
                     if let session = appState.selectedSession {
-                        let tab = Tab(title: "zsh", icon: "terminal", content: .terminal)
+                        let tab = session.createTab()
                         session.addTab(tab)
                     }
                 }

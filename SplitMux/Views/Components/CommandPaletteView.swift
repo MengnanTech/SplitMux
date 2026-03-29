@@ -132,7 +132,7 @@ struct CommandPaletteView: View {
             shortcut: "\u{2318}T",
             action: {
                 if let session = appState.selectedSession {
-                    let tab = Tab(title: "zsh", icon: "terminal", content: .terminal)
+                    let tab = session.createTab()
                     session.addTab(tab)
                 }
             }

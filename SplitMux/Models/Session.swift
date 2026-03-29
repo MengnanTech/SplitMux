@@ -98,6 +98,25 @@ class Session: Identifiable, Hashable {
         return nil
     }
 
+    /// Next sequential tab number for default naming
+    var nextTabNumber: Int {
+        let existingNumbers = tabs.compactMap { tab -> Int? in
+            // Match "zsh", "zsh 2", "zsh 3", etc.
+            if tab.title == "zsh" { return 1 }
+            guard tab.title.hasPrefix("zsh "),
+                  let num = Int(tab.title.dropFirst(4)) else { return nil }
+            return num
+        }
+        return (existingNumbers.max() ?? 0) + 1
+    }
+
+    /// Create a new terminal tab with auto-incrementing name
+    func createTab() -> Tab {
+        let n = nextTabNumber
+        let title = n == 1 ? "zsh" : "zsh \(n)"
+        return Tab(title: title, icon: "terminal", content: .terminal)
+    }
+
     func addTab(_ tab: Tab) {
         tabs.append(tab)
         activeTabID = tab.id
@@ -134,7 +153,7 @@ class Session: Identifiable, Hashable {
     /// Enter split mode: split the active tab in the given direction
     func splitActiveTab(direction: SplitDirection) {
         guard let activeID = activeTabID else { return }
-        let newTab = Tab(title: "zsh", icon: "terminal", content: .terminal)
+        let newTab = createTab()
         tabs.append(newTab)
 
         if let root = splitRoot {

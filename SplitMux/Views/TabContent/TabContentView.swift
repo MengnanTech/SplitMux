@@ -113,7 +113,7 @@ struct TabContentView: View {
     }
 
     private func addTab() {
-        let tab = Tab(title: "zsh", icon: "terminal", content: .terminal)
+        let tab = session.createTab()
         withAnimation(.easeInOut(duration: 0.15)) {
             session.addTab(tab)
         }

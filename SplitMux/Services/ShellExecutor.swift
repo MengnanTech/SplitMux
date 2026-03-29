@@ -227,7 +227,7 @@ class NotifyingTerminalView: LocalProcessTerminalView {
     @objc private func newTabAction() {
         guard let delegate = sessionDelegate, let appState = delegate.appState,
               let session = appState.sessions.first(where: { $0.tabs.contains(where: { $0.id == delegate.tab?.id }) }) else { return }
-        let tab = Tab(title: "zsh", icon: "terminal", content: .terminal)
+        let tab = session.createTab()
         session.addTab(tab)
     }
 

@@ -39,7 +39,7 @@ class AppState {
 
     private func setupDefault() {
         let mainSession = Session()
-        let tab1 = Tab(title: "zsh", icon: "terminal", content: .terminal)
+        let tab1 = mainSession.createTab()
         mainSession.addTab(tab1)
         mainSession.startGitBranchPolling()
         wireSessionSave(mainSession)
@@ -50,7 +50,7 @@ class AppState {
 
     func addSession(workingDirectory: String? = nil) {
         let session = Session(workingDirectory: workingDirectory)
-        let tab = Tab(title: "zsh", icon: "terminal", content: .terminal)
+        let tab = session.createTab()
         session.addTab(tab)
         session.startGitBranchPolling()
         wireSessionSave(session)

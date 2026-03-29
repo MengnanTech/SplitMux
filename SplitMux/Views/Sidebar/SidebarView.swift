@@ -86,7 +86,7 @@ struct SidebarView: View {
                         ))
                         .contextMenu {
                             Button {
-                                let tab = Tab(title: "Terminal", icon: "terminal", content: .terminal)
+                                let tab = session.createTab()
                                 session.addTab(tab)
                             } label: {
                                 Label("New Tab", systemImage: "plus.square")

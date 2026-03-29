@@ -122,8 +122,8 @@ struct TerminalHistoryView: View {
                                     .foregroundStyle(theme.disabledText)
                                     .frame(width: 60, alignment: .trailing)
 
-                                // Content
-                                Text(entry.text)
+                                // Content (ANSI codes stripped)
+                                Text(entry.cleanText)
                                     .font(.system(size: 11, design: .monospaced))
                                     .foregroundStyle(theme.bodyText)
                                     .textSelection(.enabled)
