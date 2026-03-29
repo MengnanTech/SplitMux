@@ -6,20 +6,6 @@ struct SettingsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack {
-                Spacer()
-                Button {
-                    dismiss()
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 16))
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.plain)
-                .padding(.top, 10)
-                .padding(.trailing, 10)
-            }
-
             TabView {
                 GeneralSettingsTab(settings: settings)
                     .tabItem {
@@ -137,6 +123,7 @@ struct ThemeSettingsTab: View {
                 }
             }
             .pickerStyle(.radioGroup)
+
         }
         .formStyle(.grouped)
     }

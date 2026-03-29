@@ -99,7 +99,7 @@ struct BreadcrumbBar: View {
                     }
                 }
                 .frame(height: 18)
-                .background(theme.appCanvasBackground)
+                .background(theme.isGlass ? Color.clear : theme.appCanvasBackground)
                 .overlay(alignment: .bottom) {
                     theme.subtleBorder.opacity(0.38).frame(height: 0.5)
                 }
@@ -158,7 +158,7 @@ struct BreadcrumbBar: View {
                     }
                 }
                 .frame(height: 22)
-                .background(theme.tabBarBackground.opacity(0.5))
+                .background(theme.isGlass ? Color.clear : theme.tabBarBackground.opacity(0.5))
                 .overlay(alignment: .bottom) {
                     theme.subtleBorder.frame(height: 0.5)
                 }

@@ -33,7 +33,7 @@ struct ContentView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            .background(theme.appCanvasBackground)
+            .background(theme.isGlass ? Color.clear : theme.appCanvasBackground)
             .ignoresSafeArea()
 
             // Notification toast overlay
@@ -296,6 +296,10 @@ class SidebarDividerNSView: NSView {
             color = NSColor(white: 1.0, alpha: 0.06)
         case .monokai:
             color = NSColor(white: 1.0, alpha: 0.06)
+        case .glass:
+            color = NSColor(white: 1.0, alpha: 0.1)
+        case .glassLight:
+            color = NSColor(white: 0.0, alpha: 0.06)
         }
         color.setFill()
         NSRect(x: 0, y: 0, width: 1, height: bounds.height).fill()

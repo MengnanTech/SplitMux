@@ -169,7 +169,7 @@ struct SidebarView: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
         }
-        .background(theme.sidebarBackground)
+        .background(theme.isGlass ? Color.white.opacity(0.04) : theme.sidebarBackground)
         .alert("Rename Session", isPresented: Binding(
             get: { renamingSession != nil },
             set: { if !$0 { renamingSession = nil } }

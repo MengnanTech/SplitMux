@@ -5,15 +5,16 @@ struct TabPanelView: View {
     @Environment(AppState.self) private var appState
     @Bindable var tab: Tab
     var workingDirectory: String = ""
+    private var theme: AppTheme { SettingsManager.shared.theme }
 
     var body: some View {
         Group {
             switch tab.content {
             case .terminal:
-                TerminalSwiftUIView(workingDirectory: workingDirectory, tab: tab, appState: appState)
+                terminalView
 
             case .sshTerminal:
-                TerminalSwiftUIView(workingDirectory: workingDirectory, tab: tab, appState: appState)
+                terminalView
 
             case .text(let text):
                 TextEditorPanel(text: text) { newText in
@@ -31,6 +32,11 @@ struct TabPanelView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
+
+    @ViewBuilder
+    private var terminalView: some View {
+        TerminalSwiftUIView(workingDirectory: workingDirectory, tab: tab, appState: appState)
+    }
 }
 
 // MARK: - Text Editor Panel
@@ -38,6 +44,7 @@ struct TabPanelView: View {
 struct TextEditorPanel: View {
     @State private var text: String
     var onChange: (String) -> Void
+    private var theme: AppTheme { SettingsManager.shared.theme }
 
     init(text: String, onChange: @escaping (String) -> Void) {
         self._text = State(initialValue: text)
@@ -47,10 +54,10 @@ struct TextEditorPanel: View {
     var body: some View {
         TextEditor(text: $text)
             .font(.system(.body, design: .monospaced))
-            .foregroundStyle(Color(white: 0.85))
+            .foregroundStyle(theme.primaryText)
             .scrollContentBackground(.hidden)
             .padding(12)
-            .background(Color(red: 0.06, green: 0.06, blue: 0.08))
+            .background(theme.contentBackground)
             .onChange(of: text) { _, newValue in
                 onChange(newValue)
             }
@@ -62,6 +69,7 @@ struct TextEditorPanel: View {
 struct NotesPanel: View {
     @State private var notes: String
     var onChange: (String) -> Void
+    private var theme: AppTheme { SettingsManager.shared.theme }
 
     init(notes: String, onChange: @escaping (String) -> Void) {
         self._notes = State(initialValue: notes)
@@ -75,23 +83,23 @@ struct NotesPanel: View {
                     .foregroundStyle(.orange)
                 Text("Notes")
                     .font(.system(.caption, design: .monospaced))
-                    .foregroundStyle(Color(white: 0.6))
+                    .foregroundStyle(theme.secondaryText)
                 Spacer()
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
-            .background(Color(red: 0.08, green: 0.08, blue: 0.1))
+            .background(theme.elevatedSurface)
 
             TextEditor(text: $notes)
                 .font(.body)
-                .foregroundStyle(Color(white: 0.85))
+                .foregroundStyle(theme.primaryText)
                 .scrollContentBackground(.hidden)
                 .padding(12)
                 .onChange(of: notes) { _, newValue in
                     onChange(newValue)
                 }
         }
-        .background(Color(red: 0.06, green: 0.06, blue: 0.08))
+        .background(theme.contentBackground)
     }
 }
 
