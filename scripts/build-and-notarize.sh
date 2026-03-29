@@ -25,6 +25,16 @@ echo "  SplitMux Release v${VERSION} (build ${BUILD_NUM})"
 echo "══════════════════════════════════════════"
 echo ""
 
+# ─── Sync Xcode project from project.yml ───
+echo "🔄 Running xcodegen to sync project.yml → pbxproj..."
+if command -v xcodegen &>/dev/null; then
+  (cd "$PROJECT_DIR" && xcodegen --quiet)
+  echo "✅ Xcode project synced"
+else
+  echo "❌ xcodegen not found. Install with: brew install xcodegen"
+  exit 1
+fi
+
 # ─── Clean ───
 echo "🧹 Cleaning build directory..."
 rm -rf "$BUILD_DIR"

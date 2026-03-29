@@ -44,6 +44,8 @@ targets:
     info:
       path: SplitMux/Info.plist
       properties:
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         SUFeedURL: "https://raw.githubusercontent.com/MengnanTech/SplitMux/main/appcast.xml"
         SUPublicEDKey: "EbZeL4SmTBcud40r+8WuD4aFqK02Bl/DFeKYOHHClb8="
     entitlements:
