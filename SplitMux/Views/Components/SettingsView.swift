@@ -137,6 +137,28 @@ struct ThemeSettingsTab: View {
                 }
             }
             .pickerStyle(.radioGroup)
+
+            if settings.theme.isGlass {
+                Divider()
+
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Glass Opacity")
+                        Spacer()
+                        Text("\(Int(settings.glassOpacity * 100))%")
+                            .font(.system(size: 12, design: .monospaced))
+                            .foregroundColor(.secondary)
+                    }
+                    Slider(value: Binding(
+                        get: { settings.glassOpacity },
+                        set: { settings.glassOpacity = $0 }
+                    ), in: 0.3...1.0)
+
+                    Text("Controls how opaque the frosted glass effect appears.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
         }
         .formStyle(.grouped)
     }

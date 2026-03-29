@@ -33,6 +33,12 @@ final class SettingsManager {
         didSet { UserDefaults.standard.set(showNotificationBanners, forKey: "showNotificationBanners") }
     }
 
+    // MARK: - Glass Theme
+
+    var glassOpacity: Double {
+        didSet { UserDefaults.standard.set(glassOpacity, forKey: "glassOpacity") }
+    }
+
     // MARK: - Behavior
 
     var confirmBeforeClose: Bool {
@@ -52,11 +58,12 @@ final class SettingsManager {
         let defaultValues: [String: Any] = [
             "terminalFontSize": 14.0,
             "terminalFontName": "SF Mono",
-            "appTheme": "dark",
+            "appTheme": "glass",
             "notifyThreshold": 5.0,
             "showNotificationBanners": true,
             "confirmBeforeClose": true,
-            "restoreSessionsOnLaunch": true
+            "restoreSessionsOnLaunch": true,
+            "glassOpacity": 0.85
         ]
         defaults.register(defaults: defaultValues)
 
@@ -67,6 +74,7 @@ final class SettingsManager {
         self.showNotificationBanners = defaults.bool(forKey: "showNotificationBanners")
         self.confirmBeforeClose = defaults.bool(forKey: "confirmBeforeClose")
         self.restoreSessionsOnLaunch = defaults.bool(forKey: "restoreSessionsOnLaunch")
+        self.glassOpacity = defaults.double(forKey: "glassOpacity")
     }
 
     func increaseFontSize() {
@@ -89,6 +97,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
     case light
     case solarized
     case monokai
+    case glass
+    case glassLight
 
     var id: String { rawValue }
 
@@ -98,8 +108,12 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .light: return "Light"
         case .solarized: return "Solarized Dark"
         case .monokai: return "Monokai"
+        case .glass: return "Glass Dark"
+        case .glassLight: return "Glass Light"
         }
     }
+
+    var isGlass: Bool { self == .glass || self == .glassLight }
 
     var terminalBackground: NSColor {
         switch self {
@@ -107,6 +121,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .light: return NSColor(white: 0.995, alpha: 1.0)
         case .solarized: return NSColor(red: 0.0, green: 0.17, blue: 0.21, alpha: 1.0)
         case .monokai: return NSColor(red: 0.15, green: 0.16, blue: 0.13, alpha: 1.0)
+        case .glass: return NSColor(red: 0.05, green: 0.05, blue: 0.07, alpha: 0.85)
+        case .glassLight: return NSColor(white: 0.995, alpha: 0.85)
         }
     }
 
@@ -116,6 +132,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .light: return NSColor(red: 0.2, green: 0.2, blue: 0.2, alpha: 1.0)
         case .solarized: return NSColor(red: 0.51, green: 0.58, blue: 0.59, alpha: 1.0)
         case .monokai: return NSColor(red: 0.97, green: 0.97, blue: 0.95, alpha: 1.0)
+        case .glass: return NSColor(white: 0.9, alpha: 1.0)
+        case .glassLight: return NSColor(red: 0.2, green: 0.2, blue: 0.2, alpha: 1.0)
         }
     }
 
@@ -125,6 +143,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .light: return Color(white: 0.95)
         case .solarized: return Color(red: 0.0, green: 0.14, blue: 0.18)
         case .monokai: return Color(red: 0.13, green: 0.13, blue: 0.11)
+        case .glass: return Color.white.opacity(0.06)
+        case .glassLight: return Color.white.opacity(0.06)
         }
     }
 
@@ -134,6 +154,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .light: return Color(white: 0.995)
         case .solarized: return Color(red: 0.0, green: 0.17, blue: 0.21)
         case .monokai: return Color(red: 0.15, green: 0.16, blue: 0.13)
+        case .glass: return Color.clear
+        case .glassLight: return Color.clear
         }
     }
 
@@ -143,6 +165,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .light: return Color(red: 0.96, green: 0.96, blue: 0.97)
         case .solarized: return Color(red: 0.02, green: 0.15, blue: 0.19)
         case .monokai: return Color(red: 0.13, green: 0.14, blue: 0.11)
+        case .glass: return Color.clear
+        case .glassLight: return Color.clear
         }
     }
 
@@ -152,6 +176,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .light: return Color(white: 0.1)
         case .solarized: return Color(red: 0.51, green: 0.58, blue: 0.59)
         case .monokai: return Color(red: 0.97, green: 0.97, blue: 0.95)
+        case .glass: return Color(white: 0.95)
+        case .glassLight: return Color(white: 0.1)
         }
     }
 
@@ -161,6 +187,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .light: return Color(white: 0.35)
         case .solarized: return Color(red: 0.40, green: 0.48, blue: 0.51)
         case .monokai: return Color(white: 0.55)
+        case .glass: return Color(white: 0.6)
+        case .glassLight: return Color(white: 0.35)
         }
     }
 
@@ -170,12 +198,14 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .light: return Color(red: 0.2, green: 0.48, blue: 0.95)
         case .solarized: return Color(red: 0.52, green: 0.60, blue: 0.0)
         case .monokai: return Color(red: 0.40, green: 0.85, blue: 0.37)
+        case .glass: return Color(red: 0.35, green: 0.68, blue: 1.0)
+        case .glassLight: return Color(red: 0.2, green: 0.48, blue: 0.95)
         }
     }
 
     var colorScheme: ColorScheme {
         switch self {
-        case .light: return .light
+        case .light, .glassLight: return .light
         default: return .dark
         }
     }
@@ -189,6 +219,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .light: return Color(white: 0.89)
         case .solarized: return Color(red: 0.04, green: 0.2, blue: 0.25)
         case .monokai: return Color(red: 0.18, green: 0.19, blue: 0.16)
+        case .glass: return Color.white.opacity(0.1)
+        case .glassLight: return Color(white: 0.89)
         }
     }
 
@@ -207,6 +239,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .dark: return contentBackground
         case .solarized: return Color(red: 0.0, green: 0.17, blue: 0.21)
         case .monokai: return Color(red: 0.15, green: 0.16, blue: 0.13)
+        case .glass: return Color.clear
+        case .glassLight: return Color.clear
         }
     }
 
@@ -217,6 +251,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .dark: return elevatedSurface
         case .solarized: return elevatedSurface
         case .monokai: return elevatedSurface
+        case .glass: return Color.clear
+        case .glassLight: return Color.clear
         }
     }
 
@@ -227,6 +263,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .dark: return subtleOverlay
         case .solarized: return subtleOverlay
         case .monokai: return subtleOverlay
+        case .glass: return Color.white.opacity(0.05)
+        case .glassLight: return Color(red: 0.90, green: 0.94, blue: 0.99).opacity(0.44)
         }
     }
 
@@ -238,6 +276,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .dark: return accentColor
         case .solarized: return accentColor
         case .monokai: return accentColor
+        case .glass: return accentColor
+        case .glassLight: return Color(red: 0.95, green: 0.47, blue: 0.34)
         }
     }
 
@@ -249,6 +289,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .dark: return accentColor
         case .solarized: return accentColor
         case .monokai: return accentColor
+        case .glass: return accentColor
+        case .glassLight: return Color(red: 0.16, green: 0.68, blue: 0.76)
         }
     }
 
@@ -259,6 +301,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .dark: return Color.black.opacity(0.45)
         case .solarized: return Color.black.opacity(0.35)
         case .monokai: return Color.black.opacity(0.40)
+        case .glass: return Color.black.opacity(0.3)
+        case .glassLight: return Color.black.opacity(0.10)
         }
     }
 
@@ -269,6 +313,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .light: return Color(red: 0.22, green: 0.5, blue: 0.96).opacity(0.12)
         case .solarized: return Color(red: 0.04, green: 0.22, blue: 0.27)
         case .monokai: return Color(red: 0.2, green: 0.21, blue: 0.18)
+        case .glass: return Color.white.opacity(0.15)
+        case .glassLight: return Color(red: 0.22, green: 0.5, blue: 0.96).opacity(0.12)
         }
     }
 
@@ -279,6 +325,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .light: return Color(white: 0.5)
         case .solarized: return Color(red: 0.35, green: 0.43, blue: 0.46)
         case .monokai: return Color(white: 0.45)
+        case .glass: return Color(white: 0.45)
+        case .glassLight: return Color(white: 0.5)
         }
     }
 
@@ -289,6 +337,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .light: return Color(white: 0.55)
         case .solarized: return Color(red: 0.3, green: 0.38, blue: 0.4)
         case .monokai: return Color(white: 0.35)
+        case .glass: return Color(white: 0.38)
+        case .glassLight: return Color(white: 0.55)
         }
     }
 
@@ -299,6 +349,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .light: return Color(white: 0.82)
         case .solarized: return Color(red: 0.1, green: 0.25, blue: 0.3)
         case .monokai: return Color(white: 0.22)
+        case .glass: return Color.white.opacity(0.12)
+        case .glassLight: return Color(white: 0.82)
         }
     }
 
@@ -309,6 +361,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .light: return Color(white: 0.42)
         case .solarized: return Color(red: 0.4, green: 0.48, blue: 0.51)
         case .monokai: return Color(white: 0.5)
+        case .glass: return Color(white: 0.45)
+        case .glassLight: return Color(white: 0.42)
         }
     }
 
@@ -319,6 +373,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .light: return Color(white: 0.97)
         case .solarized: return Color(red: 0.0, green: 0.12, blue: 0.16)
         case .monokai: return Color(red: 0.11, green: 0.12, blue: 0.1)
+        case .glass: return Color.clear
+        case .glassLight: return Color.clear
         }
     }
 
@@ -329,6 +385,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .light: return Color.black.opacity(0.05)
         case .solarized: return Color.white.opacity(0.06)
         case .monokai: return Color.white.opacity(0.06)
+        case .glass: return Color.white.opacity(0.08)
+        case .glassLight: return Color.black.opacity(0.05)
         }
     }
 
@@ -339,6 +397,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .light: return Color.white.opacity(0.9)
         case .solarized: return Color(red: 0.06, green: 0.24, blue: 0.3)
         case .monokai: return Color(red: 0.22, green: 0.23, blue: 0.2)
+        case .glass: return Color.white.opacity(0.15)
+        case .glassLight: return Color.white.opacity(0.9)
         }
     }
 
@@ -349,6 +409,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .light: return Color(white: 0.25)
         case .solarized: return Color(red: 0.45, green: 0.52, blue: 0.55)
         case .monokai: return Color(white: 0.7)
+        case .glass: return Color(white: 0.72)
+        case .glassLight: return Color(white: 0.25)
         }
     }
 
@@ -359,6 +421,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .light: return Color(white: 0.5)
         case .solarized: return Color(red: 0.35, green: 0.43, blue: 0.46)
         case .monokai: return Color(white: 0.4)
+        case .glass: return Color(white: 0.42)
+        case .glassLight: return Color(white: 0.5)
         }
     }
 
@@ -406,6 +470,12 @@ enum AppTheme: String, CaseIterable, Identifiable {
                     Color(red: 0.11, green: 0.11, blue: 0.09),
                     Color(red: 0.12, green: 0.12, blue: 0.10)
                 ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        case .glass, .glassLight:
+            return LinearGradient(
+                colors: [Color.clear, Color.clear],
                 startPoint: .top,
                 endPoint: .bottom
             )
