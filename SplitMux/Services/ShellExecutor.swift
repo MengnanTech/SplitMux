@@ -124,7 +124,10 @@ class NotifyingTerminalView: LocalProcessTerminalView {
     }
 
     deinit {
-        removeClickMonitor()
+        if let monitor = mouseMonitor {
+            NSEvent.removeMonitor(monitor)
+            mouseMonitor = nil
+        }
     }
 
     /// SSH host ID for auto-reconnect
@@ -719,8 +722,6 @@ struct TerminalSwiftUIView: NSViewRepresentable {
     }
 
     private static func applyGlassBlur(to container: TerminalContainerView) {
-        let theme = SettingsManager.shared.theme
-        let glassOpacity = min(max(SettingsManager.shared.glassOpacity, 0.2), 1.0)
         container.removeBlur()
     }
 

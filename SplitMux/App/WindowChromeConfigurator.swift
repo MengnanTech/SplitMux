@@ -82,6 +82,7 @@ enum WindowChromeConfigurator {
         }
     }
 
+    @MainActor
     private static func makeTransparent(_ view: NSView) {
         // Skip terminal container — it manages its own glass layers
         // (blur + tint + glaze). Recursing into it would clear them.

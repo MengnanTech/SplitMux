@@ -61,7 +61,9 @@ class FloatingZoomAnchorView: NSView {
             object: parentWindow,
             queue: .main
         ) { [weak self] _ in
-            self?.updatePanelPosition()
+            MainActor.assumeIsolated {
+                self?.updatePanelPosition()
+            }
         }
 
         updatePanelPosition()
