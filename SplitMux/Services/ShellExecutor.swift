@@ -94,7 +94,7 @@ class NotifyingTerminalView: LocalProcessTerminalView {
     /// Callback when user clicks in this terminal pane (for split pane focus switching)
     var onPaneClicked: (() -> Void)?
     var onPaneDoubleClicked: (() -> Void)?
-    private var mouseMonitor: Any?
+    nonisolated(unsafe) private var mouseMonitor: Any?
 
     func installClickMonitor() {
         guard mouseMonitor == nil else { return }

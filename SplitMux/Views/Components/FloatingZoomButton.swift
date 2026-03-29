@@ -27,8 +27,8 @@ class FloatingZoomAnchorView: NSView {
     var onTap: (() -> Void)? {
         didSet { panel?.onTap = onTap }
     }
-    private var panel: ZoomPanel?
-    private var positionObserver: Any?
+    nonisolated(unsafe) private var panel: ZoomPanel?
+    nonisolated(unsafe) private var positionObserver: Any?
 
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
@@ -93,7 +93,14 @@ class FloatingZoomAnchorView: NSView {
     }
 
     deinit {
-        hidePanel()
+        if let observer = positionObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+        let panelRef = panel
+        panel = nil
+        MainActor.assumeIsolated {
+            panelRef?.close()
+        }
     }
 }
 
