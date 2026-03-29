@@ -3,12 +3,12 @@
     <channel>
         <title>SplitMux</title>
         <item>
-            <title>1.0.4</title>
-            <pubDate>Sun, 29 Mar 2026 20:24:38 +0800</pubDate>
-            <sparkle:version>5</sparkle:version>
-            <sparkle:shortVersionString>1.0.4</sparkle:shortVersionString>
+            <title>1.0.5</title>
+            <pubDate>Sun, 29 Mar 2026 22:09:52 +0800</pubDate>
+            <sparkle:version>7</sparkle:version>
+            <sparkle:shortVersionString>1.0.5</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
-            <enclosure url="https://github.com/MengnanTech/SplitMux/releases/download/v1.0.4/SplitMux-1.0.4.dmg" length="3638642" type="application/octet-stream" sparkle:edSignature="UTbyVmxALiKweP7ec+W8O81rNWI0apgi++4m3X76HVRnKoDwAr4JqZuTz1JpACtAznHWSmCd6gWxejVjVTbFCg=="/>
+            <enclosure url="https://github.com/MengnanTech/SplitMux/releases/download/v1.0.5/SplitMux-1.0.5.dmg" length="3639901" type="application/octet-stream" sparkle:edSignature="4JXAia8HMa3Rj5QxnFz4IEMJfnhFYK64hrw1gmSeAl9yjN8by5iOyI2fdYkHgVHar1HZ4yx0GDhkS9F+enrXDA=="/>
         </item>
     </channel>
 </rss>
