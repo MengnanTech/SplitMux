@@ -50,6 +50,16 @@ echo "  bumped from v${OLD_VERSION} (build ${OLD_BUILD})"
 echo "══════════════════════════════════════════"
 echo ""
 
+# ─── Confirm before proceeding ───
+if [ "${SKIP_CONFIRM:-}" != "1" ]; then
+  read -rp "确认发布 v${VERSION}? [y/N] " answer
+  if [[ ! "$answer" =~ ^[Yy]$ ]]; then
+    echo "❌ 已取消，恢复 project.yml..."
+    git checkout -- "$PROJECT_DIR/project.yml"
+    exit 0
+  fi
+fi
+
 # ─── Commit version bump ───
 echo "📌 Committing version bump..."
 cd "$PROJECT_DIR"
