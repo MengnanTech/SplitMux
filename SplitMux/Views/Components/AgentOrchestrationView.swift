@@ -260,8 +260,14 @@ struct AgentRow: View {
             if agent.status == .needsInput {
                 HStack(spacing: 6) {
                     TextField("Send input to agent...", text: $inputText)
-                        .textFieldStyle(.roundedBorder)
+                        .textFieldStyle(.plain)
                         .font(.system(.caption, design: .monospaced))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6)
+                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                        )
                         .onSubmit { onSendInput() }
 
                     Button(action: onSendInput) {

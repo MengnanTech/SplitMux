@@ -5,6 +5,7 @@ struct CommandPaletteView: View {
     @Binding var isPresented: Bool
     @State private var query = ""
     @State private var selectedIndex = 0
+    @FocusState private var isSearchFocused: Bool
 
     private var theme: AppTheme { SettingsManager.shared.theme }
 
@@ -12,9 +13,11 @@ struct CommandPaletteView: View {
         let items = buildItems()
         if query.isEmpty { return items }
         let q = query.lowercased()
-        return items.filter {
-            $0.title.lowercased().contains(q) || $0.subtitle.lowercased().contains(q)
+        let filtered = items.filter { item in
+            let text = (item.title + " " + item.subtitle).lowercased()
+            return text.contains(q)
         }
+        return filtered
     }
 
     var body: some View {
@@ -28,6 +31,7 @@ struct CommandPaletteView: View {
                     .textFieldStyle(.plain)
                     .font(.system(size: 15))
                     .foregroundStyle(theme.primaryText)
+                    .focused($isSearchFocused)
                     .onSubmit {
                         executeSelected()
                     }
@@ -44,7 +48,7 @@ struct CommandPaletteView: View {
                     LazyVStack(spacing: 0) {
                         ForEach(Array(results.enumerated()), id: \.element.id) { index, item in
                             PaletteItemRow(item: item, isSelected: index == selectedIndex)
-                                .id(index)
+                                .id(item.id)
                                 .onTapGesture {
                                     selectedIndex = index
                                     executeSelected()
@@ -53,7 +57,9 @@ struct CommandPaletteView: View {
                     }
                 }
                 .onChange(of: selectedIndex) { _, newValue in
-                    proxy.scrollTo(newValue, anchor: .center)
+                    if newValue < results.count {
+                        proxy.scrollTo(results[newValue].id, anchor: .center)
+                    }
                 }
             }
             .frame(maxHeight: 300)
@@ -62,6 +68,11 @@ struct CommandPaletteView: View {
         .background(theme.elevatedSurface)
         .clipShape(RoundedRectangle(cornerRadius: 10))
         .shadow(color: .black.opacity(0.5), radius: 20)
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                isSearchFocused = true
+            }
+        }
         .onKeyPress(.upArrow) {
             selectedIndex = max(0, selectedIndex - 1)
             return .handled

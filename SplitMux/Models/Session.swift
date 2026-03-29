@@ -137,13 +137,29 @@ class Session: Identifiable, Hashable {
         // Clean up Claude hook monitoring
         ClaudeHookService.shared.stopMonitoring(tabID: tabID)
 
+        // Determine next active tab before removing (pick adjacent tab)
+        var nextActiveTabID: UUID?
+        if activeTabID == tabID {
+            if let splitRoot, let siblingID = splitRoot.siblingTabID(of: tabID) {
+                // Split mode: pick the sibling pane in the same split
+                nextActiveTabID = siblingID
+            } else if let idx = tabs.firstIndex(where: { $0.id == tabID }) {
+                // Tab bar: pick the tab to the left, or the right if leftmost
+                if idx > 0 {
+                    nextActiveTabID = tabs[idx - 1].id
+                } else if idx + 1 < tabs.count {
+                    nextActiveTabID = tabs[idx + 1].id
+                }
+            }
+        }
+
         tabs.removeAll { $0.id == tabID }
         // Also remove from split layout
         if let root = splitRoot {
             splitRoot = root.removing(tabID: tabID)
         }
         if activeTabID == tabID {
-            activeTabID = tabs.last?.id
+            activeTabID = nextActiveTabID ?? tabs.last?.id
         }
         onChanged?()
     }

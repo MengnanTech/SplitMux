@@ -68,6 +68,30 @@ indirect enum SplitNode: Equatable {
         }
     }
 
+    /// Find the sibling tab closest to the given tab in the split tree.
+    /// Returns the first tab ID from the other branch of the nearest parent split.
+    func siblingTabID(of tabID: UUID) -> UUID? {
+        switch self {
+        case .tab:
+            return nil
+        case .horizontal(let a, let b, _), .vertical(let a, let b, _):
+            // If target is directly in one branch, return the nearest tab from the other
+            if a.tabIDs.contains(tabID) {
+                if case .tab(let id) = a, id == tabID {
+                    return b.tabIDs.first
+                }
+                return a.siblingTabID(of: tabID)
+            }
+            if b.tabIDs.contains(tabID) {
+                if case .tab(let id) = b, id == tabID {
+                    return a.tabIDs.first
+                }
+                return b.siblingTabID(of: tabID)
+            }
+            return nil
+        }
+    }
+
     /// Update the split ratio at a given path
     func updatingRatio(at path: [SplitPath], newRatio: Double) -> SplitNode {
         guard let first = path.first else {

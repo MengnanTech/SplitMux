@@ -5,7 +5,7 @@ struct TerminalHistoryView: View {
     let tabID: UUID
     @Binding var isVisible: Bool
     @State private var searchQuery = ""
-    @State private var searchResults: [(entryIndex: Int, range: Range<String.Index>)] = []
+    @State private var searchResults: [Int] = []  // indices into displayLines
     @State private var selectedResultIndex = 0
 
     private var theme: AppTheme { SettingsManager.shared.theme }
@@ -29,7 +29,7 @@ struct TerminalHistoryView: View {
 
                 // Stats
                 HStack(spacing: 8) {
-                    Text("\(history.entries.count) chunks")
+                    Text("\(history.displayLines.count) lines")
                     Text(history.sizeString)
                     Text(formatDuration(history.duration))
                 }
@@ -114,34 +114,24 @@ struct TerminalHistoryView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 0) {
-                        ForEach(Array(history.entries.enumerated()), id: \.offset) { index, entry in
-                            HStack(alignment: .top, spacing: 8) {
-                                // Timestamp
-                                Text(formatTime(entry.timestamp))
-                                    .font(.system(size: 9, design: .monospaced))
-                                    .foregroundStyle(theme.disabledText)
-                                    .frame(width: 60, alignment: .trailing)
-
-                                // Content (ANSI codes stripped)
-                                Text(entry.cleanText)
-                                    .font(.system(size: 11, design: .monospaced))
-                                    .foregroundStyle(theme.bodyText)
-                                    .textSelection(.enabled)
-                            }
-                            .id(index)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 1)
-                            .background(
-                                isHighlighted(index) ? Color.yellow.opacity(0.15) : Color.clear
-                            )
+                        ForEach(history.displayLines) { line in
+                            Text(line.text)
+                                .font(.system(size: 11, design: .monospaced))
+                                .foregroundStyle(theme.bodyText)
+                                .textSelection(.enabled)
+                                .id(line.id)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 1)
+                                .background(
+                                    isHighlighted(line.id) ? Color.yellow.opacity(0.15) : Color.clear
+                                )
                         }
                     }
                     .padding(.vertical, 4)
                 }
                 .onChange(of: selectedResultIndex) { _, newValue in
                     if !searchResults.isEmpty {
-                        let entryIndex = searchResults[newValue].entryIndex
-                        proxy.scrollTo(entryIndex, anchor: .center)
+                        proxy.scrollTo(searchResults[newValue], anchor: .center)
                     }
                 }
             }
@@ -202,7 +192,14 @@ struct TerminalHistoryView: View {
     // MARK: - Actions
 
     private func performSearch() {
-        searchResults = history.search(query: searchQuery)
+        guard !searchQuery.isEmpty else {
+            searchResults = []
+            return
+        }
+        let q = searchQuery.lowercased()
+        searchResults = history.displayLines
+            .filter { $0.text.lowercased().contains(q) }
+            .map(\.id)
         selectedResultIndex = 0
     }
 
@@ -211,8 +208,8 @@ struct TerminalHistoryView: View {
         selectedResultIndex = (selectedResultIndex + offset + searchResults.count) % searchResults.count
     }
 
-    private func isHighlighted(_ entryIndex: Int) -> Bool {
-        searchResults.contains { $0.entryIndex == entryIndex }
+    private func isHighlighted(_ lineID: Int) -> Bool {
+        searchResults.contains(lineID)
     }
 
     private func exportHistory() {
@@ -234,12 +231,6 @@ struct TerminalHistoryView: View {
     }
 
     // MARK: - Formatting
-
-    private func formatTime(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "HH:mm:ss"
-        return formatter.string(from: date)
-    }
 
     private func formatDuration(_ seconds: TimeInterval) -> String {
         if seconds < 60 { return "\(Int(seconds))s" }

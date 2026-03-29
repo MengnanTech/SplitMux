@@ -16,25 +16,8 @@ struct TabContentView: View {
             // Breadcrumb path bar
             BreadcrumbBar(workingDirectory: session.workingDirectory, gitBranch: session.gitBranch)
 
-            // Search bar overlay
-            if showSearch {
-                TerminalSearchBar(
-                    isVisible: $showSearch,
-                    searchText: $searchText,
-                    onSearch: { query, backward in
-                        if let tv = session.activeTab?.terminalView as? NotifyingTerminalView {
-                            tv.searchTerminal(query: query, backward: backward)
-                        }
-                    },
-                    onDismiss: {}
-                )
-                .padding(.horizontal, 16)
-                .padding(.vertical, 4)
-                .transition(.move(edge: .top).combined(with: .opacity))
-            }
-
             // Content area with drag-to-split overlay
-            ZStack {
+            ZStack(alignment: .topTrailing) {
                 // Determine which mode to show
                 let splitTabIDs = session.splitRoot?.tabIDs ?? []
                 let showSplit = session.splitRoot != nil
@@ -65,6 +48,28 @@ struct TabContentView: View {
                 // Drop zone overlay for drag-to-split (passthrough for normal clicks)
                 SplitDropZoneOverlay(session: session)
                     .allowsHitTesting(false)
+
+                // Search bar — floating top-right like browser
+                if showSearch {
+                    TerminalSearchBar(
+                        isVisible: $showSearch,
+                        searchText: $searchText,
+                        onSearch: { query, backward in
+                            if let tv = session.activeTab?.terminalView as? NotifyingTerminalView {
+                                return tv.searchTerminal(query: query, backward: backward)
+                            }
+                            return false
+                        },
+                        onDismiss: {
+                            if let tv = session.activeTab?.terminalView as? NotifyingTerminalView {
+                                tv.clearSearch()
+                            }
+                        }
+                    )
+                    .padding(.top, 8)
+                    .padding(.trailing, 12)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                }
             }
 
             // Terminal history panel

@@ -113,9 +113,9 @@ struct HSplitContent: View {
                             .onHover { hovering in
                                 isDividerHovered = hovering
                                 if hovering {
-                                    NSCursor.resizeLeftRight.push()
+                                    NSCursor.resizeLeftRight.set()
                                 } else {
-                                    NSCursor.pop()
+                                    NSCursor.arrow.set()
                                 }
                             }
                             .gesture(
@@ -231,9 +231,9 @@ struct VSplitContent: View {
                             .onHover { hovering in
                                 isDividerHovered = hovering
                                 if hovering {
-                                    NSCursor.resizeUpDown.push()
+                                    NSCursor.resizeUpDown.set()
                                 } else {
-                                    NSCursor.pop()
+                                    NSCursor.arrow.set()
                                 }
                             }
                             .gesture(

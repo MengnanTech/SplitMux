@@ -210,11 +210,11 @@ class WindowConfiguratorView: NSView, NSWindowDelegate {
 
     func windowShouldClose(_ sender: NSWindow) -> Bool {
         let alert = NSAlert()
-        alert.messageText = "确认退出 SplitMux？"
-        alert.informativeText = "所有终端会话和正在运行的 Claude Agent 将被关闭。"
+        alert.messageText = "Quit SplitMux?"
+        alert.informativeText = "All terminal sessions and running Claude Agents will be closed."
         alert.alertStyle = .warning
-        alert.addButton(withTitle: "退出")
-        alert.addButton(withTitle: "取消")
+        alert.addButton(withTitle: "Quit")
+        alert.addButton(withTitle: "Cancel")
 
         let response = alert.runModal()
         if response == .alertFirstButtonReturn {

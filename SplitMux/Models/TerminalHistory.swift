@@ -1,25 +1,18 @@
 import Foundation
+import SwiftTerm
 
-/// A single recorded chunk of terminal output
+/// A single recorded chunk of terminal output (for replay/export)
 struct TerminalHistoryEntry {
     let timestamp: Date
     let data: Data
     let text: String
-
-    /// Text with ANSI escape codes stripped for display
-    var cleanText: String {
-        TerminalHistory.stripAnsi(text)
-    }
 }
 
-private let ansiPattern = try! NSRegularExpression(pattern: [
-    "\u{1B}\\[[0-9;:?]*[A-Za-z]",                              // CSI sequences
-    "\u{1B}\\][^\u{07}\u{1B}]*(?:\u{07}|\u{1B}\\\\)",          // OSC sequences
-    "\u{1B}P[^\u{1B}]*\u{1B}\\\\",                             // DCS sequences
-    "\u{1B}[()][A-Za-z]",                                       // Character set designation
-    "\u{1B}[=>78]",                                              // Keypad mode + cursor save/restore
-    "\u{1B}#[0-9]",                                              // Double-width/height lines
-].joined(separator: "|"))
+/// A single line of terminal output read from the rendered buffer
+struct DisplayLine: Identifiable {
+    let id: Int
+    let text: String
+}
 
 /// Records and manages terminal output history for a single tab
 @Observable
@@ -39,14 +32,14 @@ class TerminalHistory {
     var replaySpeed: Double = 1.0
     private var replayTimer: Timer?
 
+    /// Reference to the terminal for buffer reading
+    weak var terminalView: LocalProcessTerminalView?
+
+    /// Bumped on each append to trigger view refresh
+    private(set) var dataVersion: Int = 0
+
     init(tabID: UUID) {
         self.tabID = tabID
-    }
-
-    /// Strip ANSI escape codes from terminal output
-    nonisolated static func stripAnsi(_ raw: String) -> String {
-        let range = NSRange(raw.startIndex..., in: raw)
-        return ansiPattern.stringByReplacingMatches(in: raw, range: range, withTemplate: "")
     }
 
     /// Append terminal output data
@@ -62,28 +55,32 @@ class TerminalHistory {
             let removed = entries.removeFirst()
             totalBytes -= removed.data.count
         }
+
+        dataVersion += 1
+    }
+
+    /// Read display lines directly from the terminal's rendered buffer.
+    /// This gives perfectly rendered text — all ANSI codes, cursor movements,
+    /// and overwrites are already resolved by SwiftTerm.
+    var displayLines: [DisplayLine] {
+        _ = dataVersion  // subscribe to changes
+        guard let terminal = terminalView?.terminal else { return [] }
+
+        let data = terminal.getBufferAsData()
+        guard let text = String(data: data, encoding: .utf8) else { return [] }
+
+        var lines: [DisplayLine] = []
+        for (i, line) in text.components(separatedBy: "\n").enumerated() {
+            let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { continue }
+            lines.append(DisplayLine(id: i, text: trimmed))
+        }
+        return lines
     }
 
     /// Get all recorded text concatenated
     var fullText: String {
         entries.map(\.text).joined()
-    }
-
-    /// Search history for a query, returns matching entry indices and text ranges
-    func search(query: String) -> [(entryIndex: Int, range: Range<String.Index>)] {
-        guard !query.isEmpty else { return [] }
-        let q = query.lowercased()
-        var results: [(entryIndex: Int, range: Range<String.Index>)] = []
-        for (i, entry) in entries.enumerated() {
-            let lower = entry.text.lowercased()
-            var searchStart = lower.startIndex
-            while let range = lower.range(of: q, range: searchStart..<lower.endIndex) {
-                let originalRange = entry.text.index(entry.text.startIndex, offsetBy: lower.distance(from: lower.startIndex, to: range.lowerBound))..<entry.text.index(entry.text.startIndex, offsetBy: lower.distance(from: lower.startIndex, to: range.upperBound))
-                results.append((entryIndex: i, range: originalRange))
-                searchStart = range.upperBound
-            }
-        }
-        return results
     }
 
     /// Export history to a file

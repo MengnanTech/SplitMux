@@ -425,6 +425,7 @@ struct TerminalSwiftUIView: NSViewRepresentable {
 
         // Wire up terminal output history recording
         let history = TerminalHistoryService.shared.history(for: tab.id)
+        history.terminalView = termView
         termView.onDataReceived = { data in
             MainActor.assumeIsolated {
                 history.append(data: data)
