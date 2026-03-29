@@ -1,0 +1,14 @@
+<?xml version="1.0" standalone="yes"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+    <channel>
+        <title>SplitMux</title>
+        <item>
+            <title>1.0.1</title>
+            <pubDate>Sun, 29 Mar 2026 19:02:27 +0800</pubDate>
+            <sparkle:version>2</sparkle:version>
+            <sparkle:shortVersionString>1.0.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/MengnanTech/SplitMux/releases/download/v1.0.2/SplitMux-1.0.2.dmg" length="3638569" type="application/octet-stream" sparkle:edSignature="tjt3w4guelFDzATwh96LgnejoV6GwkdUYM5XkOIP7kUagrRTWq/GJ0YhAAKHg84mSoVQZaSf05/npnQVcUtpCA=="/>
+        </item>
+    </channel>
+</rss>
