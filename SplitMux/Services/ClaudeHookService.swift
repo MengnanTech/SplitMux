@@ -42,7 +42,7 @@ final class ClaudeHookService {
     /// Start monitoring a tab's status file.
     /// If already monitoring (e.g. view recreated by SwiftUI during split),
     /// preserve existing state to avoid losing Claude detection status.
-    func startMonitoring(tabID: UUID, onStatusChange: @escaping @MainActor (ClaudeStatus) -> Void) {
+    func startMonitoring(tabID: UUID, onStatusChange: @escaping @MainActor (ClaudeStatus?) -> Void) {
         let path = "\(statusDir)/\(tabID.uuidString)"
         let alreadyMonitoring = pollTimers[tabID] != nil
 
@@ -85,10 +85,16 @@ final class ClaudeHookService {
 
     private var lastStatus: [String: String] = [:]
 
-    private func checkStatusFile(path: String, tabID: UUID, callback: @escaping (ClaudeStatus) -> Void) {
+    private func checkStatusFile(path: String, tabID: UUID, callback: @escaping (ClaudeStatus?) -> Void) {
         guard let data = FileManager.default.contents(atPath: path),
               let content = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
               !content.isEmpty else {
+            // File gone or empty — Claude has exited, clear status
+            if lastStatus[path] != nil {
+                lastStatus.removeValue(forKey: path)
+                agentInfos.removeAll { $0.tabID == tabID }
+                callback(nil)
+            }
             return
         }
 

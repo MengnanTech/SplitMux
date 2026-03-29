@@ -663,6 +663,9 @@ struct TerminalSwiftUIView: NSViewRepresentable {
             let prev = tab.claudeStatus
             tab.claudeStatus = status
 
+            // nil means Claude exited — no further notification needed
+            guard let status else { return }
+
             // Fire notifications on meaningful transitions when tab is not active
             guard let delegate = coordRef else { return }
             let isActive = delegate.isTabCurrentlyActive() && NSApp.isActive

@@ -72,8 +72,8 @@ cat > "$SETTINGS_FILE" <<ENDJSON
 }
 ENDJSON
 
-# Clean up on exit: mark status idle and remove temp settings
-trap "echo idle > '$STATUS_FILE'; rm -f '$SETTINGS_FILE'" EXIT
+# Clean up on exit: remove status file so SplitMux knows Claude has exited
+trap "rm -f '$STATUS_FILE' '$SETTINGS_FILE'" EXIT
 
 # Run claude as subprocess (not exec) so trap fires when claude exits
 "$REAL_CLAUDE" --settings "$SETTINGS_FILE" "$@"
