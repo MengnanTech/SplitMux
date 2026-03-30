@@ -51,8 +51,31 @@ struct SidebarView: View {
             }
             .padding(.horizontal, 14)
             .padding(.top, 36) // Space for traffic light buttons in fullSizeContentView
-            .padding(.bottom, 10)
+            .padding(.bottom, 6)
             .background(WindowDragArea())
+
+            // Global default working directory strip
+            Button {
+                self.pickDefaultWorkingDirectory()
+            } label: {
+                HStack(spacing: 5) {
+                    Image(systemName: "folder.fill")
+                        .font(.system(size: 9))
+                        .foregroundStyle(theme.accentColor.opacity(0.75))
+                    Text(appState.defaultWorkingDirectoryDisplay)
+                        .font(.system(size: 10))
+                        .foregroundStyle(theme.secondaryText)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                    Spacer(minLength: 0)
+                    Image(systemName: "pencil")
+                        .font(.system(size: 9))
+                        .foregroundStyle(theme.tertiaryText)
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 5)
+            }
+            .buttonStyle(.plain)
 
             // Session list
             ScrollView {
@@ -84,52 +107,11 @@ struct SidebarView: View {
                             targetSessionID: session.id,
                             draggedSessionID: $draggedSessionID
                         ))
-                        .contextMenu {
-                            Button {
-                                let tab = session.createTab()
-                                session.addTab(tab)
-                            } label: {
-                                Label("New Tab", systemImage: "plus.square")
+                        .overlay(
+                            NativeContextMenu {
+                                self.buildSessionMenu(session: session)
                             }
-
-                            Button {
-                                pickWorkingDirectory(for: session)
-                            } label: {
-                                Label("Set Working Directory...", systemImage: "folder")
-                            }
-
-                            Button {
-                                renameText = session.customName ?? ""
-                                renamingSession = session
-                            } label: {
-                                Label("Rename...", systemImage: "pencil")
-                            }
-
-                            Button("Duplicate") {
-                                duplicateSession(session)
-                            }
-
-                            Divider()
-
-                            ForEach(SplitDirection.allCases, id: \.rawValue) { direction in
-                                Button {
-                                    appState.selectedSessionID = session.id
-                                    withAnimation {
-                                        session.splitActiveTab(direction: direction)
-                                    }
-                                } label: {
-                                    Label(direction.label, systemImage: direction.icon)
-                                }
-                            }
-
-                            Divider()
-
-                            Button("Delete", role: .destructive) {
-                                withAnimation {
-                                    appState.removeSession(session.id)
-                                }
-                            }
-                        }
+                        )
                     }
                 }
                 .padding(.horizontal, 8)
@@ -185,6 +167,18 @@ struct SidebarView: View {
         }
     }
 
+    private func pickDefaultWorkingDirectory() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.message = "Choose default working directory for new sessions"
+        panel.directoryURL = URL(fileURLWithPath: appState.defaultWorkingDirectory)
+        if panel.runModal() == .OK, let url = panel.url {
+            appState.defaultWorkingDirectory = url.path
+        }
+    }
+
     private func pickWorkingDirectory(for session: Session) {
         let panel = NSOpenPanel()
         panel.canChooseFiles = false
@@ -203,6 +197,64 @@ struct SidebarView: View {
                 tv.restartProcess(in: url.path)
             }
         }
+    }
+
+    private func buildSessionMenu(session: Session) -> NSMenu {
+        let menu = NSMenu()
+
+        menu.addActionItem("New Tab", image: "plus.square") {
+            Task { @MainActor in
+                let tab = session.createTab()
+                session.addTab(tab)
+            }
+        }
+
+        menu.addActionItem("New Session", image: "plus.circle") {
+            Task { @MainActor in
+                self.appState.addSession()
+            }
+        }
+
+        menu.addItem(.separator())
+
+        menu.addActionItem("Copy Path", image: "doc.on.clipboard") {
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(session.workingDirectory, forType: .string)
+        }
+
+        menu.addActionItem("Set Working Directory...", image: "folder") {
+            self.pickWorkingDirectory(for: session)
+        }
+
+        menu.addActionItem("Rename...", image: "pencil") {
+            self.renameText = session.customName ?? ""
+            self.renamingSession = session
+        }
+
+        menu.addActionItem("Duplicate", image: "doc.on.doc") {
+            self.duplicateSession(session)
+        }
+
+        menu.addItem(.separator())
+
+        for direction in SplitDirection.allCases {
+            menu.addActionItem(direction.label, image: direction.icon) {
+                self.appState.selectedSessionID = session.id
+                withAnimation {
+                    session.splitActiveTab(direction: direction)
+                }
+            }
+        }
+
+        menu.addItem(.separator())
+
+        menu.addActionItem("Delete", image: "trash") {
+            withAnimation {
+                self.appState.removeSession(session.id)
+            }
+        }
+
+        return menu
     }
 
     private func duplicateSession(_ session: Session) {

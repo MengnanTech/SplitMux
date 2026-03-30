@@ -292,24 +292,31 @@ class NotifyingTerminalView: LocalProcessTerminalView {
     @objc private func newTabAction() {
         guard let delegate = sessionDelegate, let appState = delegate.appState,
               let session = appState.sessions.first(where: { $0.tabs.contains(where: { $0.id == delegate.tab?.id }) }) else { return }
-        let tab = session.createTab()
-        session.addTab(tab)
+        Task { @MainActor in
+            let tab = session.createTab()
+            session.addTab(tab)
+        }
     }
 
     @objc private func splitRightAction() {
         guard let delegate = sessionDelegate, let appState = delegate.appState,
               let session = appState.sessions.first(where: { $0.tabs.contains(where: { $0.id == delegate.tab?.id }) }) else { return }
-        session.splitActiveTab(direction: .right)
+        Task { @MainActor in
+            session.splitActiveTab(direction: .right)
+        }
     }
 
     @objc private func splitDownAction() {
         guard let delegate = sessionDelegate, let appState = delegate.appState,
               let session = appState.sessions.first(where: { $0.tabs.contains(where: { $0.id == delegate.tab?.id }) }) else { return }
-        session.splitActiveTab(direction: .down)
+        Task { @MainActor in
+            session.splitActiveTab(direction: .down)
+        }
     }
 
     @objc private func clearTerminal() {
-        feed(text: "\u{0C}")  // Form feed (Ctrl+L)
+        // Send Ctrl+L as PTY input so the shell clears screen and redraws prompt
+        send(data: [0x0C][...])
     }
 
     // MARK: - Terminal Output Capture
@@ -528,20 +535,22 @@ struct TerminalSwiftUIView: NSViewRepresentable {
             guard let appState = appState, let clickedTab = tabRef2,
                   let session = appState.sessions.first(where: { $0.tabs.contains(where: { $0.id == tabID }) })
             else { return }
-
-            // Clear notification on click regardless of split mode
-            if clickedTab.hasNotification {
-                clickedTab.hasNotification = false
-                clickedTab.lastNotificationMessage = nil
-                appState.updateDockBadge()
+            Task { @MainActor in
+                // Clear notification on click regardless of split mode
+                if clickedTab.hasNotification {
+                    clickedTab.hasNotification = false
+                    clickedTab.lastNotificationMessage = nil
+                    appState.updateDockBadge()
+                }
+                // Switch active pane in split mode
+                guard let splitRoot = session.splitRoot,
+                      splitRoot.tabIDs.contains(tabID),
+                      session.activeTabID != tabID
+                else { return }
+                withAnimation(.easeInOut(duration: 0.1)) {
+                    session.activeTabID = tabID
+                }
             }
-
-            // Switch active pane in split mode
-            guard let splitRoot = session.splitRoot,
-                  splitRoot.tabIDs.contains(tabID),
-                  session.activeTabID != tabID
-            else { return }
-            session.activeTabID = tabID
         }
         termView.onPaneDoubleClicked = { [weak appState] in
             guard let appState = appState,

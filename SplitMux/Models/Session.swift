@@ -1,4 +1,15 @@
 import Foundation
+import SwiftUI
+
+/// Shared drag state for tab drag-to-reorder / drag-to-split
+struct TabDragState {
+    var tabID: UUID
+    /// Finger position in tabContentRoot coordinate space
+    var location: CGPoint
+    var translation: CGSize
+    var isDraggingToSplit: Bool
+    var splitDirection: SplitDirection
+}
 
 @MainActor
 @Observable
@@ -18,6 +29,9 @@ class Session: Identifiable, Hashable {
 
     /// Zoomed tab ID — when set, this pane fills the entire split area (like tmux zoom)
     var zoomedTabID: UUID?
+
+    /// Tab drag state — shared between TabBarView (gesture) and TabContentView (floating overlay)
+    var tabDragState: TabDragState?
 
     /// Current git branch name (nil if not a git repo)
     var gitBranch: String?
@@ -170,12 +184,19 @@ class Session: Identifiable, Hashable {
     func splitActiveTab(direction: SplitDirection) {
         guard let activeID = activeTabID else { return }
         let newTab = createTab()
-        tabs.append(newTab)
 
-        if let root = splitRoot {
+        // Insert new tab right after active tab in the tab bar (not at the end)
+        if let idx = tabs.firstIndex(where: { $0.id == activeID }) {
+            tabs.insert(newTab, at: idx + 1)
+        } else {
+            tabs.append(newTab)
+        }
+
+        if let root = splitRoot, root.tabIDs.contains(activeID) {
+            // Active tab is in the existing split tree — insert within it
             splitRoot = root.insertSplit(at: activeID, newTabID: newTab.id, direction: direction)
         } else {
-            // First split — create root from active tab
+            // No split yet, or active tab is outside the current split tree — create fresh split
             let existing = SplitNode.tab(activeID)
             let new = SplitNode.tab(newTab.id)
             switch direction {

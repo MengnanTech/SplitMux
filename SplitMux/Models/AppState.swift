@@ -6,6 +6,26 @@ class AppState {
     var sessions: [Session] = []
     var selectedSessionID: UUID?
 
+    /// Global default working directory for new sessions.
+    /// Persisted in UserDefaults; individual sessions can override via right-click.
+    var defaultWorkingDirectory: String = {
+        UserDefaults.standard.string(forKey: "splitmux.defaultWorkingDirectory")
+            ?? FileManager.default.homeDirectoryForCurrentUser.path
+    }() {
+        didSet {
+            UserDefaults.standard.set(defaultWorkingDirectory, forKey: "splitmux.defaultWorkingDirectory")
+        }
+    }
+
+    var defaultWorkingDirectoryDisplay: String {
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        if defaultWorkingDirectory == home { return "~" }
+        if defaultWorkingDirectory.hasPrefix(home) {
+            return "~" + String(defaultWorkingDirectory.dropFirst(home.count))
+        }
+        return (defaultWorkingDirectory as NSString).lastPathComponent
+    }
+
     var selectedSession: Session? {
         sessions.first { $0.id == selectedSessionID }
     }
@@ -38,7 +58,7 @@ class AppState {
     }
 
     private func setupDefault() {
-        let mainSession = Session()
+        let mainSession = Session(workingDirectory: defaultWorkingDirectory)
         let tab1 = mainSession.createTab()
         mainSession.addTab(tab1)
         mainSession.startGitBranchPolling()
@@ -49,7 +69,7 @@ class AppState {
     }
 
     func addSession(workingDirectory: String? = nil) {
-        let session = Session(workingDirectory: workingDirectory)
+        let session = Session(workingDirectory: workingDirectory ?? defaultWorkingDirectory)
         let tab = session.createTab()
         session.addTab(tab)
         session.startGitBranchPolling()

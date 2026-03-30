@@ -6,6 +6,7 @@ struct TabContentView: View {
     @State private var showSearch = false
     @State private var searchText = ""
     @State private var showHistory = false
+    @State private var draggedTabFrame: CGRect?
 
     private var theme: AppTheme { SettingsManager.shared.theme }
     var body: some View {
@@ -78,6 +79,57 @@ struct TabContentView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
+        .coordinateSpace(name: "tabContentRoot")
+        .onPreferenceChange(TabFrameKey.self) { frame in
+            draggedTabFrame = frame
+        }
+        // Floating drag overlay — rendered above everything including terminal
+        .overlay {
+            if let frame = draggedTabFrame,
+               let draggedID = session.tabDragState?.tabID,
+               let tab = session.tabs.first(where: { $0.id == draggedID }),
+               let index = session.tabs.firstIndex(where: { $0.id == draggedID }) {
+                let state = session.tabDragState!
+                ZStack {
+                    TabItemView(
+                        tab: tab,
+                        index: index,
+                        isActive: true,
+                        onSelect: {},
+                        onClose: {}
+                    )
+                    .frame(width: frame.width, height: frame.height)
+                    .background(
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(theme.elevatedSurface)
+                    )
+                    .shadow(color: .black.opacity(0.25), radius: 12, y: 6)
+                    .scaleEffect(state.isDraggingToSplit ? 0.88 : 1.0, anchor: .top)
+                    .opacity(state.isDraggingToSplit ? 0.7 : 1.0)
+                    .position(state.location)
+
+                    // Split hint badge
+                    if state.isDraggingToSplit {
+                        Label(state.splitDirection.label, systemImage: state.splitDirection.icon)
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(
+                                Capsule()
+                                    .fill(theme.accentColor)
+                                    .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
+                            )
+                            .position(
+                                x: state.location.x,
+                                y: state.location.y + frame.height / 2 + 24
+                            )
+                            .transition(.scale(scale: 0.8).combined(with: .opacity))
+                    }
+                }
+                .allowsHitTesting(false)
+            }
+        }
         .background(theme.isGlass ? Color.clear : theme.contentBackground)
         .onReceive(NotificationCenter.default.publisher(for: .toggleTerminalHistory)) { _ in
             guard session.id == appState.selectedSessionID else { return }
@@ -87,34 +139,8 @@ struct TabContentView: View {
             guard session.id == appState.selectedSessionID else { return }
             withAnimation(.easeInOut(duration: 0.15)) { showSearch.toggle() }
         }
-        .contextMenu {
-            Button {
-                addTab()
-            } label: {
-                Label("New Tab", systemImage: "plus")
-            }
-
-            Divider()
-
-            ForEach(SplitDirection.allCases, id: \.rawValue) { direction in
-                Button {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        session.splitActiveTab(direction: direction)
-                    }
-                } label: {
-                    Label(direction.label, systemImage: direction.icon)
-                }
-            }
-
-            if session.splitRoot != nil {
-                Divider()
-                Button("Unsplit") {
-                    withAnimation {
-                        session.unsplit()
-                    }
-                }
-            }
-        }
+        // No full-view context menu overlay — terminal has its own right-click
+        // menu via menu(for:), and the tab bar has per-tab context menus.
     }
 
     private func addTab() {
