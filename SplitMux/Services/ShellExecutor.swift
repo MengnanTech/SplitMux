@@ -77,6 +77,10 @@ class NotifyingTerminalView: LocalProcessTerminalView {
 
     override var isOpaque: Bool { !glassMode }
 
+    override var intrinsicContentSize: NSSize {
+        NSSize(width: NSView.noIntrinsicMetric, height: NSView.noIntrinsicMetric)
+    }
+
     override func makeBackingLayer() -> CALayer {
         let layer = super.makeBackingLayer()
         if glassMode {
