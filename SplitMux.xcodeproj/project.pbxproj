@@ -44,6 +44,7 @@
 		EDE1EFD4FCFAF4CD7DD6F5DC /* ClaudeHookService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6DECAC9A6DE7F237902D6A6 /* ClaudeHookService.swift */; };
 		F46C56F3D59185B62B999BF9 /* ShellExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CA791722194F1B9618ED6E1 /* ShellExecutor.swift */; };
 		F946BB61A50A6124AA9E60DB /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCDF76A742361D9CA88C024 /* EmptyStateView.swift */; };
+		FF6C2243E0A7347264EA61FB /* NativeContextMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5E5BF3A7546C93A6AB4E009 /* NativeContextMenu.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -79,6 +80,7 @@
 		BDCEA570CCC09D2C9721C5FD /* SSHHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHHost.swift; sourceTree = "<group>"; };
 		D38A76841084268D605FC270 /* SettingsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsManager.swift; sourceTree = "<group>"; };
 		D5D9BAABFB4C3CD03DEB4BD2 /* bin */ = {isa = PBXFileReference; lastKnownFileType = folder; name = bin; path = SplitMux/Resources/bin; sourceTree = SOURCE_ROOT; };
+		D5E5BF3A7546C93A6AB4E009 /* NativeContextMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeContextMenu.swift; sourceTree = "<group>"; };
 		DA94958C7B3C9598143CD854 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		DCF1D3D1A0FF0AD4CA36A3A3 /* Tab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tab.swift; sourceTree = "<group>"; };
 		E5A887AD18F9732AED899516 /* SplitMux.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SplitMux.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -185,6 +187,7 @@
 				0450FA03717F0A10E8B13CCC /* CommandPaletteView.swift */,
 				1FCDF76A742361D9CA88C024 /* EmptyStateView.swift */,
 				0363EC81A3AE7DA34F86689B /* FloatingZoomButton.swift */,
+				D5E5BF3A7546C93A6AB4E009 /* NativeContextMenu.swift */,
 				6C39C38404B471CD98B0F5EE /* NotificationToast.swift */,
 				AF1A68A30C80A52EE65AF9EF /* SettingsView.swift */,
 				AC117D2A5C7BE36B48F6B79E /* SplitDropZone.swift */,
@@ -216,7 +219,7 @@
 			path = Sidebar;
 			sourceTree = "<group>";
 		};
-		"TEMP_BB1FCB37-4B1F-40ED-970D-7217ACAFEC74" /* Resources */ = {
+		"TEMP_D31A951C-1054-4BD2-93F3-A8E8D7D6C951" /* Resources */ = {
 			isa = PBXGroup;
 			children = (
 			);
@@ -309,6 +312,7 @@
 				CF0E7EFE2E8FE8FDDEDF1CFF /* ContentView.swift in Sources */,
 				F946BB61A50A6124AA9E60DB /* EmptyStateView.swift in Sources */,
 				6A612B953C0F2248490EB0A1 /* FloatingZoomButton.swift in Sources */,
+				FF6C2243E0A7347264EA61FB /* NativeContextMenu.swift in Sources */,
 				91988B19EB460BE7E6A877E1 /* NotificationService.swift in Sources */,
 				838CCD0A18F6D42FACCA1214 /* NotificationToast.swift in Sources */,
 				15B3480BBD6D0A4DDB2B9CBE /* PersistenceService.swift in Sources */,
@@ -406,13 +410,13 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = SplitMux/SplitMux.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 8;
 				INFOPLIST_FILE = SplitMux/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.3;
+				MARKETING_VERSION = 1.0.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.levi.SplitMux;
 				SDKROOT = macosx;
 				SWIFT_STRICT_CONCURRENCY = complete;
@@ -425,13 +429,13 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = SplitMux/SplitMux.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 8;
 				INFOPLIST_FILE = SplitMux/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.3;
+				MARKETING_VERSION = 1.0.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.levi.SplitMux;
 				SDKROOT = macosx;
 				SWIFT_STRICT_CONCURRENCY = complete;

@@ -186,7 +186,7 @@ class NotifyingTerminalView: LocalProcessTerminalView {
     // MARK: - Theme
 
     func applyTheme(_ theme: AppTheme) {
-        glassMode = false
+        glassMode = theme.isGlass
         self.nativeBackgroundColor = Self.terminalBackgroundColor(for: theme)
         self.nativeForegroundColor = theme.terminalForeground
 
@@ -222,17 +222,16 @@ class NotifyingTerminalView: LocalProcessTerminalView {
         }
     }
 
-    private static func terminalBackgroundColor(for theme: AppTheme) -> NSColor {
+    static func terminalBackgroundColor(for theme: AppTheme) -> NSColor {
         guard theme.isGlass else { return theme.terminalBackground }
-        // SwiftTerm's internal Color has no alpha — it converts any
-        // NSColor to solid RGB for per-cell background drawing.
-        // So true transparency is impossible. Instead we use solid
-        // colors that visually match the frosted glass aesthetic.
+        // Use background with alpha so the NSVisualEffectView blur
+        // shows through. Text stays fully opaque (unlike alphaValue).
+        let opacity = SettingsManager.shared.glassOpacity
         switch theme {
         case .glassLight:
-            return NSColor(calibratedRed: 0.905, green: 0.92, blue: 0.945, alpha: 1.0)
+            return NSColor(calibratedRed: 0.905, green: 0.92, blue: 0.945, alpha: opacity * 0.12)
         case .glass:
-            return NSColor(calibratedRed: 0.13, green: 0.14, blue: 0.18, alpha: 1.0)
+            return NSColor(calibratedRed: 0.13, green: 0.14, blue: 0.18, alpha: opacity * 0.5)
         default:
             return theme.terminalBackground
         }
@@ -734,7 +733,39 @@ struct TerminalSwiftUIView: NSViewRepresentable {
     }
 
     private static func applyGlassBlur(to container: TerminalContainerView) {
-        container.removeBlur()
+        let settings = SettingsManager.shared
+        let theme = settings.theme
+
+        guard theme.isGlass else {
+            container.removeBlur()
+            // Restore full opacity for non-glass themes
+            if let tv = container.subviews.first(where: { $0 is NotifyingTerminalView }) {
+                tv.alphaValue = 1.0
+            }
+            return
+        }
+
+        // Install blur behind the terminal
+        let isDark = (theme == .glass)
+        container.installGlass(
+            material: isDark ? .hudWindow : .headerView,
+            blendingMode: .behindWindow,
+            appearance: NSAppearance(named: isDark ? .vibrantDark : .vibrantLight),
+            tintColor: isDark
+                ? NSColor(white: 0.0, alpha: 0.35)
+                : NSColor(white: 1.0, alpha: 0.03),
+            glazeColor: .clear
+        )
+
+        // Enable glass mode — layer non-opaque so alpha in background color works.
+        // Text stays fully opaque; only the background is translucent.
+        if let tv = container.subviews.first(where: { $0 is NotifyingTerminalView }) as? NotifyingTerminalView {
+            tv.glassMode = true
+            tv.alphaValue = 1.0
+            tv.layer?.isOpaque = false
+            tv.layer?.backgroundColor = .clear
+            tv.nativeBackgroundColor = NotifyingTerminalView.terminalBackgroundColor(for: theme)
+        }
     }
 
     /// Post in-app toast notification for Claude status changes

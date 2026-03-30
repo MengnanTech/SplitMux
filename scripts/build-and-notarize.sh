@@ -170,7 +170,16 @@ fi
 
 # ─── GitHub Release ───
 echo "🐙 Creating GitHub Release..."
-RELEASE_NOTES=$(git log --pretty=format:"- %s" "$(git describe --tags --abbrev=0 2>/dev/null || git rev-list --max-parents=0 HEAD)"..HEAD 2>/dev/null || echo "- v${VERSION} release")
+
+# Use RELEASE_NOTES.md if present, otherwise fall back to git log
+RELEASE_NOTES_FILE="$PROJECT_DIR/RELEASE_NOTES.md"
+if [ -f "$RELEASE_NOTES_FILE" ]; then
+  echo "  Using RELEASE_NOTES.md"
+  RELEASE_NOTES_FLAG=(--notes-file "$RELEASE_NOTES_FILE")
+else
+  NOTES=$(git log --pretty=format:"- %s" "$(git describe --tags --abbrev=0 2>/dev/null || git rev-list --max-parents=0 HEAD)"..HEAD 2>/dev/null || echo "- v${VERSION} release")
+  RELEASE_NOTES_FLAG=(--notes "$NOTES")
+fi
 
 if gh release view "v${VERSION}" --repo "$GITHUB_REPO" &>/dev/null; then
   echo "  Release v${VERSION} already exists, uploading asset..."
@@ -178,8 +187,8 @@ if gh release view "v${VERSION}" --repo "$GITHUB_REPO" &>/dev/null; then
 else
   gh release create "v${VERSION}" "$APPCAST_DIR/$VERSIONED_DMG" \
     --repo "$GITHUB_REPO" \
-    --title "v${VERSION}" \
-    --notes "$RELEASE_NOTES"
+    --title "SplitMux v${VERSION}" \
+    "${RELEASE_NOTES_FLAG[@]}"
 fi
 echo "✅ GitHub Release published"
 
@@ -188,6 +197,11 @@ echo "📡 Committing appcast.xml to repo..."
 cp "$APPCAST_DIR/appcast.xml" "$PROJECT_DIR/appcast.xml"
 cd "$PROJECT_DIR"
 git add appcast.xml
+# Clean up RELEASE_NOTES.md after use
+if [ -f "$RELEASE_NOTES_FILE" ]; then
+  rm "$RELEASE_NOTES_FILE"
+  git add RELEASE_NOTES.md
+fi
 git commit -m "chore: update appcast.xml for v${VERSION}" || echo "  (appcast unchanged, skipping commit)"
 git push origin main
 echo "✅ Appcast pushed to GitHub"
