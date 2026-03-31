@@ -12,7 +12,7 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     }
 
     func requestPermission() {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { _, _ in }
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { @Sendable _, _ in }
     }
 
     /// Send system notification + update dock badge
