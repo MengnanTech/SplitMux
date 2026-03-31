@@ -168,6 +168,10 @@ class Session: Identifiable, Hashable {
         }
 
         tabs.removeAll { $0.id == tabID }
+        // Clear zoom if the zoomed tab was removed
+        if zoomedTabID == tabID {
+            zoomedTabID = nil
+        }
         // Also remove from split layout
         if let root = splitRoot {
             splitRoot = root.removing(tabID: tabID)

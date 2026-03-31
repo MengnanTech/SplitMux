@@ -653,8 +653,48 @@ struct TerminalSwiftUIView: NSViewRepresentable {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                         let bytes = Array((host.sshCommand + "\n").utf8)
                         termView.send(data: bytes[...])
-                        MainActor.assumeIsolated {
-                            host.connectionState = .connected
+                        // State stays .connecting — the dataReceived monitor
+                        // below will detect the shell prompt to confirm connection.
+                    }
+
+                    // Monitor terminal output to detect SSH connection success/failure.
+                    // SSH outputs specific patterns we can match against.
+                    let prevHandler = termView.onDataReceived
+                    var sshOutputBuffer = Data()
+                    termView.onDataReceived = { [weak termView] data in
+                        // Forward to existing handler (history recording)
+                        prevHandler?(data)
+
+                        guard let termView, termView.sshHostID == hostID else { return }
+                        sshOutputBuffer.append(data)
+                        // Only inspect the first 4KB of output for connection signals
+                        guard sshOutputBuffer.count < 4096 else { return }
+                        guard let output = String(data: sshOutputBuffer, encoding: .utf8) else { return }
+                        let lower = output.lowercased()
+
+                        let failurePatterns = [
+                            "permission denied",
+                            "connection refused",
+                            "connection timed out",
+                            "no route to host",
+                            "could not resolve hostname",
+                            "host key verification failed",
+                            "connection closed",
+                            "network is unreachable"
+                        ]
+                        let isFailure = failurePatterns.contains { lower.contains($0) }
+
+                        if isFailure {
+                            Task { @MainActor in
+                                SSHManagerService.shared.host(for: hostID)?.connectionState = .failed
+                            }
+                            // Stop monitoring — restore original handler
+                            termView.onDataReceived = prevHandler
+                        } else if lower.contains("last login") || lower.contains("welcome") || output.hasSuffix("$ ") || output.hasSuffix("# ") || output.hasSuffix("% ") {
+                            Task { @MainActor in
+                                SSHManagerService.shared.host(for: hostID)?.connectionState = .connected
+                            }
+                            termView.onDataReceived = prevHandler
                         }
                     }
                 }

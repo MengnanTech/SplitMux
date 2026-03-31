@@ -231,6 +231,11 @@ class WindowConfiguratorView: NSView, NSWindowDelegate {
     // MARK: - Window Close Confirmation
 
     func windowShouldClose(_ sender: NSWindow) -> Bool {
+        guard SettingsManager.shared.confirmBeforeClose else {
+            NSApplication.shared.terminate(nil)
+            return true
+        }
+
         let alert = NSAlert()
         alert.messageText = "Quit SplitMux?"
         alert.informativeText = "All terminal sessions and running Claude Agents will be closed."

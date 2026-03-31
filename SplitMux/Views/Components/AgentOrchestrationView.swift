@@ -65,6 +65,8 @@ struct AgentOrchestrationView: View {
                         ForEach(hookService.agentInfos) { agent in
                             AgentRow(
                                 agent: agent,
+                                tabTitle: liveTabTitle(for: agent.tabID),
+                                sessionName: liveSessionName(for: agent.tabID),
                                 inputText: Binding(
                                     get: { inputText[agent.tabID] ?? "" },
                                     set: { inputText[agent.tabID] = $0 }
@@ -152,6 +154,24 @@ struct AgentOrchestrationView: View {
         }
     }
 
+    private func liveTabTitle(for tabID: UUID) -> String {
+        for session in appState.sessions {
+            if let tab = session.tabs.first(where: { $0.id == tabID }) {
+                return tab.title.isEmpty ? "Terminal" : tab.title
+            }
+        }
+        return "Terminal"
+    }
+
+    private func liveSessionName(for tabID: UUID) -> String {
+        for session in appState.sessions {
+            if session.tabs.contains(where: { $0.id == tabID }) {
+                return session.name
+            }
+        }
+        return ""
+    }
+
     private func timeAgo(_ date: Date) -> String {
         let seconds = Int(Date().timeIntervalSince(date))
         if seconds < 60 { return "\(seconds)s ago" }
@@ -192,6 +212,8 @@ struct StatusPill: View {
 
 struct AgentRow: View {
     let agent: AgentInfo
+    let tabTitle: String
+    let sessionName: String
     @Binding var inputText: String
     var onSwitch: () -> Void
     var onSendInput: () -> Void
@@ -221,12 +243,12 @@ struct AgentRow: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 6) {
-                        Text(agent.tabTitle.isEmpty ? "Terminal" : agent.tabTitle)
+                        Text(tabTitle)
                             .font(.system(.callout, design: .monospaced))
                             .foregroundStyle(theme.primaryText)
 
-                        if !agent.sessionName.isEmpty {
-                            Text("in \(agent.sessionName)")
+                        if !sessionName.isEmpty {
+                            Text("in \(sessionName)")
                                 .font(.system(.caption2, design: .monospaced))
                                 .foregroundStyle(theme.iconDimmed)
                         }
@@ -361,7 +383,7 @@ struct AgentsSidebarSection: View {
                                     .font(.system(size: 9))
                                     .foregroundStyle(agent.status.color)
 
-                                Text(agent.tabTitle.isEmpty ? "Terminal" : agent.tabTitle)
+                                Text(liveTabTitle(for: agent.tabID))
                                     .font(.system(size: 11))
                                     .foregroundStyle(theme.secondaryText)
                                     .lineLimit(1)
@@ -387,5 +409,14 @@ struct AgentsSidebarSection: View {
                 }
             }
         }
+    }
+
+    private func liveTabTitle(for tabID: UUID) -> String {
+        for session in appState.sessions {
+            if let tab = session.tabs.first(where: { $0.id == tabID }) {
+                return tab.title.isEmpty ? "Terminal" : tab.title
+            }
+        }
+        return "Terminal"
     }
 }
