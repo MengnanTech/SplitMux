@@ -1,6 +1,7 @@
 import Foundation
 import AppKit
 
+@MainActor
 @Observable
 class Tab: Identifiable, Hashable {
     let id: UUID
@@ -27,11 +28,11 @@ class Tab: Identifiable, Hashable {
         self.createdAt = Date()
     }
 
-    static func == (lhs: Tab, rhs: Tab) -> Bool {
+    nonisolated static func == (lhs: Tab, rhs: Tab) -> Bool {
         lhs.id == rhs.id
     }
 
-    func hash(into hasher: inout Hasher) {
+    nonisolated func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
 

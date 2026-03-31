@@ -2,8 +2,9 @@ import Foundation
 import SwiftUI
 
 /// Represents a saved SSH connection configuration
+@MainActor
 @Observable
-class SSHHost: Identifiable, Codable {
+class SSHHost: Identifiable, @preconcurrency Codable {
     let id: UUID
     var name: String
     var hostname: String
