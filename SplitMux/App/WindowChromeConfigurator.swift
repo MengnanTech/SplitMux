@@ -17,6 +17,13 @@ enum WindowChromeConfigurator {
         window.isMovableByWindowBackground = false
         window.isMovable = false
 
+        // Set window background to match content so the title bar area blends
+        // even if titlebarAppearsTransparent is briefly reset by SwiftUI.
+        // Glass mode overrides this to .clear in applyGlassIfNeeded().
+        if !SettingsManager.shared.theme.isGlass {
+            window.backgroundColor = SettingsManager.shared.theme.terminalBackground
+        }
+
         applyGlassIfNeeded(to: window)
     }
 
