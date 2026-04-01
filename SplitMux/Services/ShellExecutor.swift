@@ -36,6 +36,7 @@ class TerminalSessionDelegate: NSObject, LocalProcessTerminalViewDelegate, @unch
                 // Clear Claude status on process exit
                 if let tab = self?.tab {
                     tab.claudeStatus = nil
+                    tab.claudeToolDetail = nil
                     let path = "/tmp/splitmux/\(tab.id.uuidString)"
                     try? "".write(toFile: path, atomically: true, encoding: .utf8)
                 }
@@ -706,10 +707,11 @@ struct TerminalSwiftUIView: NSViewRepresentable {
         // to /tmp/splitmux/{tabID} on lifecycle events (UserPromptSubmit, Stop, Notification).
         let tabRef = tab
         let coordRef = context.coordinator
-        ClaudeHookService.shared.startMonitoring(tabID: tab.id) { [weak tabRef, weak coordRef] status in
+        ClaudeHookService.shared.startMonitoring(tabID: tab.id) { [weak tabRef, weak coordRef] status, toolDetail in
             guard let tab = tabRef else { return }
             let prev = tab.claudeStatus
             tab.claudeStatus = status
+            tab.claudeToolDetail = toolDetail
 
             // nil means Claude exited — no further notification needed
             guard let status else { return }
@@ -727,6 +729,17 @@ struct TerminalSwiftUIView: NSViewRepresentable {
                     tabIsActive: false
                 )
                 Self.postToastNotification(tab: tab, appState: delegate.appState)
+            } else if status == .error && prev != .error {
+                tab.hasNotification = true
+                tab.lastNotificationMessage = "Claude Code — Error"
+                NotificationService.shared.send(
+                    title: "Error",
+                    body: "Claude Code — \(toolDetail ?? "Something went wrong")",
+                    tabIsActive: isActive
+                )
+                if !isActive {
+                    Self.postToastNotification(tab: tab, appState: delegate.appState)
+                }
             } else if status == .idle && prev == .running && !isActive {
                 tab.hasNotification = true
                 tab.lastNotificationMessage = "Claude Code — Task Completed"

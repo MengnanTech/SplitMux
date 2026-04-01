@@ -4,6 +4,8 @@ import SwiftUI
 struct BreadcrumbBar: View {
     let workingDirectory: String
     let gitBranch: String?
+    var claudeStatus: ClaudeStatus? = nil
+    var claudeToolDetail: String? = nil
 
     private var theme: AppTheme { SettingsManager.shared.theme }
     private var usesLightChrome: Bool {
@@ -86,6 +88,19 @@ struct BreadcrumbBar: View {
 
                     Spacer()
 
+                    if let status = claudeStatus, status != .unknown {
+                        HStack(spacing: 3) {
+                            Image(systemName: status.icon)
+                                .font(.system(size: 7))
+                                .foregroundStyle(status.color.opacity(0.8))
+                            Text(claudeToolDetail ?? status.label)
+                                .font(.system(size: 9, weight: .medium, design: .monospaced))
+                                .foregroundStyle(status.color.opacity(0.8))
+                                .lineLimit(1)
+                        }
+                        .padding(.trailing, 6)
+                    }
+
                     if let branch = gitBranch {
                         HStack(spacing: 3) {
                             Image(systemName: "arrow.triangle.branch")
@@ -144,6 +159,19 @@ struct BreadcrumbBar: View {
                     }
 
                     Spacer()
+
+                    if let status = claudeStatus, status != .unknown {
+                        HStack(spacing: 3) {
+                            Image(systemName: status.icon)
+                                .font(.system(size: 8))
+                                .foregroundStyle(status.color.opacity(0.85))
+                            Text(claudeToolDetail ?? status.label)
+                                .font(.system(size: 10, weight: .medium, design: .monospaced))
+                                .foregroundStyle(status.color.opacity(0.85))
+                                .lineLimit(1)
+                        }
+                        .padding(.trailing, 8)
+                    }
 
                     if let branch = gitBranch {
                         HStack(spacing: 3) {

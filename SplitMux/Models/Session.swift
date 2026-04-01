@@ -107,6 +107,7 @@ class Session: Identifiable, Hashable {
         let statuses = tabs.compactMap(\.claudeStatus)
         if statuses.isEmpty { return nil }
         if statuses.contains(.running) { return .running }
+        if statuses.contains(.error) { return .error }
         if statuses.contains(.needsInput) { return .needsInput }
         if statuses.contains(.idle) { return .idle }
         return nil

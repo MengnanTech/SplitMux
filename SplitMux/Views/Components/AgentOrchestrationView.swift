@@ -255,12 +255,19 @@ struct AgentRow: View {
                     }
 
                     HStack(spacing: 8) {
-                        Text(agent.status.label)
+                        Text(agent.toolDisplayText ?? agent.status.label)
                             .foregroundStyle(agent.status.color)
                         Text(agent.durationString)
                             .foregroundStyle(theme.disabledText)
                     }
                     .font(.system(.caption2, design: .monospaced))
+
+                    if let error = agent.lastError, agent.status == .error {
+                        Text(error)
+                            .font(.system(.caption2, design: .monospaced))
+                            .foregroundStyle(.red.opacity(0.8))
+                            .lineLimit(1)
+                    }
                 }
 
                 Spacer()
@@ -299,6 +306,24 @@ struct AgentRow: View {
                     }
                     .buttonStyle(.plain)
                     .disabled(inputText.isEmpty)
+                }
+                .padding(.leading, 34)
+            }
+
+            // Recent actions
+            if !agent.recentActions.isEmpty {
+                VStack(alignment: .leading, spacing: 2) {
+                    ForEach(agent.recentActions.prefix(3)) { action in
+                        HStack(spacing: 4) {
+                            Image(systemName: action.success ? "checkmark" : "xmark")
+                                .font(.system(size: 7, weight: .bold))
+                                .foregroundStyle(action.success ? theme.disabledText : .red)
+                            Text(action.displayText)
+                                .font(.system(.caption2, design: .monospaced))
+                                .foregroundStyle(action.success ? theme.disabledText : .red.opacity(0.8))
+                                .lineLimit(1)
+                        }
+                    }
                 }
                 .padding(.leading, 34)
             }

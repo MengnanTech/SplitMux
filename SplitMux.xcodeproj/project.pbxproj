@@ -13,6 +13,7 @@
 		1C5951CC2DDF160D9069187D /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2705F34CBFF710F0B3B61093 /* AppState.swift */; };
 		21DA4B18691E5284DB6CB5F4 /* WindowChromeConfigurator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6284E25BADA3425EDB7A9E62 /* WindowChromeConfigurator.swift */; };
 		2C7B2F33F6C7194C7F84EF31 /* SplitNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D5B37ABA0DB8467985088D4 /* SplitNode.swift */; };
+
 		3986D9F477C2BCC04EE02687 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B58E30059BB7E8BA5B7A18D /* SidebarView.swift */; };
 		42B91EE4C27E9D6DDC54E7F3 /* SSHManagerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF4CD2689D4E5B2E8B1543FF /* SSHManagerService.swift */; };
 		5416187C450CAE0F2AD9332E /* TerminalHistoryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 403BA34C7DF212B769699C23 /* TerminalHistoryService.swift */; };
@@ -43,6 +44,7 @@
 		EA524D5C7F145B26382F1BAA /* SettingsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D38A76841084268D605FC270 /* SettingsManager.swift */; };
 		EDE1EFD4FCFAF4CD7DD6F5DC /* ClaudeHookService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6DECAC9A6DE7F237902D6A6 /* ClaudeHookService.swift */; };
 		F46C56F3D59185B62B999BF9 /* ShellExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CA791722194F1B9618ED6E1 /* ShellExecutor.swift */; };
+
 		F946BB61A50A6124AA9E60DB /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCDF76A742361D9CA88C024 /* EmptyStateView.swift */; };
 		FF6C2243E0A7347264EA61FB /* NativeContextMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5E5BF3A7546C93A6AB4E009 /* NativeContextMenu.swift */; };
 /* End PBXBuildFile section */
@@ -58,6 +60,7 @@
 		2DB0D582624EB54FE1534670 /* TerminalHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalHistory.swift; sourceTree = "<group>"; };
 		403BA34C7DF212B769699C23 /* TerminalHistoryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalHistoryService.swift; sourceTree = "<group>"; };
 		454AD7737E071BBD07A15594 /* TabContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabContentView.swift; sourceTree = "<group>"; };
+
 		6284E25BADA3425EDB7A9E62 /* WindowChromeConfigurator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowChromeConfigurator.swift; sourceTree = "<group>"; };
 		6B58E30059BB7E8BA5B7A18D /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
 		6C39C38404B471CD98B0F5EE /* NotificationToast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationToast.swift; sourceTree = "<group>"; };
@@ -77,6 +80,7 @@
 		AF1A68A30C80A52EE65AF9EF /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		B30A8EA14811DEDE4BA3C8B0 /* PersistenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceService.swift; sourceTree = "<group>"; };
 		B791AC577EE279C637592AAE /* SSHHostEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHHostEditorView.swift; sourceTree = "<group>"; };
+
 		BDCEA570CCC09D2C9721C5FD /* SSHHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHHost.swift; sourceTree = "<group>"; };
 		D38A76841084268D605FC270 /* SettingsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsManager.swift; sourceTree = "<group>"; };
 		D5D9BAABFB4C3CD03DEB4BD2 /* bin */ = {isa = PBXFileReference; lastKnownFileType = folder; name = bin; path = SplitMux/Resources/bin; sourceTree = SOURCE_ROOT; };
@@ -168,6 +172,7 @@
 		B34B49222ED8F4DC0B1844FF /* Services */ = {
 			isa = PBXGroup;
 			children = (
+
 				E6DECAC9A6DE7F237902D6A6 /* ClaudeHookService.swift */,
 				0C9D503C838C9F45E17633E3 /* NotificationService.swift */,
 				B30A8EA14811DEDE4BA3C8B0 /* PersistenceService.swift */,
@@ -182,6 +187,7 @@
 		C11B82949CBB904591BA9395 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+
 				94CFE7C5BD49F7C5AA2E257B /* AgentOrchestrationView.swift */,
 				AE127C75EE05E61FA4E9DFA7 /* BreadcrumbBar.swift */,
 				0450FA03717F0A10E8B13CCC /* CommandPaletteView.swift */,
@@ -219,7 +225,7 @@
 			path = Sidebar;
 			sourceTree = "<group>";
 		};
-		"TEMP_D31A951C-1054-4BD2-93F3-A8E8D7D6C951" /* Resources */ = {
+		"TEMP_5E7B48B5-5C9D-4657-8B81-374395B913F1" /* Resources */ = {
 			isa = PBXGroup;
 			children = (
 			);
@@ -265,7 +271,6 @@
 				};
 			};
 			buildConfigurationList = 9BFD4261F51D8037058AC6F7 /* Build configuration list for PBXProject "SplitMux" */;
-			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -279,6 +284,7 @@
 				DC51D7C121B0673D0F8223C3 /* XCRemoteSwiftPackageReference "SwiftTerm" */,
 			);
 			preferredProjectObjectVersion = 77;
+			productRefGroup = 66200C6B44B0D218932911C0 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -304,6 +310,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+
+
 				650E2C89F7618CE147A6346A /* AgentOrchestrationView.swift in Sources */,
 				1C5951CC2DDF160D9069187D /* AppState.swift in Sources */,
 				C3492213A12230A5169EE20F /* BreadcrumbBar.swift in Sources */,
@@ -410,13 +418,13 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = SplitMux/SplitMux.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				INFOPLIST_FILE = SplitMux/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.6;
+				MARKETING_VERSION = 1.0.7;
 				PRODUCT_BUNDLE_IDENTIFIER = com.levi.SplitMux;
 				SDKROOT = macosx;
 				SWIFT_STRICT_CONCURRENCY = complete;
@@ -429,13 +437,13 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = SplitMux/SplitMux.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				INFOPLIST_FILE = SplitMux/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.6;
+				MARKETING_VERSION = 1.0.7;
 				PRODUCT_BUNDLE_IDENTIFIER = com.levi.SplitMux;
 				SDKROOT = macosx;
 				SWIFT_STRICT_CONCURRENCY = complete;

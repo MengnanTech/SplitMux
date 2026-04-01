@@ -15,7 +15,12 @@ struct TabContentView: View {
             TabBarView(session: session, onAddTab: addTab)
 
             // Breadcrumb path bar
-            BreadcrumbBar(workingDirectory: session.workingDirectory, gitBranch: session.gitBranch)
+            BreadcrumbBar(
+                workingDirectory: session.workingDirectory,
+                gitBranch: session.gitBranch,
+                claudeStatus: session.activeTab?.claudeStatus,
+                claudeToolDetail: session.activeTab?.claudeToolDetail
+            )
 
             // Content area with drag-to-split overlay
             ZStack(alignment: .topTrailing) {
