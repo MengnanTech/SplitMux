@@ -43,6 +43,9 @@ if action == "pretool":
     inp = data.get("tool_input", {})
     det = inp.get("file_path", inp.get("command", inp.get("pattern", "")))
     r = {"status": "running", "tool": tool, "detail": str(det)[:80] if det else ""}
+elif action == "posttool":
+    tool = data.get("tool_name", "")
+    r = {"status": "running", "tool": tool}
 elif action == "toolfail":
     tool = data.get("tool_name", "")
     err = data.get("error", "")
@@ -52,6 +55,10 @@ elif action == "toolfail":
 elif action == "stopfail":
     err = data.get("error_type", data.get("error", "unknown"))
     r = {"status": "error", "error": str(err)[:80]}
+elif action == "subagent-start":
+    r = {"status": "running", "tool": "Agent", "detail": "Subagent started"}
+elif action == "subagent-stop":
+    r = {"status": "running", "tool": "Agent", "detail": "Subagent finished"}
 with open(sf, "w") as f:
     json.dump(r, f)
 PYEOF
@@ -61,6 +68,18 @@ SETTINGS_FILE=$(mktemp "${TMPDIR:-/tmp}/splitmux-settings-XXXXXX")
 cat > "$SETTINGS_FILE" <<ENDJSON
 {
   "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo running > $STATUS_FILE",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
     "UserPromptSubmit": [
       {
         "matcher": "",
@@ -85,6 +104,18 @@ cat > "$SETTINGS_FILE" <<ENDJSON
         ]
       }
     ],
+    "PostToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $HOOK_HELPER posttool $STATUS_FILE",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
     "PostToolUseFailure": [
       {
         "matcher": "",
@@ -92,6 +123,30 @@ cat > "$SETTINGS_FILE" <<ENDJSON
           {
             "type": "command",
             "command": "python3 $HOOK_HELPER toolfail $STATUS_FILE",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $HOOK_HELPER subagent-start $STATUS_FILE",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $HOOK_HELPER subagent-stop $STATUS_FILE",
             "timeout": 5
           }
         ]
@@ -116,6 +171,18 @@ cat > "$SETTINGS_FILE" <<ENDJSON
           {
             "type": "command",
             "command": "python3 $HOOK_HELPER stopfail $STATUS_FILE",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo idle > $STATUS_FILE",
             "timeout": 5
           }
         ]

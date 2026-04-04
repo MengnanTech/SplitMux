@@ -1,7 +1,7 @@
 #!/bin/bash
 # SplitMux codex wrapper — injects hooks for status tracking
-# Codex CLI uses hooks.json config files (no --settings flag),
-# so we write a temporary hooks.json before launching.
+# Codex CLI has a built-in hooks system (feature flag: codex_hooks)
+# that uses PascalCase event names and reads hooks.json from .codex/ dir.
 
 # Remove our directory from PATH to find the real codex
 CLEANED_PATH=$(echo "$PATH" | tr ':' '\n' | grep -v "SplitMux.app/Contents/Resources/bin" | tr '\n' ':' | sed 's/:$//')
@@ -19,15 +19,48 @@ fi
 
 STATUS_DIR="/tmp/splitmux"
 mkdir -p "$STATUS_DIR"
-STATUS_FILE="$STATUS_DIR/$SPLITMUX_TAB_ID"
 
-# Codex discovers hooks.json from ~/.codex/hooks.json (project or global)
-# Write a SplitMux-specific hooks.json to project-level .codex dir
+# Write shared hook helper script (parses JSON stdin from Codex hooks)
+# All tabs share this script; tab-specific path comes from $SPLITMUX_TAB_ID env var.
+HOOK_HELPER="$STATUS_DIR/codex-hook.py"
+cat > "$HOOK_HELPER" <<'PYEOF'
+import sys, json, os
+action = sys.argv[1]
+tab_id = os.environ.get("SPLITMUX_TAB_ID", "")
+if not tab_id:
+    sys.exit(0)
+sf = f"/tmp/splitmux/{tab_id}"
+try:
+    data = json.load(sys.stdin)
+except Exception:
+    data = {}
+r = {}
+if action == "pretool":
+    tool = data.get("tool_name", "")
+    inp = data.get("tool_input", {})
+    det = inp.get("file_path", inp.get("command", inp.get("pattern", "")))
+    r = {"status": "running", "tool": tool, "detail": str(det)[:80] if det else ""}
+elif action == "posttool":
+    tool = data.get("tool_name", "")
+    err = data.get("error", "")
+    if err:
+        if isinstance(err, dict):
+            err = err.get("message", str(err))
+        r = {"status": "error", "tool": tool, "error": str(err)[:80]}
+    else:
+        r = {"status": "running", "tool": tool}
+elif action == "stop":
+    r = {"status": "idle"}
+with open(sf, "w") as f:
+    json.dump(r, f)
+PYEOF
+
+# Codex discovers hooks.json from project .codex/ dir.
+# Write SplitMux hooks using $SPLITMUX_TAB_ID (expanded at hook runtime).
 HOOKS_DIR="${PWD}/.codex"
 HOOKS_FILE="${HOOKS_DIR}/hooks.json"
 HOOKS_BACKUP=""
 
-# Back up existing hooks.json if present
 if [ -f "$HOOKS_FILE" ]; then
     HOOKS_BACKUP="${HOOKS_FILE}.splitmux-backup"
     cp "$HOOKS_FILE" "$HOOKS_BACKUP"
@@ -35,18 +68,54 @@ fi
 
 mkdir -p "$HOOKS_DIR"
 
-# Merge our hooks — if there was an existing hooks.json, we need to be careful.
-# For simplicity, write our hooks (most users won't have custom hooks).
-cat > "$HOOKS_FILE" <<ENDJSON
+# Use quoted heredoc so $SPLITMUX_TAB_ID stays literal (resolved at hook runtime).
+# $HOOK_HELPER path is injected via sed after writing.
+cat > "$HOOKS_FILE" <<'ENDJSON'
 {
   "hooks": {
-    "UserPromptSubmit": [
+    "SessionStart": [
       {
-        "matcher": null,
+        "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "echo running > ${STATUS_FILE}",
+            "command": "echo running > /tmp/splitmux/$SPLITMUX_TAB_ID",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo running > /tmp/splitmux/$SPLITMUX_TAB_ID",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 __HOOK_HELPER__ pretool",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 __HOOK_HELPER__ posttool",
             "timeout": 5
           }
         ]
@@ -54,11 +123,11 @@ cat > "$HOOKS_FILE" <<ENDJSON
     ],
     "Stop": [
       {
-        "matcher": null,
+        "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "echo idle > ${STATUS_FILE}",
+            "command": "python3 __HOOK_HELPER__ stop",
             "timeout": 5
           }
         ]
@@ -68,16 +137,33 @@ cat > "$HOOKS_FILE" <<ENDJSON
 }
 ENDJSON
 
-# Cleanup function — restore original hooks.json on exit
+# Inject the actual helper path
+sed -i '' "s|__HOOK_HELPER__|${HOOK_HELPER}|g" "$HOOKS_FILE"
+
+# Cleanup: restore original hooks.json on exit
 cleanup() {
     if [ -n "$HOOKS_BACKUP" ]; then
         mv "$HOOKS_BACKUP" "$HOOKS_FILE"
     else
         rm -f "$HOOKS_FILE"
-        # Remove .codex dir only if we created it and it's empty
         rmdir "$HOOKS_DIR" 2>/dev/null
     fi
+    rm -f "$STATUS_DIR/$SPLITMUX_TAB_ID"
 }
 trap cleanup EXIT
 
-exec "$REAL_CODEX" "$@"
+# Check if user already passed --enable codex_hooks
+NEEDS_ENABLE=true
+for arg in "$@"; do
+    if [ "$arg" = "codex_hooks" ]; then
+        NEEDS_ENABLE=false
+        break
+    fi
+done
+
+# Run codex as subprocess (not exec) so trap fires on exit
+if [ "$NEEDS_ENABLE" = true ]; then
+    "$REAL_CODEX" --enable codex_hooks "$@"
+else
+    "$REAL_CODEX" "$@"
+fi
