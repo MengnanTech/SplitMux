@@ -219,7 +219,7 @@
 			path = Sidebar;
 			sourceTree = "<group>";
 		};
-		"TEMP_74D1DF78-ADCA-401D-90E6-44C0EC4E35D4" /* Resources */ = {
+		"TEMP_16D94F6C-934C-47D4-BA14-34C3214BCB16" /* Resources */ = {
 			isa = PBXGroup;
 			children = (
 			);
@@ -410,13 +410,13 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = SplitMux/SplitMux.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				INFOPLIST_FILE = SplitMux/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.7;
+				MARKETING_VERSION = 1.0.8;
 				PRODUCT_BUNDLE_IDENTIFIER = com.levi.SplitMux;
 				SDKROOT = macosx;
 				SWIFT_STRICT_CONCURRENCY = complete;
@@ -429,13 +429,13 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = SplitMux/SplitMux.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				INFOPLIST_FILE = SplitMux/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.7;
+				MARKETING_VERSION = 1.0.8;
 				PRODUCT_BUNDLE_IDENTIFIER = com.levi.SplitMux;
 				SDKROOT = macosx;
 				SWIFT_STRICT_CONCURRENCY = complete;
