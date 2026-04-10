@@ -36,6 +36,7 @@ class TerminalSessionDelegate: NSObject, LocalProcessTerminalViewDelegate, @unch
                 // Clear Claude status on process exit
                 if let tab = self?.tab {
                     tab.claudeStatus = nil
+                    tab.claudeToolDetail = nil
                     let path = "/tmp/splitmux/\(tab.id.uuidString)"
                     try? "".write(toFile: path, atomically: true, encoding: .utf8)
                 }
@@ -653,8 +654,48 @@ struct TerminalSwiftUIView: NSViewRepresentable {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                         let bytes = Array((host.sshCommand + "\n").utf8)
                         termView.send(data: bytes[...])
-                        MainActor.assumeIsolated {
-                            host.connectionState = .connected
+                        // State stays .connecting — the dataReceived monitor
+                        // below will detect the shell prompt to confirm connection.
+                    }
+
+                    // Monitor terminal output to detect SSH connection success/failure.
+                    // SSH outputs specific patterns we can match against.
+                    let prevHandler = termView.onDataReceived
+                    var sshOutputBuffer = Data()
+                    termView.onDataReceived = { [weak termView] data in
+                        // Forward to existing handler (history recording)
+                        prevHandler?(data)
+
+                        guard let termView, termView.sshHostID == hostID else { return }
+                        sshOutputBuffer.append(data)
+                        // Only inspect the first 4KB of output for connection signals
+                        guard sshOutputBuffer.count < 4096 else { return }
+                        guard let output = String(data: sshOutputBuffer, encoding: .utf8) else { return }
+                        let lower = output.lowercased()
+
+                        let failurePatterns = [
+                            "permission denied",
+                            "connection refused",
+                            "connection timed out",
+                            "no route to host",
+                            "could not resolve hostname",
+                            "host key verification failed",
+                            "connection closed",
+                            "network is unreachable"
+                        ]
+                        let isFailure = failurePatterns.contains { lower.contains($0) }
+
+                        if isFailure {
+                            Task { @MainActor in
+                                SSHManagerService.shared.host(for: hostID)?.connectionState = .failed
+                            }
+                            // Stop monitoring — restore original handler
+                            termView.onDataReceived = prevHandler
+                        } else if lower.contains("last login") || lower.contains("welcome") || output.hasSuffix("$ ") || output.hasSuffix("# ") || output.hasSuffix("% ") {
+                            Task { @MainActor in
+                                SSHManagerService.shared.host(for: hostID)?.connectionState = .connected
+                            }
+                            termView.onDataReceived = prevHandler
                         }
                     }
                 }
@@ -666,10 +707,11 @@ struct TerminalSwiftUIView: NSViewRepresentable {
         // to /tmp/splitmux/{tabID} on lifecycle events (UserPromptSubmit, Stop, Notification).
         let tabRef = tab
         let coordRef = context.coordinator
-        ClaudeHookService.shared.startMonitoring(tabID: tab.id) { [weak tabRef, weak coordRef] status in
+        ClaudeHookService.shared.startMonitoring(tabID: tab.id) { [weak tabRef, weak coordRef] status, toolDetail in
             guard let tab = tabRef else { return }
             let prev = tab.claudeStatus
             tab.claudeStatus = status
+            tab.claudeToolDetail = toolDetail
 
             // nil means Claude exited — no further notification needed
             guard let status else { return }
@@ -687,6 +729,17 @@ struct TerminalSwiftUIView: NSViewRepresentable {
                     tabIsActive: false
                 )
                 Self.postToastNotification(tab: tab, appState: delegate.appState)
+            } else if status == .error && prev != .error {
+                tab.hasNotification = true
+                tab.lastNotificationMessage = "Claude Code — Error"
+                NotificationService.shared.send(
+                    title: "Error",
+                    body: "Claude Code — \(toolDetail ?? "Something went wrong")",
+                    tabIsActive: isActive
+                )
+                if !isActive {
+                    Self.postToastNotification(tab: tab, appState: delegate.appState)
+                }
             } else if status == .idle && prev == .running && !isActive {
                 tab.hasNotification = true
                 tab.lastNotificationMessage = "Claude Code — Task Completed"

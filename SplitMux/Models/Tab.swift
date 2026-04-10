@@ -1,6 +1,7 @@
 import Foundation
 import AppKit
 
+@MainActor
 @Observable
 class Tab: Identifiable, Hashable {
     let id: UUID
@@ -11,6 +12,7 @@ class Tab: Identifiable, Hashable {
     var hasNotification: Bool = false
     var lastNotificationMessage: String?
     var claudeStatus: ClaudeStatus?
+    var claudeToolDetail: String?
     /// Strong reference — terminal view must survive SwiftUI view recreation
     /// (e.g. split mode transitions) to preserve running process & Claude detection state.
     /// Cleaned up when tab is removed via Session.removeTab().
@@ -27,11 +29,11 @@ class Tab: Identifiable, Hashable {
         self.createdAt = Date()
     }
 
-    static func == (lhs: Tab, rhs: Tab) -> Bool {
+    nonisolated static func == (lhs: Tab, rhs: Tab) -> Bool {
         lhs.id == rhs.id
     }
 
-    func hash(into hasher: inout Hasher) {
+    nonisolated func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
 

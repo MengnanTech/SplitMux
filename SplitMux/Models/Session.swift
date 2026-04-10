@@ -107,6 +107,7 @@ class Session: Identifiable, Hashable {
         let statuses = tabs.compactMap(\.claudeStatus)
         if statuses.isEmpty { return nil }
         if statuses.contains(.running) { return .running }
+        if statuses.contains(.error) { return .error }
         if statuses.contains(.needsInput) { return .needsInput }
         if statuses.contains(.idle) { return .idle }
         return nil
@@ -168,6 +169,10 @@ class Session: Identifiable, Hashable {
         }
 
         tabs.removeAll { $0.id == tabID }
+        // Clear zoom if the zoomed tab was removed
+        if zoomedTabID == tabID {
+            zoomedTabID = nil
+        }
         // Also remove from split layout
         if let root = splitRoot {
             splitRoot = root.removing(tabID: tabID)

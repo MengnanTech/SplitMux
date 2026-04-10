@@ -2,8 +2,9 @@ import Foundation
 import SwiftUI
 
 /// Represents a saved SSH connection configuration
+@MainActor
 @Observable
-class SSHHost: Identifiable, Codable {
+class SSHHost: Identifiable, @preconcurrency Codable {
     let id: UUID
     var name: String
     var hostname: String
@@ -101,6 +102,41 @@ class SSHHost: Identifiable, Codable {
             parts.append(hostname)
         }
         return parts.joined(separator: " ")
+    }
+}
+
+// MARK: - SSH Host Snapshot (for cancel-safe editing)
+
+/// Value snapshot of SSHHost fields for restoring on cancel
+struct SSHHostSnapshot {
+    let name: String
+    let hostname: String
+    let port: Int
+    let username: String
+    let keyPath: String?
+    let colorTag: SSHColorTag
+    let autoReconnect: Bool
+
+    @MainActor
+    init(from host: SSHHost) {
+        self.name = host.name
+        self.hostname = host.hostname
+        self.port = host.port
+        self.username = host.username
+        self.keyPath = host.keyPath
+        self.colorTag = host.colorTag
+        self.autoReconnect = host.autoReconnect
+    }
+
+    @MainActor
+    func restore(to host: SSHHost) {
+        host.name = name
+        host.hostname = hostname
+        host.port = port
+        host.username = username
+        host.keyPath = keyPath
+        host.colorTag = colorTag
+        host.autoReconnect = autoReconnect
     }
 }
 

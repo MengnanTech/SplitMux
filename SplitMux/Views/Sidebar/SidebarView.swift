@@ -205,7 +205,9 @@ struct SidebarView: View {
         menu.addActionItem("New Tab", image: "plus.square") {
             Task { @MainActor in
                 let tab = session.createTab()
-                session.addTab(tab)
+                withAnimation(.easeInOut(duration: 0.15)) {
+                    session.addTab(tab)
+                }
             }
         }
 

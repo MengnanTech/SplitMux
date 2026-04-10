@@ -159,6 +159,7 @@ struct WindowConfigurator: NSViewRepresentable {
 class WindowConfiguratorView: NSView, NSWindowDelegate {
     private var kvoObservation: NSKeyValueObservation?
     private var toolbarObservation: NSKeyValueObservation?
+    private var titlebarObservation: NSKeyValueObservation?
     private var notificationToken: NSObjectProtocol?
     private var isApplying = false
 
@@ -166,6 +167,7 @@ class WindowConfiguratorView: NSView, NSWindowDelegate {
         super.viewDidMoveToWindow()
         kvoObservation = nil
         toolbarObservation = nil
+        titlebarObservation = nil
         if let notificationToken {
             NotificationCenter.default.removeObserver(notificationToken)
             self.notificationToken = nil
@@ -189,6 +191,17 @@ class WindowConfiguratorView: NSView, NSWindowDelegate {
                 self.applyConfig(win)
             }
         }
+        // KVO: SwiftUI can reset titlebar transparency during re-renders
+        // (e.g. after session restoration triggers preferredColorScheme re-evaluation).
+        // Without this, the title bar becomes opaque while fullSizeContentView is active,
+        // causing the tab bar to be hidden behind an opaque title bar in non-glass mode.
+        titlebarObservation = window.observe(\.titlebarAppearsTransparent, options: [.new]) { [weak self] win, change in
+            guard change.newValue == false else { return }
+            Task { @MainActor [weak self] in
+                guard let self, !self.isApplying else { return }
+                self.applyConfig(win)
+            }
+        }
         notificationToken = NotificationCenter.default.addObserver(
             forName: NSWindow.didBecomeKeyNotification,
             object: window,
@@ -197,6 +210,15 @@ class WindowConfiguratorView: NSView, NSWindowDelegate {
             Task { @MainActor [weak self] in
                 self?.applyConfig(window)
             }
+        }
+
+        // Safety net: re-apply after SwiftUI settles post-restoration layout.
+        // Glass mode already gets a delayed re-apply via applyGlassIfNeeded's
+        // asyncAfter, but non-glass mode needs this to survive property resets
+        // triggered by session restoration in onAppear.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            guard let self, let window = self.window else { return }
+            self.applyConfig(window)
         }
     }
 
@@ -209,6 +231,11 @@ class WindowConfiguratorView: NSView, NSWindowDelegate {
     // MARK: - Window Close Confirmation
 
     func windowShouldClose(_ sender: NSWindow) -> Bool {
+        guard SettingsManager.shared.confirmBeforeClose else {
+            NSApplication.shared.terminate(nil)
+            return true
+        }
+
         let alert = NSAlert()
         alert.messageText = "Quit SplitMux?"
         alert.informativeText = "All terminal sessions and running Claude Agents will be closed."

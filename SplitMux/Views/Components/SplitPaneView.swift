@@ -47,7 +47,7 @@ struct SplitPaneView: View {
             )
             .overlay(alignment: .topTrailing) {
                 if let status = tab.claudeStatus, status != .unknown {
-                    SplitPaneStatusBadge(status: status, hasNotification: tab.hasNotification)
+                    SplitPaneStatusBadge(status: status, hasNotification: tab.hasNotification, toolDetail: tab.claudeToolDetail)
                         .padding(8)
                 }
             }
@@ -297,6 +297,7 @@ struct VSplitContent: View {
 struct SplitPaneStatusBadge: View {
     let status: ClaudeStatus
     let hasNotification: Bool
+    var toolDetail: String? = nil
 
     private var theme: AppTheme { SettingsManager.shared.theme }
 
@@ -312,9 +313,10 @@ struct SplitPaneStatusBadge: View {
                     .foregroundStyle(status.color)
             }
 
-            Text(status.label)
+            Text(toolDetail ?? status.label)
                 .font(.system(size: 9, weight: .medium, design: .monospaced))
                 .foregroundStyle(status.color)
+                .lineLimit(1)
 
             if hasNotification {
                 Circle()

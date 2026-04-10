@@ -6,7 +6,6 @@ struct ContentView: View {
     @State private var showAgentDashboard = false
     @State private var sidebarWidth: CGFloat = 220
     @State private var dragStartWidth: CGFloat = 220
-
     private var theme: AppTheme { SettingsManager.shared.theme }
 
     var body: some View {

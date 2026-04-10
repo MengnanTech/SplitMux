@@ -6,6 +6,7 @@ struct SSHHostsSection: View {
     @State private var isExpanded = false
     @State private var showAddHost = false
     @State private var editingHost: SSHHost?
+    @State private var editSnapshot: SSHHostSnapshot?
     @State private var hoveredHostID: UUID?
 
     private let sshManager = SSHManagerService.shared
@@ -78,7 +79,10 @@ struct SSHHostsSection: View {
                                 host: host,
                                 isHovered: hoveredHostID == host.id,
                                 onConnect: { connectToHost(host) },
-                                onEdit: { editingHost = host }
+                                onEdit: {
+                                    editSnapshot = SSHHostSnapshot(from: host)
+                                    editingHost = host
+                                }
                             )
                             .onHover { hovering in
                                 hoveredHostID = hovering ? host.id : nil
@@ -86,7 +90,10 @@ struct SSHHostsSection: View {
                             .contextMenu {
                                 Button("Connect") { connectToHost(host) }
 
-                                Button("Edit...") { editingHost = host }
+                                Button("Edit...") {
+                                    editSnapshot = SSHHostSnapshot(from: host)
+                                    editingHost = host
+                                }
 
                                 if sshManager.savedHosts.contains(where: { $0.id == host.id }) {
                                     Divider()
@@ -123,9 +130,17 @@ struct SSHHostsSection: View {
                 isNew: false,
                 onSave: { _ in
                     sshManager.updateHost(host)
+                    editSnapshot = nil
                     editingHost = nil
                 },
-                onCancel: { editingHost = nil }
+                onCancel: {
+                    // Restore original values on cancel
+                    if let snapshot = editSnapshot {
+                        snapshot.restore(to: host)
+                    }
+                    editSnapshot = nil
+                    editingHost = nil
+                }
             )
         }
     }

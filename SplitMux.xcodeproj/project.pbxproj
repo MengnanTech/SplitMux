@@ -219,7 +219,7 @@
 			path = Sidebar;
 			sourceTree = "<group>";
 		};
-		"TEMP_2F3C86A2-94ED-449E-901F-AEB5804BEA79" /* Resources */ = {
+		"TEMP_74D1DF78-ADCA-401D-90E6-44C0EC4E35D4" /* Resources */ = {
 			isa = PBXGroup;
 			children = (
 			);

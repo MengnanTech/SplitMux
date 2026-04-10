@@ -301,6 +301,13 @@ struct TabItemView: View {
                     .controlSize(.mini)
                     .scaleEffect(0.6)
                     .padding(.trailing, 3)
+                    .help(tab.claudeToolDetail ?? "Claude Running")
+            } else if tab.claudeStatus == .error {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 9))
+                    .foregroundStyle(.red)
+                    .padding(.trailing, 3)
+                    .help("Claude Error")
             } else if tab.claudeStatus == .needsInput {
                 Image(systemName: "exclamationmark.circle.fill")
                     .font(.system(size: 9))

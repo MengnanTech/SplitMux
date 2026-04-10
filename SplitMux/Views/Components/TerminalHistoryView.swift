@@ -36,21 +36,6 @@ struct TerminalHistoryView: View {
                 .font(.system(.caption2, design: .monospaced))
                 .foregroundStyle(theme.iconDimmed)
 
-                // Replay controls
-                if history.isReplaying {
-                    Button {
-                        history.stopReplay()
-                    } label: {
-                        Image(systemName: "stop.fill")
-                            .foregroundStyle(.red)
-                    }
-                    .buttonStyle(.plain)
-
-                    Text("\(history.replayPosition)/\(history.entries.count)")
-                        .font(.system(.caption2, design: .monospaced))
-                        .foregroundStyle(.blue)
-                }
-
                 // Export button
                 Button { exportHistory() } label: {
                     Image(systemName: "square.and.arrow.up")
@@ -136,37 +121,9 @@ struct TerminalHistoryView: View {
                 }
             }
 
-            // Replay controls bar
+            // Footer bar
             HStack(spacing: 12) {
-                Button {
-                    startReplay()
-                } label: {
-                    Label("Replay", systemImage: "play.fill")
-                        .font(.system(.caption, design: .monospaced))
-                }
-                .buttonStyle(.plain)
-                .disabled(history.entries.isEmpty || history.isReplaying)
-
                 Spacer()
-
-                // Speed picker
-                HStack(spacing: 4) {
-                    Text("Speed:")
-                        .font(.system(.caption2, design: .monospaced))
-                        .foregroundStyle(theme.iconDimmed)
-
-                    Picker("", selection: Binding(
-                        get: { history.replaySpeed },
-                        set: { history.replaySpeed = $0 }
-                    )) {
-                        Text("0.5x").tag(0.5)
-                        Text("1x").tag(1.0)
-                        Text("2x").tag(2.0)
-                        Text("4x").tag(4.0)
-                    }
-                    .pickerStyle(.segmented)
-                    .frame(width: 180)
-                }
 
                 // Recording toggle
                 HStack(spacing: 4) {
@@ -219,14 +176,6 @@ struct TerminalHistoryView: View {
 
         if panel.runModal() == .OK, let url = panel.url {
             try? history.exportToFile(url: url, includeTimestamps: true)
-        }
-    }
-
-    private func startReplay() {
-        // TODO: In a full implementation, this would feed data to a separate read-only terminal
-        // For now, just animate the position
-        history.startReplay { _ in
-            // Replay data would be fed to terminal
         }
     }
 
