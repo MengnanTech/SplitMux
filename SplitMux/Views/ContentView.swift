@@ -6,6 +6,7 @@ struct ContentView: View {
     @State private var showAgentDashboard = false
     @State private var sidebarWidth: CGFloat = 220
     @State private var dragStartWidth: CGFloat = 220
+    private var hookService: ClaudeHookService { ClaudeHookService.shared }
     private var theme: AppTheme { SettingsManager.shared.theme }
 
     var body: some View {
@@ -69,6 +70,17 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showAgentDashboard) {
             AgentOrchestrationView(isPresented: $showAgentDashboard)
+        }
+        .background {
+            AgentIslandOverlay(
+                snapshot: AgentIslandSnapshot.build(
+                    agentInfos: hookService.agentInfos,
+                    sessions: appState.sessions
+                )
+            ) {
+                showAgentDashboard = true
+            }
+            .frame(width: 0, height: 0)
         }
         // MARK: - Keyboard Shortcuts
         .background {

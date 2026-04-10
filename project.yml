@@ -52,3 +52,14 @@ targets:
       path: SplitMux/SplitMux.entitlements
       properties:
         com.apple.security.app-sandbox: false
+  SplitMuxTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: SplitMuxTests
+    dependencies:
+      - target: SplitMux
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.levi.SplitMuxTests
+        GENERATE_INFOPLIST_FILE: YES
